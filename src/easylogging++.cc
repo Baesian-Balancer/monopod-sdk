@@ -15,7 +15,7 @@
 //
 // https://github.com/amrayn/easyloggingpp
 
-#include "scenario/monopod/easylogging++.h"
+#include "monopodSDK/easylogging++.h"
 
 #if defined(AUTO_INITIALIZE_EASYLOGGINGPP)
 INITIALIZE_EASYLOGGINGPP

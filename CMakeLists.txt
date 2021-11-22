@@ -12,25 +12,34 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Include useful features
 include(GNUInstallDirs)
 
-# Set up in setup.py
+# Set CMAKE_BUILD_TYPE to set to debug
 if(NOT CMAKE_CONFIGURATION_TYPES)
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING
             "Choose the type of build, options are: Debug or Release" FORCE)
     endif()
-    set(SCENARIO_BUILD_TYPES "Debug" "Release")
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${SCENARIO_BUILD_TYPES})
+    set(MONOPODSDK_BUILD_TYPES "Debug" "Release")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${MONOPODSDK_BUILD_TYPES})
 endif()
 
 # Expose shared or static compilation
-set(SCENARIO_BUILD_SHARED_LIBRARY TRUE
+set(MONOPODSDK_BUILD_SHARED_LIBRARY TRUE
     CACHE BOOL "Compile libraries as shared libraries")
-set(BUILD_SHARED_LIBS ${SCENARIO_BUILD_SHARED_LIBRARY})
+set(BUILD_SHARED_LIBS ${MONOPODSDK_BUILD_SHARED_LIBRARY})
 
+# Control where binaries and libraries are placed in the build folder.
+# This simplifies tests running in Windows.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
+# =========
 # Use -fPIC even if statically compiled
 # Makes the machine code use relative addressing not absolute
 # Needed for libraries.
 # https://stackoverflow.com/questions/5311515/gcc-fpic-option
+# =========
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Tweak linker flags in Linux
@@ -43,24 +52,29 @@ if(UNIX AND NOT APPLE)
     endif()
 endif()
 
-# Control where binaries and libraries are placed in the build folder.
-# This simplifies tests running in Windows.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-
+# =========
 # Get include-what-you-use information when compiling
 # https://include-what-you-use.org/
-option(SCENARIO_USE_IWYU "Get the output of include-what-you-use" OFF)
-mark_as_advanced(SCENARIO_USE_IWYU)
-if(SCENARIO_USE_IWYU)
+# =========
+
+option(MONOPODSDK_USE_IWYU "Get the output of include-what-you-use" OFF)
+mark_as_advanced(MONOPODSDK_USE_IWYU)
+if(MONOPODSDK_USE_IWYU)
     find_program(IWYU_PATH NAMES include-what-you-use iwyu)
     if(IWYU_PATH)
         set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH})
     endif()
 endif()
 
+# =========
+# Dependencies
+# =========
+add_subdirectory(deps)
+
+# =========
 # Settings for RPATH - Run Path
+# =========
+
 # explaination https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
 if(NOT MSVC)
    # MSVC - Set to true when the compiler is some version of Microsoft Visual
@@ -68,9 +82,6 @@ if(NOT MSVC)
     option(ENABLE_RPATH "Enable RPATH installation" TRUE)
     mark_as_advanced(ENABLE_RPATH)
 endif()
-
-# Dependencies
-add_subdirectory(deps)
 
 if(${CMAKE_VERSION} VERSION_GREATER 3.15)
     cmake_policy(SET CMP0094 NEW)
@@ -105,17 +116,18 @@ set(MONOPODSDK_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 # Helper for exporting targets
 # talking about this package here
 # http://robotology.github.io/ycm/gh-pages/git-master/module/InstallBasicPackageFiles.html
+
 include(InstallBasicPackageFiles)
 
 # =========
-# Monopod SDK
+# Add tests
 # =========
 
 add_subdirectory(tests)
 
-# ==============
-# monopodSDK
-# ==============
+# =========
+# Monopod SDK
+# =========
 #
 set(MONOPODSDK_PUBLIC_HDRS
     include/monopodSDK/easylogging++.h)
@@ -158,5 +170,7 @@ install_basic_package_files(MonopodSDK
     ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSDK
 )
 
+# ===================
 # Add unistall target
+# ===================
 include(AddUninstallTarget)
