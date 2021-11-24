@@ -43,7 +43,7 @@ endif()
 
 # =============================================================================
 
-function (build_external_project target git_repo)
+function (build_external_project target target_DIR git_repo)
 
     # set(CMAKELIST_CONTENT "
     #     cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
@@ -60,118 +60,97 @@ function (build_external_project target git_repo)
     #     add_dependencies(build_external_project ${target})
     # ")
 
+    set(TARGET_DIR "${CMAKE_BINARY_DIR}/_deps/${target}")
+
     set(CMAKELIST_CONTENT "
         cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
         project(build_external_project)
         include(ExternalProject)
         ExternalProject_add(${target}
             GIT_REPOSITORY \"${git_repo}\"
-            #--Configure step-------------
-            CONFIGURE_COMMAND \"\"
-            #--Build step-----------------
-            BUILD_COMMAND \"\"
-            #--Install step---------------
-            UPDATE_COMMAND \"\" # Skip annoying updates for every build
+            # #--Configure step-------------
+            # CONFIGURE_COMMAND cmake ${TARGET_DIR}
+            # #--Build step-----------------
+            # BUILD_COMMAND cmake --build ${TARGET_DIR}
+            # #--Install step---------------
+            # UPDATE_COMMAND \"\" # Skip annoying updates for every build
+            # INSTALL_COMMAND \"\"
+
+            # CONFIGURE_COMMAND \"\" # Disable all other steps
+            # BUILD_COMMAND \"\"
             INSTALL_COMMAND \"\"
             CMAKE_ARGS ${ARGN})
         add_custom_target(build_external_project)
         add_dependencies(build_external_project ${target})
     ")
 
-    set(TARGET_DIR "${CMAKE_BINARY_DIR}/_deps/${target}")
+    # cmake -S . -B build
 
     file(WRITE "${TARGET_DIR}/CMakeLists.txt" "${CMAKELIST_CONTENT}")
 
-    file(MAKE_DIRECTORY "${TARGET_DIR}" "${TARGET_DIR}/build")
+    # file(MAKE_DIRECTORY "${TARGET_DIR}" "${TARGET_DIR}/build")
 
-    # execute_process(COMMAND ${CMAKE_COMMAND}
-    #     -G "${CMAKE_GENERATOR}"
-    #     -A "${CMAKE_GENERATOR_PLATFORM}"
-    #     -T "${CMAKE_GENERATOR_TOOLSET}"
-    #     ..
-    #     WORKING_DIRECTORY "${TARGET_DIR}/build")
-    #
-    # execute_process(COMMAND ${CMAKE_COMMAND}
-    #     --build .
-    #     --config ${CMAKE_BUILD_TYPE}
-    #     WORKING_DIRECTORY "${TARGET_DIR}/build")
+    # # execute_process(COMMAND ${CMAKE_COMMAND}
+    # #     -G "${CMAKE_GENERATOR}"
+    # #     -A "${CMAKE_GENERATOR_PLATFORM}"
+    # #     -T "${CMAKE_GENERATOR_TOOLSET}"
+    # #     ..
+    # #     WORKING_DIRECTORY "${TARGET_DIR}/build")
+    # #
+    # # execute_process(COMMAND ${CMAKE_COMMAND}
+    # #     --build .
+    # #     --config ${CMAKE_BUILD_TYPE}
+    # #     WORKING_DIRECTORY "${TARGET_DIR}/build")
 
     # Configure external project
+
+    # CONFIGURE_COMMAND \"cmake -S . -B build\" # Disable all other steps
+    # BUILD_COMMAND \"cmake --build build\"
+    
     execute_process(
-        COMMAND ${CMAKE_COMMAND} ${TARGET_DIR}
-        WORKING_DIRECTORY "${TARGET_DIR}/build"
+        COMMAND ${CMAKE_COMMAND} "${TARGET_DIR}"
+        WORKING_DIRECTORY "${TARGET_DIR}"
     )
 
     # Build external project
     execute_process(
-        COMMAND ${CMAKE_COMMAND} --build "${TARGET_DIR}/build"
+        COMMAND ${CMAKE_COMMAND} --build "${TARGET_DIR}"
     )
 
-    set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${TARGET_DIR}/build/${target}-prefix/src/${target}/cmake")
-    # set("${target}_DIR" "${TARGET_DIR}/build/${target}-prefix/src/${target}-build/" GLOBAL)
+    # set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${TARGET_DIR}/build/${target}-prefix/src/${target}/cmake" PARENT_SCOPE)
+    set(${target_DIR} "${TARGET_DIR}/${target}-prefix/src/${target}-build/" PARENT_SCOPE)
+    # message(STATUS "${TARGET_DIR}/build/${target}-prefix/src/${target}-build/")
+    # set_property(GLOBAL PROPERTY ${${hhhh}} "${TARGET_DIR}/build/${target}-prefix/src/${target}-build/")
 endfunction()
 
 # ===
 # Mpi cmake modules
 # ===
 
-build_external_project(mpi_cmake_modules "https://github.com/machines-in-motion/mpi_cmake_modules.git")
-build_external_project(pybind11 "https://github.com/pybind/pybind11.git")
+# build_external_project(Eigen3 Eigen3_DIR "https://gitlab.com/libeigen/eigen.git")
+build_external_project(pybind11 pybind11_DIR "https://github.com/pybind/pybind11.git")
+# build_external_project(mpi_cmake_modules mpi_cmake_modules_DIR "https://github.com/machines-in-motion/mpi_cmake_modules.git")
 
+# set(${CMAKE_PREFIX_PATH} "${CMAKE_BINARY_DIR}/_deps/mpi_cmake_modules/build/mpi_cmake_modules-prefix/src/mpi_cmake_modules-build")
+message(STATUS ${Eigen3_DIR})
+message(STATUS ${pybind11_DIR})
+message(STATUS ${mpi_cmake_modules_DIR})
 
-# # ===
-# # Mpi cmake modules
-# # ===
-#
-# FetchContent_Declare(
-#   mpi_cmake_modules
-#   # Specify the commit you depend on and update it regularly.
-#   GIT_REPOSITORY https://github.com/machines-in-motion/mpi_cmake_modules.git
-# )
-# FetchContent_GetProperties(mpi_cmake_modules)
-#
-# if(NOT mpi_cmake_modules_POPULATED)
-#     FetchContent_Populate(mpi_cmake_modules)
-#
-#     add_subdirectory(${mpi_cmake_modules_SOURCE_DIR}
-#                      ${mpi_cmake_modules_BINARY_DIR}
-#                      EXCLUDE_FROM_ALL)
-# endif()
-#
-# # set(mpi_cmake_modules_DIR "${mpi_cmake_modules_SOURCE_DIR}/../mpi_cmake_modules-build";)
-# # set(CMAKE_MODULE_PATH "${CMAKE_MODULE_PATH};${mpi_cmake_modules_SOURCE_DIR}/cmake" PARENT_SCOPE)
-#
-# # ===
-# # pybind11
-# # ===
-#
-# FetchContent_Declare(
-#   pybind11
-#   # Specify the commit you depend on and update it regularly.
-#   GIT_REPOSITORY https://github.com/pybind/pybind11.git
-# )
-# FetchContent_GetProperties(pybind11)
-#
-# if(NOT pybind11_POPULATED)
-#     FetchContent_Populate(pybind11)
-#
-#     add_subdirectory(${pybind11_SOURCE_DIR}
-#                      ${pybind11_BINARY_DIR}
-#                      EXCLUDE_FROM_ALL)
-# endif()
-#
-#
-# # ===
-# # Real time tools
-# # ===
-#
+# find_package(mpi_cmake_modules REQUIRED)
+# find_package(pybind11 REQUIRED)
+# find_package(Eigen3 REQUIRED)
+
+# ===
+# Real time tools
+# ===
+
 # FetchContent_Declare(
 #   real_time_tools
 #   # Specify the commit you depend on and update it regularly.
 #   GIT_REPOSITORY https://github.com/machines-in-motion/real_time_tools.git
 # )
-#
-# add_dependencies(real_time_tools mpi_cmake_modules pybind11)
-#
+
+# add_dependencies(real_time_tools mpi_cmake_modules pybind11 eigen3)
+
 # FetchContent_MakeAvailable(real_time_tools QUIET)
 # # FetchContent_MakeAvailable(mpi_cmake_modules real_time_tools)
