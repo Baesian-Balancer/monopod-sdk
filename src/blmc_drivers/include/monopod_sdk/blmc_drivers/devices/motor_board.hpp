@@ -23,7 +23,7 @@ namespace blmc_drivers
 {
 //==============================================================================
 /**
- * @brief This MotorBoardCommand class is a data structure that defines a
+ * @brief This MotorBoardCommand class is a data structurs that defines a
  * command.
  */
 class MotorBoardCommand

@@ -66,25 +66,16 @@ if(MONOPODSDK_USE_IWYU)
     endif()
 endif()
 
-# =========
-# Dependencies
-# =========
-add_subdirectory(deps)
-# =========
-# Settings for RPATH - Run Path
-# =========
-
-# explaination https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
-if(NOT MSVC)
-   # MSVC - Set to true when the compiler is some version of Microsoft Visual
-   # C++ or another compiler simulating the Visual C++ cl command-line syntax.
-    option(ENABLE_RPATH "Enable RPATH installation" TRUE)
-    mark_as_advanced(ENABLE_RPATH)
-endif()
-
 if(${CMAKE_VERSION} VERSION_GREATER 3.15)
     cmake_policy(SET CMP0094 NEW)
 endif()
+
+# =========
+# Dependencies
+# =========
+
+add_subdirectory(deps)
+
 
 # Select the appropriate install prefix used throughout the project
 set(MONOPODSDK_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR})
@@ -128,47 +119,8 @@ include(InstallBasicPackageFiles)
 # =========
 # Monopod SDK
 # =========
-#
-set(MONOPODSDK_PUBLIC_HDRS
-    include/monopodSDK/easylogging++.h)
 
-add_library(MonopodSDK
-    ${MONOPODSDK_PUBLIC_HDRS}
-    src/easylogging++.cc)
-
-add_library(MonopodSDK::MonopodSDK ALIAS MonopodSDK)
-
-target_include_directories(MonopodSDK PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
-
-set_target_properties(MonopodSDK PROPERTIES
-PUBLIC_HEADER "${MONOPODSDK_PUBLIC_HDRS}")
-
-
-install(
-    TARGETS
-    MonopodSDK
-    EXPORT MonopodSDKExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopodSDK)
-
-# ===================
-# Install the targets
-# ===================
-
-install_basic_package_files(MonopodSDK
-    COMPONENT SDK
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-    EXPORT MonopodSDKExport
-    NAMESPACE MonopodSDK::
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSDK
-)
+add_subdirectory(src)
 
 # ===================
 # Add unistall target
