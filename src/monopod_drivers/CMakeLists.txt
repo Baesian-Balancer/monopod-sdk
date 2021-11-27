@@ -1,22 +1,24 @@
 # =========
-# Monopod SDK
+# Monopod Drivers
 # =========
 
-set(MONOPODSDK_PUBLIC_HDRS
-include/monopod_sdk/easylogging++.h)
+set(MONOPOD_DRIVERS_PUBLIC_HDRS
+# include/monopod_sdk/easylogging++.h
+)
 
-add_library(MonopodSDK
-    ${MONOPODSDK_PUBLIC_HDRS}
-    src/easylogging++.cc)
+add_library(MonopodDrivers
+    ${MONOPOD_DRIVERS_PUBLIC_HDRS}
+    # src/easylogging++.cc
+  )
 
-add_library(MonopodSDK::MonopodSDK ALIAS MonopodSDK)
+add_library(MonopodDrivers::MonopodDrivers ALIAS MonopodDrivers)
 
-target_include_directories(MonopodSDK PUBLIC
+target_include_directories(MonopodDrivers PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
 
-set_target_properties(MonopodSDK PROPERTIES
-    PUBLIC_HEADER "${MONOPODSDK_PUBLIC_HDRS}")
+set_target_properties(MonopodDrivers PROPERTIES
+    PUBLIC_HEADER "${MONOPOD_DRIVERS_PUBLIC_HDRS}")
 
 
 # =================================================================

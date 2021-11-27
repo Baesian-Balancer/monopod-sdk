@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(monopodSDK VERSION 0.0.1)
+project(monopod_sdk VERSION 0.0.1)
 
 # Add custom functions / macros
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -110,17 +110,15 @@ set(MONOPODSDK_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 include(InstallBasicPackageFiles)
 
 # =========
-# Add tests
-# =========
-
-# add_subdirectory(tests)
-# add_subdirectory(demos)
-
-# =========
 # Monopod SDK
 # =========
-
 add_subdirectory(src)
+
+# # =========
+# # Add Demos, Tests, and Misc
+# # =========
+# add_subdirectory(tests)
+# add_subdirectory(demos)
 
 # ===================
 # Add unistall target
