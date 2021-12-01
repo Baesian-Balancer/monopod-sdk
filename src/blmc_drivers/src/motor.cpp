@@ -10,7 +10,7 @@
  *
  */
 
-#include <blmc_drivers/devices/motor.hpp>
+#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
 
 namespace blmc_drivers
 {

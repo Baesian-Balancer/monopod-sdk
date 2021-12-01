@@ -13,7 +13,7 @@
 
 #include <sstream>
 
-#include <blmc_drivers/devices/can_bus.hpp>
+#include <monopod_sdk/blmc_drivers/devices/can_bus.hpp>
 
 namespace blmc_drivers
 {

@@ -16,7 +16,7 @@
 #include <real_time_tools/spinner.hpp>
 #include <real_time_tools/thread.hpp>
 
-#include <blmc_drivers/blmc_joint_module.hpp>
+#include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
 
 using namespace blmc_drivers;
 

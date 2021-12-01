@@ -16,8 +16,8 @@
 
 #include <Eigen/Eigen>
 
-#include "blmc_drivers/devices/motor.hpp"
-#include "blmc_drivers/utils/polynome.hpp"
+#include "monopod_sdk/blmc_drivers/devices/motor.hpp"
+#include "monopod_sdk/blmc_drivers/utils/polynome.hpp"
 
 namespace blmc_drivers
 {
