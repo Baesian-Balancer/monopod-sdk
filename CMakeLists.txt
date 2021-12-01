@@ -112,8 +112,7 @@ include(InstallBasicPackageFiles)
 # =========
 # Monopod SDK
 # =========
-# add_subdirectory(src)
-add_subdirectory(src0)
+add_subdirectory(src)
 
 # # =========
 # # Add Demos, Tests, and Misc
