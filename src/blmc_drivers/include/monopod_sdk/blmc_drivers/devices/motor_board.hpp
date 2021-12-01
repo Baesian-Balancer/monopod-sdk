@@ -15,9 +15,9 @@
 #include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
-#include "blmc_drivers/devices/can_bus.hpp"
-#include "blmc_drivers/devices/device_interface.hpp"
-#include "blmc_drivers/utils/os_interface.hpp"
+#include "monopod_sdk/blmc_drivers/devices/can_bus.hpp"
+#include "monopod_sdk/blmc_drivers/devices/device_interface.hpp"
+#include "monopod_sdk/blmc_drivers/utils/os_interface.hpp"
 
 namespace blmc_drivers
 {

@@ -13,7 +13,7 @@
  * for further enhancement.
  */
 
-#include <blmc_drivers/utils/polynome.hpp>
+#include <monopod_sdk/blmc_drivers/utils/polynome.hpp>
 #include <iostream>
 
 namespace blmc_drivers

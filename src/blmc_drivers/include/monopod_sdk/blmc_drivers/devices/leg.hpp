@@ -14,8 +14,8 @@
 
 #include <time_series/time_series.hpp>
 
-#include <blmc_drivers/devices/device_interface.hpp>
-#include <blmc_drivers/devices/motor.hpp>
+#include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
+#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
 
 namespace blmc_drivers
 {

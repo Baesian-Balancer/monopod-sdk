@@ -9,7 +9,7 @@
  *
  */
 
-#include "blmc_drivers/serial_reader.hpp"
+#include "monopod_sdk/blmc_drivers/serial_reader.hpp"
 #include <errno.h>
 #include <fcntl.h>
 #include <string.h>

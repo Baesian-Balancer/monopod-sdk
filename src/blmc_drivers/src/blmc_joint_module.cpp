@@ -8,7 +8,7 @@
  * @date 2019-07-11
  */
 
-#include "blmc_drivers/blmc_joint_module.hpp"
+#include "monopod_sdk/blmc_drivers/blmc_joint_module.hpp"
 #include <cmath>
 #include "real_time_tools/iostream.hpp"
 #include "real_time_tools/spinner.hpp"

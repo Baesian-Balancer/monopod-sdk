@@ -4,7 +4,7 @@
  * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
  * @author Maximilien Naveau (maximilien.naveau@gmail.com)
  * @brief This file implements the classes from
- * "blmc_drivers/devices/motor_board.hpp"
+ * "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
  * @version 0.1
  * @date 2018-11-26
  *
@@ -12,7 +12,7 @@
  *
  */
 
-#include <blmc_drivers/devices/motor_board.hpp>
+#include <monopod_sdk/blmc_drivers/devices/motor_board.hpp>
 
 namespace blmc_drivers
 {

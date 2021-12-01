@@ -10,7 +10,7 @@
  *
  */
 
-#include <blmc_drivers/devices/analog_sensor.hpp>
+#include <monopod_sdk/blmc_drivers/devices/analog_sensor.hpp>
 
 namespace blmc_drivers
 {
