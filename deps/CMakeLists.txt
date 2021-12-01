@@ -1,7 +1,3 @@
-# Copyright (C) 2019 Istituto Italiano di Tecnologia (IIT). All rights reserved.
-# This software may be modified and distributed under the terms of the
-# GNU Lesser General Public License v2.1 or any later version.
-
 include(FetchContent)
 
 # ===
@@ -41,73 +37,67 @@ else()
         "${CMAKE_MODULE_PATH};${YCM_MODULE_PATH}" PARENT_SCOPE)
 endif()
 
-# # ====================
-# # TINY-PROCESS-LIBRARY
-# # ====================
+# # =============================================================================
+# # EXTERNAL PROJECT DEPENDS - I hate my life :)
+# # =============================================================================
 #
-# find_package(tiny-process-library QUIET)
+# function (build_external_project target target_ROOT git_repo)
+#     # Set up CMakeLists.txt in target directory
+#     set(TARGET_DIR "${${target_ROOT}}")
+#     list(APPEND ARGN -DCMAKE_INSTALL_PREFIX=${TARGET_DIR})
+#     set(CMAKELIST_CONTENT
+# "cmake_minimum_required(VERSION ${CMAKE_MINIMUM_REQUIRED_VERSION})
+# project(build_external_project)
+# include(ExternalProject)
+# ExternalProject_add(${target}
+#     GIT_REPOSITORY \"${git_repo}\"
+#     BUILD_COMMAND cmake --build . --config ${CMAKE_BUILD_TYPE}
+#     CMAKE_ARGS ${ARGN})
+# add_custom_target(build_external_project)
+# add_dependencies(build_external_project ${target})")
+#     file(WRITE "${TARGET_DIR}/CMakeLists.txt" "${CMAKELIST_CONTENT}")
+#     #config external project
+#     execute_process(
+#         COMMAND ${CMAKE_COMMAND} .
+#         WORKING_DIRECTORY "${TARGET_DIR}"
+#     )
+#     # Build external project
+#     execute_process(
+#         COMMAND ${CMAKE_COMMAND} --build .
+#         WORKING_DIRECTORY "${TARGET_DIR}"
+#     )
+# endfunction()
 #
-# option(SCENARIO_USE_SYSTEM_TPL
-#     "Use system-installed tiny-process-library, rather than a private copy"
-#     ${tiny-process-library_FOUND})
+# set(pybind11_ROOT "${FETCHCONTENT_BASE_DIR}/pybind11" CACHE INTERNAL "")
+# build_external_project(pybind11 pybind11_ROOT "https://github.com/pybind/pybind11.git" -DPYBIND11_TEST=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+# find_package(pybind11 REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-Dpybind11_DIR=${pybind11_DIR}")
 #
-# if(SCENARIO_USE_SYSTEM_TPL AND NOT ${tiny-process-library_FOUND})
-#     message(FATAL_ERROR "Failed to find system tiny-process-library")
-# endif()
+# set(Eigen3_ROOT "${FETCHCONTENT_BASE_DIR}/Eigen3" CACHE INTERNAL "")
+# build_external_project(Eigen3 Eigen3_ROOT "https://gitlab.com/libeigen/eigen.git" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+# find_package(Eigen3 REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-DEigen3_DIR=${Eigen3_DIR}")
 #
-# if(NOT ${SCENARIO_USE_SYSTEM_TPL})
+# set(mpi_cmake_modules_ROOT "${FETCHCONTENT_BASE_DIR}/mpi_cmake_modules" CACHE INTERNAL "")
+# build_external_project(mpi_cmake_modules mpi_cmake_modules_ROOT "https://github.com/machines-in-motion/mpi_cmake_modules.git" -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE})
+# find_package(mpi_cmake_modules REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-Dmpi_cmake_modules_DIR=${mpi_cmake_modules_DIR}")
 #
-#     FetchContent_Declare(
-#         tinyprocesslibrary
-#         GIT_REPOSITORY https://gitlab.com/eidheim/tiny-process-library.git)
+# set(real_time_tools_ROOT "${FETCHCONTENT_BASE_DIR}/real_time_tools" CACHE INTERNAL "")
+# build_external_project(real_time_tools real_time_tools_ROOT "https://github.com/machines-in-motion/real_time_tools.git" -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${GLOBAL_THIRDPARTY_LIB_ARGS})
+# find_package(real_time_tools REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-Dreal_time_tools_DIR=${real_time_tools_DIR}")
 #
-#     FetchContent_GetProperties(tinyprocesslibrary)
+# set(signal_handler_ROOT "${FETCHCONTENT_BASE_DIR}/signal_handler" CACHE INTERNAL "")
+# build_external_project(signal_handler signal_handler_ROOT "https://github.com/MPI-IS/signal_handler.git" -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${GLOBAL_THIRDPARTY_LIB_ARGS})
+# find_package(signal_handler REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-Dsignal_handler_DIR=${signal_handler_DIR}")
 #
-#     if(NOT tinyprocesslibrary_POPULATED)
-#         FetchContent_Populate(tinyprocesslibrary)
+# set(shared_memory_ROOT "${FETCHCONTENT_BASE_DIR}/shared_memory" CACHE INTERNAL "")
+# build_external_project(shared_memory shared_memory_ROOT "https://github.com/machines-in-motion/shared_memory.git" -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${GLOBAL_THIRDPARTY_LIB_ARGS})
+# find_package(shared_memory REQUIRED)
+# list(APPEND GLOBAL_THIRDPARTY_LIB_ARGS "-Dshared_memory_DIR=${shared_memory_DIR}")
 #
-#         # We don't want to install this library in the system, we instead
-#         # compile it as an OBJECT library and embed in either the shared or
-#         # static libraries that need it.
-#
-#         if(WIN32)
-#             add_library(tiny-process-library OBJECT
-#                 ${tinyprocesslibrary_SOURCE_DIR}/process.cpp
-#                 ${tinyprocesslibrary_SOURCE_DIR}/process_win.cpp)
-#             #If compiled using MSYS2, use sh to run commands
-#             if(MSYS)
-#                 target_compile_definitions(tiny-process-library
-#                     PUBLIC MSYS_PROCESS_USE_SH)
-#             endif()
-#         else()
-#             add_library(tiny-process-library OBJECT
-#                 ${tinyprocesslibrary_SOURCE_DIR}/process.cpp
-#                 ${tinyprocesslibrary_SOURCE_DIR}/process_unix.cpp)
-#         endif()
-#
-#         if(MSVC)
-#             target_compile_definitions(tiny-process-library
-#                 PRIVATE /D_CRT_SECURE_NO_WARNINGS)
-#         endif()
-#
-#         find_package(Threads REQUIRED)
-#
-#         target_link_libraries(tiny-process-library PRIVATE
-#             ${CMAKE_THREAD_LIBS_INIT})
-#
-#         target_include_directories(tiny-process-library PUBLIC
-#             $<BUILD_INTERFACE:${tinyprocesslibrary_SOURCE_DIR}>)
-#
-#         add_library(tiny-process-library::tiny-process-library ALIAS tiny-process-library)
-#
-#     endif()
-# endif()
-
-# =====
-# CLARA
-# =====
-
-add_library(Clara INTERFACE)
-target_sources(Clara INTERFACE ${CMAKE_CURRENT_SOURCE_DIR}/clara/clara.hpp)
-target_include_directories(Clara INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/clara>)
+# set(time_series_ROOT "${FETCHCONTENT_BASE_DIR}/time_series" CACHE INTERNAL "")
+# build_external_project(time_series time_series_ROOT "https://github.com/machines-in-motion/time_series.git" -DBUILD_TESTING=OFF -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${GLOBAL_THIRDPARTY_LIB_ARGS})
+# find_package(time_series REQUIRED)

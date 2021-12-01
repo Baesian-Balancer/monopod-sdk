@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(monopodSDK VERSION 0.0.1)
+project(monopod_sdk VERSION 0.0.1)
 
 # Add custom functions / macros
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
@@ -12,25 +12,34 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 # Include useful features
 include(GNUInstallDirs)
 
-# Set up in setup.py
+# Set CMAKE_BUILD_TYPE to set to debug
 if(NOT CMAKE_CONFIGURATION_TYPES)
     if(NOT CMAKE_BUILD_TYPE)
         set(CMAKE_BUILD_TYPE "Release" CACHE STRING
             "Choose the type of build, options are: Debug or Release" FORCE)
     endif()
-    set(SCENARIO_BUILD_TYPES "Debug" "Release")
-    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${SCENARIO_BUILD_TYPES})
+    set(MONOPODSDK_BUILD_TYPES "Debug" "Release")
+    set_property(CACHE CMAKE_BUILD_TYPE PROPERTY STRINGS ${MONOPODSDK_BUILD_TYPES})
 endif()
 
 # Expose shared or static compilation
-set(SCENARIO_BUILD_SHARED_LIBRARY TRUE
+set(MONOPODSDK_BUILD_SHARED_LIBRARY TRUE
     CACHE BOOL "Compile libraries as shared libraries")
-set(BUILD_SHARED_LIBS ${SCENARIO_BUILD_SHARED_LIBRARY})
+set(BUILD_SHARED_LIBS ${MONOPODSDK_BUILD_SHARED_LIBRARY})
 
+# Control where binaries and libraries are placed in the build folder.
+# This simplifies tests running in Windows.
+set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
+set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
+
+# =========
 # Use -fPIC even if statically compiled
 # Makes the machine code use relative addressing not absolute
 # Needed for libraries.
 # https://stackoverflow.com/questions/5311515/gcc-fpic-option
+# =========
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 
 # Tweak linker flags in Linux
@@ -43,38 +52,30 @@ if(UNIX AND NOT APPLE)
     endif()
 endif()
 
-# Control where binaries and libraries are placed in the build folder.
-# This simplifies tests running in Windows.
-set(CMAKE_RUNTIME_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_BINDIR}")
-set(CMAKE_LIBRARY_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY "${CMAKE_BINARY_DIR}/${CMAKE_INSTALL_LIBDIR}")
-
+# =========
 # Get include-what-you-use information when compiling
 # https://include-what-you-use.org/
-option(SCENARIO_USE_IWYU "Get the output of include-what-you-use" OFF)
-mark_as_advanced(SCENARIO_USE_IWYU)
-if(SCENARIO_USE_IWYU)
+# =========
+
+option(MONOPODSDK_USE_IWYU "Get the output of include-what-you-use" OFF)
+mark_as_advanced(MONOPODSDK_USE_IWYU)
+if(MONOPODSDK_USE_IWYU)
     find_program(IWYU_PATH NAMES include-what-you-use iwyu)
     if(IWYU_PATH)
         set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE ${IWYU_PATH})
     endif()
 endif()
 
-# Settings for RPATH - Run Path
-# explaination https://gitlab.kitware.com/cmake/community/-/wikis/doc/cmake/RPATH-handling
-if(NOT MSVC)
-   # MSVC - Set to true when the compiler is some version of Microsoft Visual
-   # C++ or another compiler simulating the Visual C++ cl command-line syntax.
-    option(ENABLE_RPATH "Enable RPATH installation" TRUE)
-    mark_as_advanced(ENABLE_RPATH)
-endif()
-
-# Dependencies
-add_subdirectory(deps)
-
 if(${CMAKE_VERSION} VERSION_GREATER 3.15)
     cmake_policy(SET CMP0094 NEW)
 endif()
+
+# =========
+# Dependencies
+# =========
+
+add_subdirectory(deps)
+
 
 # Select the appropriate install prefix used throughout the project
 set(MONOPODSDK_INSTALL_BINDIR ${CMAKE_INSTALL_BINDIR})
@@ -105,58 +106,22 @@ set(MONOPODSDK_INSTALL_INCLUDEDIR ${CMAKE_INSTALL_INCLUDEDIR})
 # Helper for exporting targets
 # talking about this package here
 # http://robotology.github.io/ycm/gh-pages/git-master/module/InstallBasicPackageFiles.html
+
 include(InstallBasicPackageFiles)
 
 # =========
 # Monopod SDK
 # =========
+# add_subdirectory(src)
+add_subdirectory(src0)
 
-add_subdirectory(tests)
-
-# ==============
-# monopodSDK
-# ==============
-#
-set(MONOPODSDK_PUBLIC_HDRS
-    include/monopodSDK/easylogging++.h)
-
-add_library(MonopodSDK
-    ${MONOPODSDK_PUBLIC_HDRS}
-    src/easylogging++.cc)
-
-add_library(MonopodSDK::MonopodSDK ALIAS MonopodSDK)
-
-target_include_directories(MonopodSDK PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
-
-set_target_properties(MonopodSDK PROPERTIES
-PUBLIC_HEADER "${MONOPODSDK_PUBLIC_HDRS}")
-
-
-install(
-    TARGETS
-    MonopodSDK
-    EXPORT MonopodSDKExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopodSDK)
+# # =========
+# # Add Demos, Tests, and Misc
+# # =========
+# add_subdirectory(tests)
+# add_subdirectory(demos)
 
 # ===================
-# Install the targets
-# ===================
-
-install_basic_package_files(MonopodSDK
-    COMPONENT SDK
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-    EXPORT MonopodSDKExport
-    NAMESPACE MonopodSDK::
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSDK
-)
-
 # Add unistall target
+# ===================
 include(AddUninstallTarget)
