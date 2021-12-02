@@ -40,7 +40,7 @@ add_library(blmc_drivers
   )
 
 if(Xenomai_FOUND)
-  target_include_directories(${PROJECT_NAME} PUBLIC ${Xenomai_INCLUDE_DIR})
+  target_include_directories(blmc_drivers PUBLIC ${Xenomai_INCLUDE_DIR})
 endif()
 
 # Link the catkin dependencies.
