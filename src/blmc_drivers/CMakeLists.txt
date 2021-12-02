@@ -40,7 +40,7 @@ add_library(blmc_drivers
   )
 
 if(Xenomai_FOUND)
-  target_include_directories(${PROJECT_NAME} PUBLIC ${Xenomai_INCLUDE_DIR})
+  target_include_directories(blmc_drivers PUBLIC ${Xenomai_INCLUDE_DIR})
 endif()
 
 # Link the catkin dependencies.
@@ -77,10 +77,38 @@ target_link_libraries(can_encoder_index_test
     blmc_drivers
 )
 
+set(misc_targets)
+list(APPEND misc_targets can_encoder_index_test)
+macro(add_demo demo_name)
+  add_executable(
+    ${demo_name}
+    demos/pd_control.cpp demos/sine_torque_control.cpp
+    demos/sine_position_control.cpp demos/const_torque_control.cpp
+    demos/${demo_name}.cpp)
+  target_include_directories(
+    ${demo_name}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
+         $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
+  target_link_libraries(${demo_name} blmc_drivers)
+  list(APPEND misc_targets ${demo_name})
+endmacro()
+
+add_demo(demo_sine_torque_1_motor)
+add_demo(demo_sine_position_1_motor)
+add_demo(demo_const_torque_1_motor)
+add_demo(demo_single_board)
+add_demo(demo_leg)
+add_demo(demo_2_motors)
+add_demo(demo_1_motor_print_everything)
+add_demo(demo_1_motor)
+add_demo(demo_8_motors)
+add_demo(demo_print_analog_sensors)
+
 
 install(
     TARGETS
-    blmc_drivers can_encoder_index_test
+    blmc_drivers ${misc_targets}
     EXPORT blmc_driversExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
