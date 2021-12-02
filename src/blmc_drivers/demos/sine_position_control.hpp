@@ -45,7 +45,7 @@ public:
             control_buffer_.back().clear();
         }
         stop_loop_ = false;
-        kp_ = 0.0;
+        kp_ = 0.1;
         kd_ = 0.0;
     }
 

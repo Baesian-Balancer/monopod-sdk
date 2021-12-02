@@ -23,7 +23,7 @@ void SinePositionControl::loop()
     double local_time = 0.0;
     double control_period = 0.001;
     // sine torque params
-    double amplitude = 0.0 /*3.1415*/;
+    double amplitude = 0.1 /*3.1415*/;
     double frequence = 0.5;
     // here is the control in current (Ampere)
     double desired_position = 0.0;
