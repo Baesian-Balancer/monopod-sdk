@@ -1,4 +1,4 @@
-#include "monopod.hpp"
+#include "monopod_sdk/monopod_drivers/monopod.hpp"
 
 namespace monopod_drivers
 {
@@ -27,7 +27,7 @@ Monopod::ReturnValueStatus Monopod::get_position(const int joint_index)
     {
         case hip:
             // TODO: Rename this? Not clear we are reading encoders with method
-            // named get_motor_measurement 
+            // named get_motor_measurement
             ReturnValueStatus.valid = true;
             ReturnValueStatus.value_series = monopod_[leg]->get_motor_measurement(joint_index, Monopod::position);
             return ReturnValueStatus
@@ -110,7 +110,7 @@ Monopod::ReturnValueStatus set_target_torque(const int joint_index, const double
             ReturnValueStatus.value_series = torque_target;
             return ReturnValueStatus
         case knee:
-            monopod_[leg]->motors_[knee]->set_current_target(torque_target); 
+            monopod_[leg]->motors_[knee]->set_current_target(torque_target);
             monopod_[leg]->motors_[knee]->send_if_input_changed();
             ReturnValueStatus.valid = true;
             ReturnValueStatus.value_series = torque_target;

@@ -7,7 +7,7 @@ set(MONOPODSDK_COMPONENTS Core blmc_drivers monopod_drivers)
 #     real_time_tools signal_handler shared_memory time_series)
 
 add_subdirectory(blmc_drivers)
-# add_subdirectory(monopod_drivers)
+add_subdirectory(monopod_drivers)
 # add_subdirectory(Core)
 
 # Dummy meta target for the top-level EXPORT

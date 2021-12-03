@@ -17,12 +17,16 @@ find_package(Xenomai QUIET)
 # ===============================
 
 set(MONOPOD_DRIVERS_PUBLIC_HDRS
-
+    include/monopod_sdk/monopod_drivers/encoder.hpp
+    include/monopod_sdk/monopod_drivers/monopod.hpp
+    include/monopod_sdk/monopod_drivers/planarizer.hpp
 )
 
 add_library(monopod_drivers
     ${MONOPOD_DRIVERS_PUBLIC_HDRS}
-
+        src/encoder.cpp
+        src/monopod.cpp
+        src/planarizer.cpp
   )
 
 # ===============================
@@ -41,9 +45,7 @@ endif()
 add_dependencies(monopod_drivers rt::rt)
 target_link_libraries(monopod_drivers real_time_tools::real_time_tools)
 target_link_libraries(monopod_drivers time_series::time_series)
-target_link_libraries(monopod_drivers Eigen3::Eigen)
-target_link_libraries(monopod_drivers Threads::Threads)
-
+target_link_libraries(monopod_drivers blmc_drivers::blmc_drivers)
 
 # ===============================
 # Build Library

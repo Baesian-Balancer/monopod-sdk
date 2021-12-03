@@ -1,5 +1,5 @@
 #include <time_series/time_series.hpp>
-#include <blmc_drivers/devices/analog_sensor.hpp>
+#include <monopod_sdk/blmc_drivers/devices/analog_sensor.hpp>
 
 namespace monopod_drivers
 {
@@ -35,7 +35,7 @@ class Planarizer
 
         /**
          * @brief Construct a new Planarizer object
-         * 
+         *
          * @param encoder_bc  boom connector encoder
          * @param encoder_by  boom yaw encoder
          * @param encoder_bp  boom pitch encoder
@@ -43,14 +43,14 @@ class Planarizer
         Planarizer(std::shared_ptr<blmc_drivers::EncoderInterface> encoder_bc,
                     std::shared_ptr<blmc_drivers::EncoderInterface> encoder_by,
                     std::shared_ptr<blmc_drivers::EncoderInterface> encoder_bp);
-        
+
         /**
          * @brief Destroy the Planarizer object
          */
         ~Planarizer(){};
 
         /**
-         * Getter 
+         * Getter
          */
         ReturnValueStatus get_measurement(const int &joint_index,
                                                     const int &measurement_index) const;
