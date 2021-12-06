@@ -17,14 +17,13 @@
 #include "monopod_sdk/blmc_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
 /**
- * @brief This class declares an interface to the motor. It allows the user to
- * access the sensors data as well as sending controls. The only control
- * supported for now is the current.
+ * @brief This class declares an interface to the encoder. It allows the user to
+ * access the encoder data.
  */
-class EncoderInterface : public DeviceInterface
+class EncoderInterface : public blmc_drivers::DeviceInterface
 {
 public:
     /**
@@ -87,7 +86,7 @@ public:
      * @param board is the MotorBoard to be used.
      * @param encoder_id is the id of the encoder on the on-board card
      */
-    Encoder(Ptr<MotorBoardInterface> board, bool encoder_id);
+    Encoder(Ptr<blmc_drivers::MotorBoardInterface> board, bool encoder_id);
 
     /**
      * @brief Destroy the Motor object
@@ -115,7 +114,7 @@ protected:
     /**
      * @brief The MotorBoard to be used for the communication.
      */
-    Ptr<MotorBoardInterface> board_;
+    Ptr<blmc_drivers::MotorBoardInterface> board_;
 
     /**
      * @brief The id of the encoder on the MotorBoard.

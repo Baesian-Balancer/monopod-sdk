@@ -1,15 +1,15 @@
 #include "monopod_sdk/monopod_drivers/monopod.hpp"
+#include "monopod_sdk/monopod_drivers/leg.hpp"
 
 namespace monopod_drivers
 {
 
-
 Monopod::Monopod(
-                    std::shared_ptr<blmc_drivers::Leg> leg,
-                    std::shared_ptr<monopod_drivers::Planarizer> planarizer)
+                    std::shared_ptr<Leg> leg,
+                    std::shared_ptr<Planarizer> planarizer)
     {
-        monopod_[monopod_drivers::Monopod::leg] = leg
-        monopod_[monopod_drivers::Monopod::planarizer] = planarizer
+        leg_ = leg;
+        planarizer_ = planarizer;
     }
 
 Monopod::~Monopod()
@@ -26,31 +26,29 @@ Monopod::ReturnValueStatus Monopod::get_position(const int joint_index)
     switch(joint_index)
     {
         case hip:
-            // TODO: Rename this? Not clear we are reading encoders with method
-            // named get_motor_measurement
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[leg]->get_motor_measurement(joint_index, Monopod::position);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return return_value_status_;
         case knee:
-            ReturnValueStatus.valid = true
-            ReturnValueStatus.value_series = monopod_[leg]->get_motor_measurement(joint_index, Monopod::position);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return return_value_status_;
         case boom_connector:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::position);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return return_value_status_;
         case boom_yaw:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::position);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return return_value_status_;
         case boom_pitch:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::position);
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
-            ReturnValueStatus.valid = false;
-            ReturnValueStatus.value_series = NULL;
-            return ReturnValueStatus
+            return_value_status_.valid = false;
+            return_value_status_.value_series = NULL;
+            return return_value_status_;
     }
 }
 
@@ -61,37 +59,35 @@ Monopod::ReturnValueStatus Monopod::get_velocity(const int joint_index)
     switch(joint_index)
     {
         case hip:
-            // TODO: Rename this? Not clear we are reading encoders with method
-            // named get_motor_measurement
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[leg]->get_motor_measurement(joint_index, Monopod::velocity);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return return_value_status_;
         case knee:
-            ReturnValueStatus.valid = true
-            ReturnValueStatus.value_series = monopod_[leg]->get_motor_measurement(joint_index, Monopod::velocity);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return return_value_status_;
         case boom_connector:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::velocity);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return return_value_status_;
         case boom_yaw:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::velocity);
-            return ReturnValueStatus
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return return_value_status_;
         case boom_pitch:
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = monopod_[planarizer]->get_measurement(joint_index, Monopod::velocity);
+            return_value_status_.valid = true;
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
-            ReturnValueStatus.valid = false;
-            ReturnValueStatus.value_series = NULL;
-            return ReturnValueStatus
+            return_value_status_.valid = false;
+            return_value_status_.value_series = NULL;
+            return return_value_status_;
     }
 }
 
-PID Monopod::get_PID()
+Monopod::PID Monopod::get_PID()
 {
-    return Monopod::PID
+    return pid_;
 }
 
 /**=======================================================================
@@ -99,27 +95,27 @@ PID Monopod::get_PID()
  */
 
 
-Monopod::ReturnValueStatus set_target_torque(const int joint_index, const double &torque_target) const
+Monopod::ReturnValueStatus Monopod::set_target_torque(const int joint_index, const double &torque_target)
 {
     switch(joint_index)
     {
         case hip:
-            monopod_[leg]->motors_[hip]->set_current_target(torque_target);
-            monopod_[leg]->motors_[hip]->send_if_input_changed();
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = torque_target;
-            return ReturnValueStatus
+            leg_->motors_[hip]->set_current_target(torque_target);
+            leg_->motors_[hip]->send_if_input_changed();
+            return_value_status_.valid = true;
+            return_value_status_.value_series = torque_target;
+            return return_value_status_;
         case knee:
-            monopod_[leg]->motors_[knee]->set_current_target(torque_target);
-            monopod_[leg]->motors_[knee]->send_if_input_changed();
-            ReturnValueStatus.valid = true;
-            ReturnValueStatus.value_series = torque_target;
-            return ReturnValueStatus
+            leg_->motors_[knee]->set_current_target(torque_target);
+            leg_->motors_[knee]->send_if_input_changed();
+            return_value_status_.valid = true;
+            return_value_status_.value_series = torque_target;
+            return return_value_status_;
         default:
             std::cout<<"Joint index not valid - must be hip or knee" << std::endl;
-            ReturnValueStatus.valid = false;
-            ReturnValueStatus.value_series = NULL;
-            return ReturnValueStatus
+            return_value_status_.valid = false;
+            return_value_status_.value_series = NULL;
+            return return_value_status_;
 
 
     }
@@ -127,9 +123,9 @@ Monopod::ReturnValueStatus set_target_torque(const int joint_index, const double
 
 void Monopod::set_PID(const double &p_value, const double &i_value, const double &d_value)
 {
-    Monopod::PID.p = p_value;
-    Monopod::PID.i = i_value;
-    Monopod::PID.d = d_value;
+    pid_.p = p_value;
+    pid_.i = i_value;
+    pid_.d = d_value;
 }
 
 

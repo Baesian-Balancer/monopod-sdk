@@ -9,17 +9,17 @@
  * @copyright Copyright (c) 2018
  *
  */
+// #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
+#include "monopod_sdk/monopod_drivers/encoder.hpp"
 
-#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
-
-namespace blmc_drivers
+namespace monopod_drivers
 {
-Encoder::Encoder(Ptr<MotorBoardInterface> board, bool encoder_id)
+Encoder::Encoder(Ptr<blmc_drivers::MotorBoardInterface> board, bool encoder_id)
     : board_(board), encoder_id_(encoder_id)
 {
 }
 
-Encoder::Ptr<const Motor::ScalarTimeseries> Motor::get_measurement(
+Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
     const int& index) const
 {
     if (encoder_id_ == 0)
@@ -27,14 +27,14 @@ Encoder::Ptr<const Motor::ScalarTimeseries> Motor::get_measurement(
         switch (index)
         {
             case current:
-                return board_->get_measurement(MotorBoardInterface::current_0);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::current_0);
             case position:
-                return board_->get_measurement(MotorBoardInterface::position_0);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::position_0);
             case velocity:
-                return board_->get_measurement(MotorBoardInterface::velocity_0);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::velocity_0);
             case encoder_index:
                 return board_->get_measurement(
-                    MotorBoardInterface::encoder_index_0);
+                    blmc_drivers::MotorBoardInterface::encoder_index_0);
         }
     }
     else
@@ -42,14 +42,14 @@ Encoder::Ptr<const Motor::ScalarTimeseries> Motor::get_measurement(
         switch (index)
         {
             case current:
-                return board_->get_measurement(MotorBoardInterface::current_1);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::current_1);
             case position:
-                return board_->get_measurement(MotorBoardInterface::position_1);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::position_1);
             case velocity:
-                return board_->get_measurement(MotorBoardInterface::velocity_1);
+                return board_->get_measurement(blmc_drivers::MotorBoardInterface::velocity_1);
             case encoder_index:
                 return board_->get_measurement(
-                    MotorBoardInterface::encoder_index_1);
+                    blmc_drivers::MotorBoardInterface::encoder_index_1);
         }
     }
 
@@ -59,7 +59,7 @@ Encoder::Ptr<const Motor::ScalarTimeseries> Motor::get_measurement(
 
 void Encoder::print() const
 {
-    MotorBoardStatus motor_board_status;
+    blmc_drivers::MotorBoardStatus motor_board_status;
     double motor_current = std::nan("");
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");
@@ -91,16 +91,11 @@ void Encoder::print() const
         motor_encoder_index = get_measurement(encoder_index)->newest_element();
     }
 
-    if (get_sent_current_target()->length() != 0)
-    {
-        motor_sent_current_target = get_sent_current_target()->newest_element();
-    }
-
     rt_printf("motor board status: ");
     rt_printf("enabled: %d ", motor_board_status.system_enabled);
     rt_printf("error_code: %d ", motor_board_status.error_code);
     rt_printf("motor status: ");
-    if (motor_id_ == 0)
+    if (encoder_id_ == 0)
     {
         rt_printf("enabled: %d ", motor_board_status.motor1_enabled);
         rt_printf("ready: %d ", motor_board_status.motor1_ready);
