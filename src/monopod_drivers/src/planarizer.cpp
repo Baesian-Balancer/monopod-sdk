@@ -19,9 +19,10 @@ namespace monopod_drivers
     template <typename Type>
     using Ptr = std::shared_ptr<Type>;
     
-    Planarizer::Planarizer(std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bc,
+    Planarizer::Planarizer(
             std::shared_ptr<monopod_drivers::EncoderInterface> encoder_by,
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp)
+            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp,
+            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bc)
     {
         encoders_[Monopod::JointNameIndexing::boom_connector] = encoder_bc;
         encoders_[Monopod::JointNameIndexing::boom_yaw] = encoder_by;

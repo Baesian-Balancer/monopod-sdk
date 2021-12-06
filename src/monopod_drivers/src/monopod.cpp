@@ -44,10 +44,11 @@ Monopod::ReturnValueStatus Monopod::get_position(const int joint_index)
         case boom_pitch:
             return_value_status_.valid = true;
             return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return return_value_status_;
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
             return_value_status_.valid = false;
-            return_value_status_.value_series = NULL;
+            return_value_status_.value_series = NAN;
             return return_value_status_;
     }
 }
@@ -77,10 +78,11 @@ Monopod::ReturnValueStatus Monopod::get_velocity(const int joint_index)
         case boom_pitch:
             return_value_status_.valid = true;
             return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return return_value_status_;
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
             return_value_status_.valid = false;
-            return_value_status_.value_series = NULL;
+            return_value_status_.value_series = NAN;
             return return_value_status_;
     }
 }
@@ -114,7 +116,7 @@ Monopod::ReturnValueStatus Monopod::set_target_torque(const int joint_index, con
         default:
             std::cout<<"Joint index not valid - must be hip or knee" << std::endl;
             return_value_status_.valid = false;
-            return_value_status_.value_series = NULL;
+            return_value_status_.value_series = NAN;
             return return_value_status_;
 
 
