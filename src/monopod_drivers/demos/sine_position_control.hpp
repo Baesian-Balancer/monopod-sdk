@@ -24,10 +24,11 @@ public:
     /**
      * @brief Construct a new SinePositionControl object.
      *
-     * @param motor_slider_pairs
+     * @param leg
      */
     SinePositionControl(Leg_ptr leg)
     {
+        leg_ = leg;
         encoders_.clear();
         velocities_.clear();
         currents_.clear();
@@ -115,6 +116,8 @@ private:
      * @brief memory_buffer_size_ is the max size of the memory buffer.
      */
     unsigned memory_buffer_size_;
+
+    Leg_ptr leg_;
 
     /**
      * @brief Encoder data

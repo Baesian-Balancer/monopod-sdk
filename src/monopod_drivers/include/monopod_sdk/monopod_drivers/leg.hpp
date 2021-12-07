@@ -146,8 +146,8 @@ public:
      * @param hip_motor is the pointer to the hip motor
      * @param knee_motor is the pointer to the knee motor
      */
-    Leg(std::shared_ptr<blmc_drivers::MotorInterface> hip_motor,
-        std::shared_ptr<blmc_drivers::MotorInterface> knee_motor)
+    Leg(std::shared_ptr<blmc_drivers::SafeMotor> hip_motor,
+        std::shared_ptr<blmc_drivers::SafeMotor> knee_motor)
     {
         motors_[hip] = hip_motor;
         motors_[knee] = knee_motor;
@@ -208,7 +208,7 @@ public:
      * @brief This list contains pointers to two motors. This motors are
      * respectively the hip and the knee of the leg.
      */
-    std::array<std::shared_ptr<blmc_drivers::MotorInterface>, 2> motors_;
+    std::array<std::shared_ptr<blmc_drivers::SafeMotor>, 2> motors_;
 
 };
 

@@ -60,10 +60,11 @@ int main(int, char **)
     rt_printf("motors are set up \n");
 
     auto leg = std::make_shared<Leg>(motor_hip, motor_knee);
+    
     rt_printf("leg is set up \n");
 
     // construct a simple PD controller.
-    blmc_drivers::SinePositionControl controller(leg);
+    SinePositionControl controller(leg);
 
     rt_printf("controllers are set up \n");
 
