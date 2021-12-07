@@ -7,6 +7,7 @@
 #include <signal.h>
 #include <atomic>
 #include "sine_position_control.hpp"
+#include "monopod_sdk/monopod_drivers/leg.hpp"
 
 /**
  * @brief This boolean is here to kill cleanly the application upon ctrl+c

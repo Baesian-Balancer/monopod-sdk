@@ -1,6 +1,6 @@
 
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
-#include <monopod_sdk/monopod.hpp>
+// #include <monopod_sdk/monopod.hpp>
 // This is not imported because it should not be a connected graph for imports.
 // Monopod in the parent to leg and planarizer. this means it should not be imported lower down... that should be
 // invariant.
@@ -27,9 +27,9 @@ namespace monopod_drivers
             std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp,
             std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bc)
     {
-        encoders_[Monopod::JointNameIndexing::boom_connector] = encoder_bc;
-        encoders_[Monopod::JointNameIndexing::boom_yaw] = encoder_by;
-        encoders_[Monopod::JointNameIndexing::boom_pitch] = encoder_bp;
+        encoders_[boom_connector] = encoder_bc;
+        encoders_[boom_yaw] = encoder_by;
+        encoders_[boom_pitch] = encoder_bp;
     }
 
     Ptr<const ScalarTimeseries> Planarizer::get_measurement(const int &joint_index,
