@@ -129,4 +129,4 @@ void SinePositionControl::stop_loop()
     rt_printf("dumped the trajectory");
 }
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

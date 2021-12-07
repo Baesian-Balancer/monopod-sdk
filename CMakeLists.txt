@@ -9,6 +9,16 @@ set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_EXTENSIONS OFF)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+# Find Usual dependencies.
+find_package(mpi_cmake_modules REQUIRED)
+find_package(real_time_tools REQUIRED)
+find_package(time_series REQUIRED)
+find_package(Eigen3 REQUIRED)
+find_package(rt REQUIRED)
+find_package(Threads REQUIRED)
+# Check for xenomai as these drivers are xenomai compatible.
+find_package(Xenomai QUIET)
+
 # Include useful features
 include(GNUInstallDirs)
 

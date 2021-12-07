@@ -2,13 +2,12 @@
 #pragma once
 
 #include <time_series/time_series.hpp>
-#include "monopod_sdk/monopod_drivers/planarizer.hpp"
-#include <monopod_sdk/monopod_drivers/leg.hpp>
+#include <monopod_sdk/monopod_drivers/planarizer.hpp>
 
 /**
  * @brief The Monopod class defines the API for interacting with the Baesian
- * monopod. It takes a leg 
- * 
+ * monopod. It takes a leg
+ *
  */
 namespace monopod_drivers
 {
@@ -36,7 +35,7 @@ namespace monopod_drivers
         };
 
         /**
-             * @brief Enumerates the joint names for indexing 
+             * @brief Enumerates the joint names for indexing
              */
         enum JointNameIndexing
         {
@@ -49,7 +48,7 @@ namespace monopod_drivers
         /**
              * @brief MotorMeasurementIndexing this enum allow to access the different
              * kind of sensor measurements in an understandable way in the code.
-             * 
+             *
              * Note: This is same as in leg.hpp for consistency
              */
         enum MotorMeasurementIndexing
@@ -80,7 +79,7 @@ namespace monopod_drivers
         };
         /**
              * @brief Construct a new Monopod object
-             * 
+             *
              * @param leg is the pointer to the leg
              * @param planarizer is the pointer to the planarizer
              */
@@ -98,7 +97,7 @@ namespace monopod_drivers
 
         /**
              * @brief Get the position of joint
-             * 
+             *
              * @param joint_index name of the joint we want to access
              * @return ReturnValueStatus containing a valid boolean and the
              * value of the position (NULL if not valid)
@@ -107,7 +106,7 @@ namespace monopod_drivers
 
         /**
              * @brief Get the velocity of the joint
-             * 
+             *
              * @param joint_index name of the joint we want to access
              * @return ReturnValueStatus containing a valid boolean and the
              * value of the velocity (NULL if not valid)
@@ -116,7 +115,7 @@ namespace monopod_drivers
 
         /**
              * @brief Get the acceleration of the joint
-             * 
+             *
              * @param joint_index name of the joint we want to access
              * @return ReturnValueStatus containing a valid boolean and the
              * value of the acceleration (NULL if not valid)
@@ -125,8 +124,8 @@ namespace monopod_drivers
 
         /**
              * @brief Get the PID values
-             * 
-             * @param joint_index 
+             *
+             * @param joint_index
              * @return PID struct containing PID values
              */
         PID get_PID();
@@ -137,22 +136,22 @@ namespace monopod_drivers
 
         /**
              * @brief Set the PID values
-             * 
+             *
              */
         void set_PID(const double &p_value, const double &i_value, const double &d_value);
 
         /**
              * @brief Set the target torque and send command to monopod if value is different from
              * previous target_torque
-             * 
-             * @param joint_index 
-             * @param torque_target 
+             *
+             * @param joint_index
+             * @param torque_target
              * @return ReturnValueStatus containing a valid boolean and the
              * value of the torque (NULL if not valid)
              */
         ReturnValueStatus set_target_torque(const int joint_index, const double &torque_target);
 
-    
+
     private:
         // std::array<std::shared_ptr<MonopodSubInterface>, 2> monopod_;
         std::shared_ptr<Leg> leg_;

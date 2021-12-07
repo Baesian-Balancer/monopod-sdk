@@ -6,6 +6,7 @@
 
 #include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/leg.hpp"
 
 namespace monopod_drivers
 {
@@ -147,4 +148,4 @@ private:
 
 };  // end class SinePositionControl definition
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

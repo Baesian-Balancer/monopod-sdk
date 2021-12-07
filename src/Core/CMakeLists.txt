@@ -3,12 +3,12 @@
 # =========
 
 set(MONOPOD_SDK_CORE_PUBLIC_HDRS
-
+    include/monopod_sdk/monopod.hpp
 )
 
 add_library(MonopodSdkCore
     ${MONOPOD_SDK_CORE_PUBLIC_HDRS}
-
+    src/monopod.cpp
   )
 
 add_library(MonopodSdkCore::MonopodSdkCore ALIAS MonopodSdkCore)
@@ -21,10 +21,12 @@ set_target_properties(MonopodSdkCore PROPERTIES
     PUBLIC_HEADER "${MONOPOD_SDK_CORE_PUBLIC_HDRS}")
 
 
-# target_link_libraries(blmc_drivers real_time_tools::real_time_tools)
-# target_link_libraries(blmc_drivers time_series::time_series)
-# target_link_libraries(blmc_drivers Eigen3::Eigen)
-# target_link_libraries(blmc_drivers Threads::Threads)
+target_link_libraries(MonopodSdkCore real_time_tools::real_time_tools)
+target_link_libraries(MonopodSdkCore time_series::time_series)
+target_link_libraries(MonopodSdkCore Eigen3::Eigen)
+target_link_libraries(MonopodSdkCore Threads::Threads)
+target_link_libraries(MonopodSdkCore MonopodDrivers)
+target_link_libraries(MonopodSdkCore blmc_drivers)
 
 
 install(

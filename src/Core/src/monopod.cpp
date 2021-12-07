@@ -1,12 +1,10 @@
-#include "monopod_sdk/monopod_drivers/monopod.hpp"
-#include "monopod_sdk/monopod_drivers/leg.hpp"
+#include "monopod_sdk/monopod.hpp"
+#include <monopod_sdk/monopod_drivers/leg.hpp>
 
 namespace monopod_drivers
 {
 
-Monopod::Monopod(
-                    std::shared_ptr<Leg> leg,
-                    std::shared_ptr<Planarizer> planarizer)
+Monopod::Monopod(std::shared_ptr<Leg> leg, std::shared_ptr<Planarizer> planarizer)
     {
         leg_ = leg;
         planarizer_ = planarizer;

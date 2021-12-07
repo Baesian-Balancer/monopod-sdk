@@ -59,7 +59,7 @@ class Planarizer
                                                     const int &measurement_index) const;
     private:
         std::array<std::shared_ptr<EncoderInterface>, 3> encoders_;
-        
+
 
 };
 } // end monopod_drivers namespace

@@ -1,6 +1,9 @@
 
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
-#include "monopod_sdk/monopod_drivers/monopod.hpp"
+#include <monopod_sdk/monopod.hpp>
+// This is not imported because it should not be a connected graph for imports.
+// Monopod in the parent to leg and planarizer. this means it should not be imported lower down... that should be
+// invariant.
 
 
 namespace monopod_drivers
@@ -18,7 +21,7 @@ namespace monopod_drivers
      */
     template <typename Type>
     using Ptr = std::shared_ptr<Type>;
-    
+
     Planarizer::Planarizer(
             std::shared_ptr<monopod_drivers::EncoderInterface> encoder_by,
             std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp,

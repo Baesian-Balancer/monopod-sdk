@@ -2,16 +2,6 @@
 # Blmc Drivers
 # =========
 
-# Usual dependencies.
-find_package(mpi_cmake_modules REQUIRED)
-find_package(real_time_tools REQUIRED)
-find_package(time_series REQUIRED)
-find_package(Eigen3 REQUIRED)
-find_package(rt REQUIRED)
-find_package(Threads REQUIRED)
-# Check for xenomai as these drivers are xenomai compatible.
-find_package(Xenomai QUIET)
-
 if(Xenomai_FOUND)
   add_definitions(${Xenomai_DEFINITIONS})
 endif()
@@ -20,7 +10,6 @@ set(BLMC_DRIVERS_PUBLIC_HDRS
     include/monopod_sdk/blmc_drivers/devices/analog_sensor.hpp
     include/monopod_sdk/blmc_drivers/devices/can_bus.hpp
     include/monopod_sdk/blmc_drivers/devices/device_interface.hpp
-    include/monopod_sdk/blmc_drivers/devices/leg.hpp
     include/monopod_sdk/blmc_drivers/devices/motor_board.hpp
     include/monopod_sdk/blmc_drivers/devices/motor.hpp
     include/monopod_sdk/blmc_drivers/utils/polynome.hpp
@@ -98,7 +87,6 @@ add_demo(demo_sine_torque_1_motor)
 add_demo(demo_sine_position_1_motor)
 add_demo(demo_const_torque_1_motor)
 add_demo(demo_single_board)
-add_demo(demo_leg)
 add_demo(demo_2_motors)
 add_demo(demo_1_motor_print_everything)
 add_demo(demo_1_motor)
@@ -124,5 +112,5 @@ install_basic_package_files(blmc_drivers
     NAMESPACE blmc_drivers::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/monopod_sdk/blmc_drivers
+    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/blmc_drivers
 )
