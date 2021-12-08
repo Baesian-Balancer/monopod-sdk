@@ -59,12 +59,12 @@ int main(int, char **)
 
     rt_printf("motors are set up \n");
 
-    auto leg = std::make_shared<Leg>(motor_hip, motor_knee);
-    
+    auto leg = std::make_shared<monopod_drivers::Leg>(motor_hip, motor_knee);
+
     rt_printf("leg is set up \n");
 
     // construct a simple PD controller.
-    SinePositionControl controller(leg);
+    monopod_drivers::SinePositionControl controller(monopod_drivers::Leg);
 
     rt_printf("controllers are set up \n");
 

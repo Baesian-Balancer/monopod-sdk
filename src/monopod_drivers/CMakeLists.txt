@@ -70,7 +70,7 @@ macro(add_demo demo_name)
 endmacro()
 
 add_demo(demo_leg_sine_position)
-add_demo(demo_leg)
+# add_demo(demo_leg)
 add_demo(demo_planarizer)
 
 # ===============================

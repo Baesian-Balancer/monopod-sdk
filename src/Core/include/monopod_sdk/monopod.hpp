@@ -3,6 +3,7 @@
 
 #include <time_series/time_series.hpp>
 #include <monopod_sdk/monopod_drivers/planarizer.hpp>
+#include <monopod_sdk/monopod_drivers/leg.hpp>
 
 /**
  * @brief The Monopod class defines the API for interacting with the Baesian
