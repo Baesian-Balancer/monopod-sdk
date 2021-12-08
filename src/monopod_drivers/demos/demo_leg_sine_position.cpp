@@ -64,7 +64,7 @@ int main(int, char **)
     rt_printf("leg is set up \n");
 
     // construct a simple PD controller.
-    monopod_drivers::SinePositionControl controller(monopod_drivers::Leg);
+    monopod_drivers::SinePositionControl controller(leg);
 
     rt_printf("controllers are set up \n");
 

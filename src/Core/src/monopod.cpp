@@ -1,5 +1,4 @@
 #include "monopod_sdk/monopod.hpp"
-#include <monopod_sdk/monopod_drivers/leg.hpp>
 
 namespace monopod_drivers
 {
@@ -25,23 +24,23 @@ Monopod::ReturnValueStatus Monopod::get_position(const int joint_index)
     {
         case hip:
             return_value_status_.valid = true;
-            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return_value_status_.value_series = leg_->get_measurement(joint_index, position)->newest_element();
             return return_value_status_;
         case knee:
             return_value_status_.valid = true;
-            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return_value_status_.value_series = leg_->get_measurement(joint_index, position)->newest_element();
             return return_value_status_;
         case boom_connector:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, position)->newest_element();
             return return_value_status_;
         case boom_yaw:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, position)->newest_element();
             return return_value_status_;
         case boom_pitch:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::position)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, position)->newest_element();
             return return_value_status_;
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
@@ -59,23 +58,23 @@ Monopod::ReturnValueStatus Monopod::get_velocity(const int joint_index)
     {
         case hip:
             return_value_status_.valid = true;
-            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return_value_status_.value_series = leg_->get_measurement(joint_index, velocity)->newest_element();
             return return_value_status_;
         case knee:
             return_value_status_.valid = true;
-            return_value_status_.value_series = leg_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return_value_status_.value_series = leg_->get_measurement(joint_index, velocity)->newest_element();
             return return_value_status_;
         case boom_connector:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, velocity)->newest_element();
             return return_value_status_;
         case boom_yaw:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, velocity)->newest_element();
             return return_value_status_;
         case boom_pitch:
             return_value_status_.valid = true;
-            return_value_status_.value_series = planarizer_->get_measurement(joint_index, Monopod::velocity)->newest_element();
+            return_value_status_.value_series = planarizer_->get_measurement(joint_index, velocity)->newest_element();
             return return_value_status_;
         default:
             std::cout<<"Passed joint index not valid - not part of monopod" << std::endl;
