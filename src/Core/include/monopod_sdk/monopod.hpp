@@ -131,6 +131,8 @@ namespace monopod_drivers
              */
         PID get_PID();
 
+        std::vector<std::string> get_joint_indexing() const;
+
         /**
              * Setters
              */
@@ -151,6 +153,8 @@ namespace monopod_drivers
              * value of the torque (NULL if not valid)
              */
         ReturnValueStatus set_target_torque(const int joint_index, const double &torque_target);
+
+        const std::vector<std::string> joint_str_indexer{"hip", "knee", "boom_connector", "boom_yaw", "boom_pitch"};
 
 
     private:

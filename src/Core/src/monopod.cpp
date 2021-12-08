@@ -89,6 +89,11 @@ Monopod::PID Monopod::get_PID()
     return pid_;
 }
 
+std::vector<std::string> Monopod::get_joint_indexing() const
+{
+    return joint_str_indexer;
+}
+
 /**=======================================================================
  * Setters
  */
