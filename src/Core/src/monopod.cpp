@@ -53,6 +53,44 @@ Monopod::~Monopod()
 /**================================================================================
  * Getters
  */
+
+/**
+ * @brief Returns all the data in an unordered map. Key is a joint
+ * in joint_str_indexer, value is a vector containing pos, vel, accel, torq,
+ * in that order
+ * 
+ * @return std::unordered_map<std::string, std::vector<double>> 
+ */
+std::unordered_map<std::string, std::vector<double>> Monopod::get_measurements()
+{
+    std::unordered_map<std::string, std::vector<double>> joint_dataframe;
+
+    for(int i = 0; i < joint_str_indexer.size(); i++)
+    {
+        std::vector<double> joint_data;
+        std::string joint_string = joint_str_indexer[i];
+
+        // get all data
+        //
+        // TODO: implement accel
+        if (i == hip || i == knee)
+        {
+            double pos = leg_->get_measurement(i, position)->newest_element();
+            double vel = leg_->get_measurement(i, velocity)->newest_element();
+            double curr = leg_->get_measurement(i, current)->newest_element();
+            joint_data.insert(joint_data.end(), {pos, vel, curr});
+        }
+        else
+        {
+            double pos = planarizer_->get_measurement(i, position)->newest_element();
+            double vel = planarizer_->get_measurement(i, velocity)->newest_element();
+            joint_data.insert(joint_data.end(), {pos, vel});
+        }  
+        joint_dataframe[joint_string] = joint_data;  
+    }
+    return joint_dataframe;
+}
+
 Monopod::ReturnValueStatus Monopod::get_position(const int joint_index)
 {
     // if joint_index is equal to hip or knee use leg, if equal to boom_connector
@@ -121,6 +159,30 @@ Monopod::ReturnValueStatus Monopod::get_velocity(const int joint_index)
     }
 }
 
+
+Monopod::ReturnValueStatus Monopod::get_current(const int joint_index)
+{
+    // if joint_index is equal to hip or knee use leg, if equal to boom_connector
+    // boom_yaw or boom_pitch use planarizer
+    switch(joint_index)
+    {
+        case hip:
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, current)->newest_element();
+            return return_value_status_;
+        case knee:
+            return_value_status_.valid = true;
+            return_value_status_.value_series = leg_->get_measurement(joint_index, current)->newest_element();
+            return return_value_status_;
+        default:
+            std::cout<<"Non-valid joint index for current - must be hip or knee" << std::endl;
+            return_value_status_.valid = false;
+            return_value_status_.value_series = NAN;
+            return return_value_status_;
+    }
+}
+
+
 Monopod::PID Monopod::get_PID()
 {
     return pid_;
@@ -131,9 +193,10 @@ std::vector<std::string> Monopod::get_joint_indexing() const
     return joint_str_indexer;
 }
 
+
 /**=======================================================================
  * Setters
- */
+*/
 
 
 Monopod::ReturnValueStatus Monopod::set_target_torque(const int joint_index, const double &torque_target)
