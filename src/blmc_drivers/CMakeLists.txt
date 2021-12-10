@@ -3,52 +3,13 @@ if(Xenomai_FOUND)
 endif()
 
 # ================
-# Blmc Drivers / Devices
-# ================
-
-set(BLMC_DEVICES_PUBLIC_HDRS
-    include/monopod_sdk/blmc_drivers/devices/analog_sensor.hpp
-    include/monopod_sdk/blmc_drivers/devices/can_bus.hpp
-    include/monopod_sdk/blmc_drivers/devices/device_interface.hpp
-    include/monopod_sdk/blmc_drivers/devices/motor_board.hpp
-    include/monopod_sdk/blmc_drivers/devices/motor.hpp
-    )
-
-add_library(devices
-            ${BLMC_DRIVERS_PUBLIC_HDRS}
-             src/analog_sensors.cpp
-             src/can_bus.cpp
-             src/motor_board.cpp
-             src/motor.cpp)
-add_library(blmc_drivers::devices ALIAS devices)
-
-target_include_directories(devices INTERFACE
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
-
-add_dependencies(devices rt::rt)
-target_link_libraries( devices
-    PUBLIC
-    real_time_tools::real_time_tools
-    time_series::time_series
-    Eigen3::Eigen
-    Threads::Threads)
-# If on xenomai we need to link to the real time os librairies.
-if(Xenomai_FOUND)
-  target_link_libraries(devices ${Xenomai_LIBRARY_XENOMAI}
-                        ${Xenomai_LIBRARY_NATIVE} ${Xenomai_LIBRARY_RTDM})
-endif()
-
-set_target_properties(devices PROPERTIES
-    PUBLIC_HEADER "${BLMC_DEVICES_PUBLIC_HDRS}")
-
-
-# ================
 # Blmc Drivers / Utils
 # ================
 
 set(BLMC_UTILS_PUBLIC_HDRS
     include/monopod_sdk/blmc_drivers/utils/polynome.hpp
+    include/monopod_sdk/blmc_drivers/utils/polynome.hxx
+    include/monopod_sdk/blmc_drivers/utils/os_interface.hpp
     )
 
 add_library(utils
@@ -57,11 +18,12 @@ add_library(utils
 
 add_library(blmc_drivers::utils ALIAS utils)
 
-target_include_directories(utils INTERFACE
+target_include_directories(utils PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
 
 add_dependencies(utils rt::rt)
+
 target_link_libraries( utils
     PUBLIC
     real_time_tools::real_time_tools
@@ -101,6 +63,15 @@ endif()
 
 add_library(blmc_drivers::blmc_drivers ALIAS blmc_drivers)
 
+add_dependencies(blmc_drivers rt::rt)
+
+target_link_libraries( blmc_drivers
+    PUBLIC
+    real_time_tools::real_time_tools
+    time_series::time_series
+    Eigen3::Eigen
+    Threads::Threads)
+
 target_include_directories(blmc_drivers PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
@@ -108,6 +79,47 @@ target_include_directories(blmc_drivers PUBLIC
 set_target_properties(blmc_drivers PROPERTIES
     PUBLIC_HEADER "${BLMC_DRIVERS_PUBLIC_HDRS}")
 
+
+# ================
+# Blmc Drivers / Devices
+# ================
+
+set(BLMC_DEVICES_PUBLIC_HDRS
+    include/monopod_sdk/blmc_drivers/devices/analog_sensor.hpp
+    include/monopod_sdk/blmc_drivers/devices/can_bus.hpp
+    include/monopod_sdk/blmc_drivers/devices/device_interface.hpp
+    include/monopod_sdk/blmc_drivers/devices/motor_board.hpp
+    include/monopod_sdk/blmc_drivers/devices/motor.hpp
+    )
+
+add_library(devices
+            ${BLMC_DEVICES_PUBLIC_HDRS}
+             src/analog_sensors.cpp
+             src/can_bus.cpp
+             src/motor_board.cpp
+             src/motor.cpp)
+add_library(blmc_drivers::devices ALIAS devices)
+
+target_include_directories(devices PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
+
+add_dependencies(devices rt::rt)
+target_link_libraries( devices
+    PUBLIC
+    utils
+    real_time_tools::real_time_tools
+    time_series::time_series
+    Eigen3::Eigen
+    Threads::Threads)
+# If on xenomai we need to link to the real time os librairies.
+if(Xenomai_FOUND)
+  target_link_libraries(devices ${Xenomai_LIBRARY_XENOMAI}
+                        ${Xenomai_LIBRARY_NATIVE} ${Xenomai_LIBRARY_RTDM})
+endif()
+
+set_target_properties(devices PROPERTIES
+    PUBLIC_HEADER "${BLMC_DEVICES_PUBLIC_HDRS}")
 
 # ===========================
 # Manage Exectuables
@@ -118,6 +130,8 @@ add_executable(can_encoder_index_test
 )
 target_link_libraries(can_encoder_index_test
     blmc_drivers
+    utils
+    devices
 )
 
 set(misc_targets)
@@ -133,7 +147,10 @@ macro(add_demo demo_name)
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
            $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
          $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
-  target_link_libraries(${demo_name} blmc_drivers)
+  target_link_libraries(${demo_name}
+                        blmc_drivers
+                        utils
+                        devices)
   list(APPEND misc_targets ${demo_name})
 endmacro()
 

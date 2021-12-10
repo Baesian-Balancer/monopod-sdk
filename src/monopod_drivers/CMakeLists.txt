@@ -35,6 +35,8 @@ add_dependencies(MonopodDrivers rt::rt)
 target_link_libraries( MonopodDrivers
     PUBLIC
     blmc_drivers::blmc_drivers
+    blmc_drivers::devices
+    blmc_drivers::utils
     PRIVATE
     real_time_tools::real_time_tools
     time_series::time_series)
@@ -50,7 +52,7 @@ target_include_directories(MonopodDrivers PUBLIC
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
 
 set_target_properties(MonopodDrivers PROPERTIES
-PUBLIC_HEADER "${MONOPOD_DRIVERS_PUBLIC_HDRS}")
+    PUBLIC_HEADER "${MONOPOD_DRIVERS_PUBLIC_HDRS}")
 
 # ===============================
 # Demos
