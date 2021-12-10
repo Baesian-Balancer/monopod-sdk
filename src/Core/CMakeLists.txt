@@ -21,13 +21,15 @@ set_target_properties(MonopodSdkCore PROPERTIES
     PUBLIC_HEADER "${MONOPOD_SDK_CORE_PUBLIC_HDRS}")
 
 
-target_link_libraries(MonopodSdkCore real_time_tools::real_time_tools)
-target_link_libraries(MonopodSdkCore time_series::time_series)
-target_link_libraries(MonopodSdkCore Eigen3::Eigen)
-target_link_libraries(MonopodSdkCore Threads::Threads)
-target_link_libraries(MonopodSdkCore MonopodDrivers)
-target_link_libraries(MonopodSdkCore blmc_drivers)
-
+target_link_libraries( MonopodSdkCore
+    PUBLIC
+    blmc_drivers::blmc_drivers
+    MonopodDrivers::MonopodDrivers
+    PRIVATE
+    time_series::time_series
+    real_time_tools::real_time_tools
+    Eigen3::Eigen
+    Threads::Threads)
 
 install(
     TARGETS
@@ -44,6 +46,7 @@ install_basic_package_files(MonopodSdkCore
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
     EXPORT MonopodSdkCoreExport
+    DEPENDENCIES blmc_drivers MonopodDrivers real_time_tools time_series
     NAMESPACE MonopodSdkCore::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION

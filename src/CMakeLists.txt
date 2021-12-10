@@ -1,10 +1,8 @@
 # ==============
 # Find Monopod SDK dependencies
 # ==============
-set(MONOPODSDK_COMPONENTS Core blmc_drivers MonopodDrivers)
-
-# set(MONOPODSDK_PRIVATE_DEPENDENCIES pybind11 Eigen3 mpi_cmake_modules
-#     real_time_tools signal_handler shared_memory time_series)
+set(MONOPODSDK_COMPONENTS MonopodSdkCore blmc_drivers MonopodDrivers)
+set(MONOPODSDK_PRIVATE_DEPENDENCIES time_series real_time_tools)
 
 add_subdirectory(blmc_drivers)
 add_subdirectory(monopod_drivers)

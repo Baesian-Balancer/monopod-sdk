@@ -130,9 +130,9 @@ namespace monopod_drivers
       ReturnValueStatus get_acceleration(const int joint_index);
 
       /**
-       * @brief Get the current 
-       * 
-       * @param joint_index 
+       * @brief Get the current
+       *
+       * @param joint_index
       * @return ReturnValueStatus containing a valid boolean and the
       * value of the current (NULL if not valid)
        */
@@ -148,15 +148,15 @@ namespace monopod_drivers
 
       /**
        * @brief Get a list of joint strings ordered by index
-       * 
+       *
        * @return vector of joint strings
        */
       std::vector<std::string> get_joint_indexing() const;
 
       /**
        * @brief Get the measurements object
-       * 
-       * @return unordered_map<string, double> for joints 
+       *
+       * @return unordered_map<string, double> for joints
        */
       std::unordered_map<std::string, std::vector<double>> get_measurements();
 

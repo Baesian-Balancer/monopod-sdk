@@ -24,7 +24,7 @@ Monopod::Monopod()
         std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus2);
     auto motor_board3=
         std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus3);
-    
+
     // Connect leg motors to motor_board1
     auto motor_hip = std::make_shared<blmc_drivers::SafeMotor>(motor_board1, 0);
     auto motor_knee = std::make_shared<blmc_drivers::SafeMotor>(motor_board1, 1);
@@ -35,7 +35,7 @@ Monopod::Monopod()
         std::make_shared<monopod_drivers::Encoder>(motor_board2, 0);
     auto encoder_bp =
         std::make_shared<monopod_drivers::Encoder>(motor_board2, 1);
-    auto encoder_bc = 
+    auto encoder_bc =
         std::make_shared<monopod_drivers::Encoder>(motor_board3, 0);
 
 
@@ -58,14 +58,14 @@ Monopod::~Monopod()
  * @brief Returns all the data in an unordered map. Key is a joint
  * in joint_str_indexer, value is a vector containing pos, vel, accel, torq,
  * in that order
- * 
- * @return std::unordered_map<std::string, std::vector<double>> 
+ *
+ * @return std::unordered_map<std::string, std::vector<double>>
  */
 std::unordered_map<std::string, std::vector<double>> Monopod::get_measurements()
 {
     std::unordered_map<std::string, std::vector<double>> joint_dataframe;
 
-    for(int i = 0; i < joint_str_indexer.size(); i++)
+    for(long unsigned int i = 0; i < joint_str_indexer.size(); i++)
     {
         std::vector<double> joint_data;
         std::string joint_string = joint_str_indexer[i];
@@ -85,8 +85,8 @@ std::unordered_map<std::string, std::vector<double>> Monopod::get_measurements()
             double pos = planarizer_->get_measurement(i, position)->newest_element();
             double vel = planarizer_->get_measurement(i, velocity)->newest_element();
             joint_data.insert(joint_data.end(), {pos, vel});
-        }  
-        joint_dataframe[joint_string] = joint_data;  
+        }
+        joint_dataframe[joint_string] = joint_data;
     }
     return joint_dataframe;
 }

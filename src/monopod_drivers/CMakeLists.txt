@@ -32,9 +32,12 @@ endif()
 
 # Link the catkin dependencies.
 add_dependencies(MonopodDrivers rt::rt)
-target_link_libraries(MonopodDrivers real_time_tools::real_time_tools)
-target_link_libraries(MonopodDrivers time_series::time_series)
-target_link_libraries(MonopodDrivers blmc_drivers::blmc_drivers)
+target_link_libraries( MonopodDrivers
+    PUBLIC
+    blmc_drivers::blmc_drivers
+    PRIVATE
+    real_time_tools::real_time_tools
+    time_series::time_series)
 
 # ===============================
 # Build Library
@@ -92,6 +95,7 @@ install_basic_package_files(MonopodDrivers
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
     EXPORT MonopodDriversExport
+    DEPENDENCIES blmc_drivers real_time_tools time_series
     NAMESPACE MonopodDrivers::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
