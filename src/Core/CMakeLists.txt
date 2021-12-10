@@ -24,6 +24,8 @@ set_target_properties(MonopodSdkCore PROPERTIES
 target_link_libraries( MonopodSdkCore
     PUBLIC
     blmc_drivers::blmc_drivers
+    blmc_drivers::devices
+    blmc_drivers::utils
     MonopodDrivers::MonopodDrivers
     PRIVATE
     time_series::time_series
