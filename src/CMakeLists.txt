@@ -6,7 +6,7 @@ set(MONOPODSDK_PRIVATE_DEPENDENCIES time_series real_time_tools)
 
 add_subdirectory(blmc_drivers)
 add_subdirectory(monopod_drivers)
-add_subdirectory(Core)
+add_subdirectory(core)
 
 # Dummy meta target for the top-level EXPORT
 add_library(MonopodSdk INTERFACE)

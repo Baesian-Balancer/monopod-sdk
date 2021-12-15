@@ -1,0 +1,14 @@
+!_TAG_FILE_FORMAT	2	/extended format; --format=1 will not append ;" to lines/
+!_TAG_FILE_SORTED	0	/0=unsorted, 1=sorted, 2=foldcase/
+!_TAG_PROGRAM_AUTHOR	Darren Hiebert	/dhiebert@users.sourceforge.net/
+!_TAG_PROGRAM_NAME	Exuberant Ctags	//
+!_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
+!_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+monopod_drivers	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^namespace monopod_drivers$/;"	namespace	line:3	file:
+Monopod	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^Monopod::Monopod()$/;"	function	line:10	class:monopod_drivers::Monopod	signature:()
+~Monopod	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^Monopod::~Monopod()$/;"	function	line:15	class:monopod_drivers::Monopod	signature:()
+initialize	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^bool Monopod::initialize()$/;"	function	line:21	class:monopod_drivers::Monopod	signature:()
+start_loop	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^void Monopod::start_loop()$/;"	function	line:26	class:monopod_drivers::Monopod	signature:()
+set_torque_target	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^bool Monopod::set_torque_target(const double &torque_target, const int joint_index)$/;"	function	line:31	class:monopod_drivers::Monopod	signature:(const double &torque_target, const int joint_index)
+set_torque_targets	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes)$/;"	function	line:51	class:monopod_drivers::Monopod	signature:(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes)
+loop	/home/capstone/Documents/Repos/monopod_sdk/src/core/src/monopod.cpp	/^void Monopod::loop()$/;"	function	line:111	class:monopod_drivers::Monopod	signature:()

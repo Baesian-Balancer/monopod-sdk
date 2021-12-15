@@ -38,10 +38,15 @@ int main(int, char**)
 
     monopod.start_loop();
     rt_printf("loops have started \n");
-
+    double x = 0;
     while (!StopDemos)
     {
-        real_time_tools::Timer::sleep_sec(0.001);
+        real_time_tools::Timer::sleep_sec(1);
+
+        // monopod.set_torque_target(x, 0);
+        // monopod.set_torque_target(x + 0.69, 1);
+        monopod.set_torque_targets({x, x + 1});
+        x++;
     }
 
     return 0;
