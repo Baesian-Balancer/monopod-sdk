@@ -59,7 +59,7 @@ set_target_properties(MonopodDrivers PROPERTIES
 # ===============================
 
 set(misc_targets)
-list(APPEND misc_targets can_encoder_index_test)
+list(APPEND misc_targets)
 macro(add_demo demo_name)
   add_executable(
     ${demo_name}

@@ -1,202 +1,73 @@
+#include <math.h>
+#include "real_time_tools/spinner.hpp"
+#include "real_time_tools/timer.hpp"
 
-#pragma once
-
-#include <time_series/time_series.hpp>
-#include <monopod_sdk/monopod_drivers/planarizer.hpp>
-#include <monopod_sdk/monopod_drivers/leg.hpp>
-
-/**
- * @brief The Monopod class defines the API for interacting with the Baesian
- * monopod. It takes a leg
- *
- */
 namespace monopod_drivers
 {
-   class Monopod
-   {
-   public:
-      /**
-             * @brief ScalarTimeseries is a simple shortcut for more intelligible code.
-             */
-      typedef time_series::TimeSeries<double> ScalarTimeseries;
 
-      /**
-             * @brief This is a shortcut for creating shared pointer in a simpler
-             * writting expression.
-             *
-             * @tparam Type is the template paramer of the shared pointer.
-             */
-      template <typename Type>
-      using Ptr = std::shared_ptr<Type>;
+/**
+ * @brief This is a basic PD controller to be used in the demos of this package.
+ */
+class Monopod
+{
+public:
+    /**
+     * @brief Construct a new Monopod object.
+     *
+     * @param motor_slider_pairs
+     */
+    Monopod()
+    {
+        stop_loop = false;
+    }
 
-      enum MonopodBodyIndexing
-      {
-         leg,
-         planarizer
-      };
+    /**
+     * @brief Destroy the Monopod object
+     */
+    ~Monopod()
+    {
+        stop_loop = true;
+        rt_thread_.join();
+    }
 
-      /**
-             * @brief Enumerates the joint names for indexing
-             */
-      enum JointNameIndexing
-      {
-         hip,
-         knee,
-         boom_connector,
-         boom_yaw,
-         boom_pitch
-      };
-      /**
-             * @brief MotorMeasurementIndexing this enum allow to access the different
-             * kind of sensor measurements in an understandable way in the code.
-             *
-             * Note: This is same as in leg.hpp for consistency
-             */
-      enum MotorMeasurementIndexing
-      {
-         current,
-         position,
-         velocity,
-         encoder_index,
-         motor_measurement_count
-      };
+    /**
+     * @brief This method is a helper to start the thread loop.
+     */
+    void start_loop()
+    {
+        rt_thread_.create_realtime_thread(&Monopod::loop, this);
+    }
 
-      // struct ReturnValueStatus
-      // {
-      //     bool valid;
-      //     Ptr<const ScalarTimeseries> value_series;
-      // };
-      struct ReturnValueStatus
-      {
-         bool valid;
-         double value_series;
-      };
+private:
+    /**
+     * @brief This is the real time thread object.
+     */
+    real_time_tools::RealTimeThread rt_thread_;
 
-      struct PID
-      {
-         double p;
-         double i;
-         double d;
-      };
-      /**
-             * @brief Construct a new Monopod object
-             *
-             * @param leg is the pointer to the leg
-             * @param planarizer is the pointer to the planarizer
-             */
-      Monopod(std::shared_ptr<Leg> leg_,
-              std::shared_ptr<Planarizer> planarizer_);
+    /**
+     * @brief this function is just a wrapper around the actual loop function,
+     * such that it can be spawned as a posix thread.
+     */
+    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    {
+        ((Monopod*)(instance_pointer))->loop();
+        return THREAD_FUNCTION_RETURN_VALUE;
+    }
 
-      /**
-           * @brief Construct a new Monopod object. Will create the leg and planarizer
-           * with default connections.
-           */
-      Monopod();
+    /**
+     * @brief this is a simple control loop which runs at a kilohertz.
+     *
+     * it reads the measurement from the analog sensor, in this case the
+     * slider. then it scales it and sends it as the current target to
+     * the motor.
+     */
+    void loop();
 
-      /**
-             * @brief Destroy the Monopod object
-             */
-      ~Monopod();
+    /**
+     * @brief managing the stopping of the loop
+     */
+    bool stop_loop;
 
-      /**
-             * Getters
-             */
+};  // end class Monopod definition
 
-      /**
-             * @brief Get the position of joint
-             *
-             * @param joint_index name of the joint we want to access
-             * @return ReturnValueStatus containing a valid boolean and the
-             * value of the position (NULL if not valid)
-             */
-      ReturnValueStatus get_position(const int joint_index);
-
-      /**
-             * @brief Get the velocity of the joint
-             *
-             * @param joint_index name of the joint we want to access
-             * @return ReturnValueStatus containing a valid boolean and the
-             * value of the velocity (NULL if not valid)
-             */
-      ReturnValueStatus get_velocity(const int joint_index);
-
-      /**
-             * @brief Get the acceleration of the joint
-             *
-             * @param joint_index name of the joint we want to access
-             * @return ReturnValueStatus containing a valid boolean and the
-             * value of the acceleration (NULL if not valid)
-             */
-      ReturnValueStatus get_acceleration(const int joint_index);
-
-      /**
-       * @brief Get the current
-       *
-       * @param joint_index
-      * @return ReturnValueStatus containing a valid boolean and the
-      * value of the current (NULL if not valid)
-       */
-      ReturnValueStatus get_current(const int joint_index);
-
-      /**
-             * @brief Get the PID values
-             *
-             * @param joint_index
-             * @return PID struct containing PID values
-             */
-      PID get_PID();
-
-      /**
-       * @brief Get a list of joint strings ordered by index
-       *
-       * @return vector of joint strings
-       */
-      std::vector<std::string> get_joint_indexing() const;
-
-      /**
-       * @brief Get the measurements object
-       *
-       * @return unordered_map<string, double> for joints
-       */
-      std::unordered_map<std::string, std::vector<double>> get_measurements();
-
-      /**
-             * Setters
-             */
-
-      /**
-             * @brief Set the PID values
-             *
-             */
-      void set_PID(const double &p_value, const double &i_value, const double &d_value);
-
-      /**
-             * @brief Set the target torque and send command to monopod if value is different from
-             * previous target_torque
-             *
-             * @param joint_index
-             * @param torque_target
-             * @return ReturnValueStatus containing a valid boolean and the
-             * value of the torque (NULL if not valid)
-             */
-      ReturnValueStatus set_target_torque(const int joint_index, const double &torque_target);
-
-      const std::vector<std::string> joint_str_indexer{"hip", "knee", "boom_connector", "boom_yaw", "boom_pitch"};
-
-   private:
-      // std::array<std::shared_ptr<MonopodSubInterface>, 2> monopod_;
-      std::shared_ptr<Leg> leg_;
-      std::shared_ptr<Planarizer> planarizer_;
-
-      /**
-           * @brief return struct holding the value and the bool valid
-           */
-      ReturnValueStatus return_value_status_;
-
-      /**
-          * @brief PID values
-          */
-      PID pid_;
-     };
-
-} // end monopod_drivers namespace
+}  // namespace blmc_drivers

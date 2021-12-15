@@ -1,5 +1,5 @@
 # =========
-# Monopod Drivers
+# Monopod sdk core
 # =========
 
 set(MONOPOD_SDK_CORE_PUBLIC_HDRS
@@ -21,6 +21,10 @@ set_target_properties(MonopodSdkCore PROPERTIES
     PUBLIC_HEADER "${MONOPOD_SDK_CORE_PUBLIC_HDRS}")
 
 
+# ===============================
+# Link Libraries
+# ===============================
+
 target_link_libraries( MonopodSdkCore
     PUBLIC
     blmc_drivers::blmc_drivers
@@ -33,9 +37,34 @@ target_link_libraries( MonopodSdkCore
     Eigen3::Eigen
     Threads::Threads)
 
+# ===============================
+# Demos
+# ===============================
+
+set(misc_targets)
+macro(add_demo demo_name)
+  add_executable(
+    ${demo_name}
+    demos/${demo_name}.cpp)
+  target_include_directories(
+    ${demo_name}
+    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
+           $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
+  target_link_libraries(${demo_name} MonopodSdkCore)
+  list(APPEND misc_targets ${demo_name})
+endmacro()
+
+add_demo(demo_threads)
+
+
+# ===============================
+# Install
+# ===============================
+
 install(
     TARGETS
-    MonopodSdkCore
+    MonopodSdkCore ${misc_targets}
     EXPORT MonopodSdkCoreExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
