@@ -1,6 +1,5 @@
 #include "monopod_sdk/monopod.hpp"
 
-
 namespace monopod_drivers
 {
 
@@ -14,7 +13,7 @@ namespace monopod_drivers
       real_time_tools::Spinner spinner;
       spinner.set_period(0.001);  // 1kz loop
       size_t count = 0;
-      while (!stop_loop_)
+      while (!stop_loop)
       {
 
           // Do stuff --------------------------------------------------------
@@ -23,7 +22,7 @@ namespace monopod_drivers
           spinner.spin();
           if ((count % 1000) == 0)
           {
-              rt_printf("Loop number: %d\n", count);
+              rt_printf("Loop number: %ld\n", count);
           }
           count++;
       }

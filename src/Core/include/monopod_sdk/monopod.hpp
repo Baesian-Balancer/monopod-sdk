@@ -1,6 +1,8 @@
 #include <math.h>
 #include "real_time_tools/spinner.hpp"
 #include "real_time_tools/timer.hpp"
+#include <real_time_tools/thread.hpp>
+#include <fstream>
 
 namespace monopod_drivers
 {
@@ -10,7 +12,20 @@ namespace monopod_drivers
  */
 class Monopod
 {
+private:
+
+    /**
+     * @brief the realt time thread object.
+     */
+    real_time_tools::RealTimeThread rt_thread_;
+
+    /**
+     * @brief managing the stopping of the loop
+     */
+    bool stop_loop;
+
 public:
+
     /**
      * @brief Construct a new Monopod object.
      *
@@ -38,21 +53,17 @@ public:
         rt_thread_.create_realtime_thread(&Monopod::loop, this);
     }
 
-private:
     /**
-     * @brief This is the real time thread object.
-     */
-    real_time_tools::RealTimeThread rt_thread_;
-
-    /**
-     * @brief this function is just a wrapper around the actual loop function,
-     * such that it can be spawned as a posix thread.
-     */
+    * @brief this function is just a wrapper around the actual loop function,
+    * such that it can be spawned as a posix thread.
+    */
     static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
     {
-        ((Monopod*)(instance_pointer))->loop();
-        return THREAD_FUNCTION_RETURN_VALUE;
+      ((Monopod*)(instance_pointer))->loop();
+      return THREAD_FUNCTION_RETURN_VALUE;
     }
+
+private:
 
     /**
      * @brief this is a simple control loop which runs at a kilohertz.
@@ -63,11 +74,7 @@ private:
      */
     void loop();
 
-    /**
-     * @brief managing the stopping of the loop
-     */
-    bool stop_loop;
 
 };  // end class Monopod definition
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers
