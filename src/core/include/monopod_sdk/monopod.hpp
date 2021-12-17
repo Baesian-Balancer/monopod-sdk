@@ -51,6 +51,10 @@ public:
     */
     std::vector<std::string> get_jointNames() const;
 
+    // ======================================
+    // setters
+    //=======================================
+
     /**
     * @brief Set the torque target for some joint index. Return the bool whether success
     *
@@ -68,6 +72,10 @@ public:
     * @return bool whether setting the value was successfull
     */
     bool set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes={});
+
+    // ======================================
+    // getters
+    //=======================================
 
     /**
     * @brief Get the torque
@@ -133,14 +141,6 @@ public:
     * @return std::optional<std::vector<double>> containing vector of accelerations if success
     */
     std::optional<std::vector<double>> get_accelerations(const std::vector<int> &joint_indexes={});
-
-    // /**
-    // * @brief Get the measurements object
-    // *
-    // * @return unordered_map<string, double> for joints
-    // */
-    // using measurements = std::unordered_map<std::string, std::vector<double>>;
-    // std::optional<measurements> get_measurements();
 
 
 private:
