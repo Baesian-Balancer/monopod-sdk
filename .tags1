@@ -4,3 +4,5 @@
 !_TAG_PROGRAM_NAME	Exuberant Ctags	//
 !_TAG_PROGRAM_URL	http://ctags.sourceforge.net	/official site/
 !_TAG_PROGRAM_VERSION	5.9~svn20110310	//
+my_handler	/home/capstone/Documents/Repos/monopod_sdk/src/core/demos/demo_threads.cpp	/^void my_handler(int)$/;"	function	line:20	signature:(int)
+main	/home/capstone/Documents/Repos/monopod_sdk/src/core/demos/demo_threads.cpp	/^int main(int, char**)$/;"	function	line:26	signature:(int, char**)

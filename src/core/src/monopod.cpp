@@ -53,6 +53,8 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
 bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes)
 {
 
+     // Note: if it fails the behaviour is undefined. For example if first 3 joints
+     // are right but one bad index it will updatethe good ones the fail on the bad one
     const std::vector<int>& jointSerialization =
         joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
@@ -86,7 +88,7 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index)
     {
         case hip_joint:
         case knee_joint:
-        {  
+        {
               buffers.write_door.lock(); //Lock write buffers
               double torque_target = buffers.write[(JointNameIndexing)joint_index];
               buffers.write_door.unlock(); //unLock write buffers

@@ -296,7 +296,6 @@ private:
     */
    struct
    {
-
        /**
         * @brief Mutex lock for write buffer
         */
