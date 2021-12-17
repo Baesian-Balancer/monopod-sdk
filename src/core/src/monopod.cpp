@@ -28,18 +28,19 @@ void Monopod::start_loop()
     rt_thread_.create_realtime_thread(&Monopod::loop, this);
 }
 
+std::vector<std::string> Monopod::get_jointNames() const
+{
+    return joint_names;
+}
+
 bool Monopod::set_torque_target(const double &torque_target, const int joint_index)
 {
     switch(joint_index)
     {
         case hip_joint:
-            buffers.write_door.lock(); //Lock write buffers
-            buffers.write[hip_joint] = torque_target;
-            buffers.write_door.unlock(); //unLock write buffers
-            return true;
         case knee_joint:
             buffers.write_door.lock(); //Lock write buffers
-            buffers.write[knee_joint] = torque_target;
+            buffers.write[(JointNameIndexing)joint_index] = torque_target;
             buffers.write_door.unlock(); //unLock write buffers
             return true;
         default:
@@ -47,6 +48,7 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
 
     }
 }
+
 
 bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes)
 {
@@ -59,45 +61,117 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
         return false;
 
     bool ok = true;
+    buffers.write_door.lock(); //Lock write buffers
     for(std::vector<int>::size_type i = 0; i != torque_targets.size(); i++){
-    // for (const auto& joint_index : jointSerialization) {
         switch(jointSerialization[i])
         {
             case hip_joint:
-                buffers.write_door.lock(); //Lock write buffers
-                buffers.write[hip_joint] = torque_targets[i];
-                buffers.write_door.unlock(); //unLock write buffers
-                ok = ok &&  true;
             case knee_joint:
-                buffers.write_door.lock(); //Lock write buffers
-                buffers.write[knee_joint] = torque_targets[i];
-                buffers.write_door.unlock(); //unLock write buffers
+                buffers.write[(JointNameIndexing)jointSerialization[i]] = torque_targets[i];
                 ok = ok &&  true;
+                break;
             default:
                 ok = ok &&  false;
-
+                break;
         }
     }
+    buffers.write_door.unlock(); //unLock write buffers
 
     return ok;
 }
 
-// std::optional<double> Monopod::get_measurements()
-// {
-//     double value = 0.0;
-//
-//     switch(joint_index)
-//     {
-//         case hip_joint:
-//             return value;
-//         case knee_joint:
-//             return value;
-//         default:
-//             return std::nullopt;
-//
-//     }
-// }
 
+std::optional<double> Monopod::get_position(const int &joint_index)
+{
+  switch(joint_index)
+  {
+      case hip_joint:
+      case knee_joint:
+      case boom_connector_joint:
+      case planarizer_yaw_joint:
+      case planarizer_pitch_joint:
+      {
+          buffers.read_door.lock();
+          double position = buffers.read[(JointNameIndexing)joint_index].pos;
+          buffers.read_door.unlock();
+          return position;
+      }
+      default:
+          return std::nullopt;
+
+  }
+}
+
+
+std::optional<double> Monopod::get_velocity(const int &joint_index)
+{
+  switch(joint_index)
+  {
+      case hip_joint:
+      case knee_joint:
+      case boom_connector_joint:
+      case planarizer_yaw_joint:
+      case planarizer_pitch_joint:
+      {
+          buffers.read_door.lock();
+          double velocity = buffers.read[(JointNameIndexing)joint_index].vel;
+          buffers.read_door.unlock();
+          return velocity;
+      }
+      default:
+          return std::nullopt;
+
+  }
+}
+
+
+std::optional<double> Monopod::get_acceleration(const int &joint_index)
+{
+  switch(joint_index)
+  {
+      case hip_joint:
+      case knee_joint:
+      case boom_connector_joint:
+      case planarizer_yaw_joint:
+      case planarizer_pitch_joint:
+      {
+          buffers.read_door.lock();
+          double acceleration = buffers.read[(JointNameIndexing)joint_index].acc;
+          buffers.read_door.unlock();
+          return acceleration;
+      }
+      default:
+          return std::nullopt;
+
+  }
+}
+
+std::optional<std::vector<double>> Monopod::get_positions(const std::vector<int> &joint_indexes)
+{
+  auto lambda = [](JointReadState joint_state) -> double  {
+      return joint_state.pos;
+  };
+
+  return getJointDataSerialized(this, joint_indexes, lambda);
+}
+
+std::optional<std::vector<double>> Monopod::get_velocities(const std::vector<int> &joint_indexes)
+{
+  auto lambda = [](JointReadState joint_state) -> double  {
+      return joint_state.vel;
+  };
+
+  return getJointDataSerialized(this, joint_indexes, lambda);
+}
+
+std::optional<std::vector<double>> Monopod::get_accelerations(const std::vector<int> &joint_indexes)
+{
+  auto lambda = [](JointReadState joint_state) -> double  {
+      return joint_state.acc;
+  };
+
+  return getJointDataSerialized(this, joint_indexes, lambda);
+}
 
 //===================================================================
 // Private methods
@@ -113,6 +187,7 @@ void Monopod::loop()
   real_time_tools::Spinner spinner;
   spinner.set_period(0.001);  // 1kz loop
   size_t count = 0;
+  size_t count_in = 0;
   while (!stop_loop)
   {
 
@@ -125,32 +200,36 @@ void Monopod::loop()
       if ((count % 2500) == 0)
       {
           rt_printf("Loop number: %ld\n", count);
-
           // Write buffers print ------------------------------------------
 
-          buffers.write_door.lock(); //Lock write buffers
-
-          rt_printf("buffers.write: ");
-          for (auto const &pair: buffers.write) {
-              // std::cout << "{" << pair.first << ": " << pair.second << "}";
-              rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
-          }
-          rt_printf("\n");
-
-          buffers.write_door.unlock(); //unLock write buffers
-
-          // // Read buffers print -------------------------------------------
+          // buffers.write_door.lock(); //Lock write buffers
           //
-          // buffers.read_door.lock(); //Lock read buffers
-          //
-          // rt_printf("buffers.read: ");
-          // for (auto const &pair: buffers.read) {
+          // rt_printf("buffers.write: ");
+          // for (auto const &pair: buffers.write) {
           //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", pair.first.c_str(), pair.second);
+          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
           // }
           // rt_printf("\n");
           //
-          // buffers.read_door.unlock(); //unLock read buffers
+          // buffers.write_door.unlock(); //unLock write buffers
+
+          // Read buffers print -------------------------------------------
+
+          buffers.read_door.lock(); //Lock read buffers
+
+          // rt_printf("buffers.read: ");
+          // for (auto const &pair: buffers.read) {
+          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
+          // }
+          // rt_printf("\n");
+
+          buffers.read[(JointNameIndexing)(count_in%5)].pos++;
+          buffers.read[(JointNameIndexing)(count_in%5)].vel++;
+          buffers.read[(JointNameIndexing)(count_in%5)].acc++;
+
+          buffers.read_door.unlock(); //unLock read buffers
+          count_in++;
       }
       count++;
 

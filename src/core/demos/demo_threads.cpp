@@ -1,6 +1,6 @@
 #include <math.h>
-#include "real_time_tools/spinner.hpp"
-#include "real_time_tools/timer.hpp"
+// #include "real_time_tools/spinner.hpp"
+// #include "real_time_tools/timer.hpp"
 #include <monopod_sdk/monopod.hpp>
 
 #include <signal.h>
@@ -39,6 +39,12 @@ int main(int, char**)
     monopod.start_loop();
     rt_printf("loops have started \n");
     double x = 0;
+
+    auto jointNames = monopod.get_jointNames();
+    for (std::string i: jointNames)
+        std::cout << i << ", ";
+    std::cout << std::endl << std::endl;
+
     while (!StopDemos)
     {
         real_time_tools::Timer::sleep_sec(1);
@@ -46,6 +52,11 @@ int main(int, char**)
         // monopod.set_torque_target(x, 0);
         // monopod.set_torque_target(x + 0.69, 1);
         monopod.set_torque_targets({x, x + 1});
+
+        std::vector<double> poss = monopod.get_positions().value();
+        for (auto i: poss)
+            std::cout << i << ", ";
+        std::cout << std::endl << std::endl;
         x++;
     }
 
