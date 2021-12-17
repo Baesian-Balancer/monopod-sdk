@@ -70,10 +70,26 @@ public:
     bool set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes={});
 
     /**
+    * @brief Get the torque
+    *
+    * @param joint_index
+    * @return std::optional<double> containing the torque if success
+    */
+    std::optional<double> get_torque_target(const int &joint_index);
+
+    /**
+    * @brief Get the torques of indexed joints
+    *
+    * @param joint_index
+    * @return std::optional<double> containing the torque if success
+    */
+    std::optional<std::vector<double>> get_torque_targets(const std::vector<int> &joint_indexes={});
+
+    /**
     * @brief Get the position of joint
     *
     * @param joint_index name of the joint we want to access
-    * @return std::optional<double> containing a valid boolean and the
+    * @return std::optional<double> containing the position if success
     * value of the position (NULL if not valid)
     */
     std::optional<double> get_position(const int &joint_index);
@@ -82,7 +98,7 @@ public:
     * @brief Get the velocity of the joint
     *
     * @param joint_index name of the joint we want to access
-    * @return std::optional<double> containing the position if success
+    * @return std::optional<double> containing the velocity if success
     */
     std::optional<double> get_velocity(const int &joint_index);
 
@@ -90,17 +106,9 @@ public:
     * @brief Get the acceleration of the joint
     *
     * @param joint_index name of the joint we want to access
-    * @return std::optional<double> containing the velocity if success
-    */
-    std::optional<double> get_acceleration(const int &joint_index);
-
-    /**
-    * @brief Get the current
-    *
-    * @param joint_index
     * @return std::optional<double> containing the acceleration if success
     */
-    std::optional<double> get_current(const int &joint_index);
+    std::optional<double> get_acceleration(const int &joint_index);
 
     /**
     * @brief Get the position of the joint indexes
@@ -162,7 +170,7 @@ private:
   * Gets indees on joint index enum
   */
 
-  struct JointReadState;
+  struct JointReadState; //Forward declaration
 
   std::optional<std::vector<double>> getJointDataSerialized(
   const Monopod* monopod,
@@ -329,13 +337,13 @@ private:
 
 
    // /**
-   // * @brief Structure holding the observed state of a joint
+   // * @brief Structure holding a joint PID
    // */
-   // struct JointWriteState
+   // struct PID
    // {
-   //    JointWriteState() = default;
+   //    PID() = default;
    //
-   //    JointWriteState(const double _torque_target, const double _p, const double _i, const double _d)
+   //    PID(const double _torque_target, const double _p, const double _i, const double _d)
    //      : torque_target(_torque_target)
    //      , p(_p)
    //      , i(_i)

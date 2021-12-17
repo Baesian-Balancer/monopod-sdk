@@ -80,6 +80,47 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
     return ok;
 }
 
+std::optional<double> Monopod::get_torque_target(const int &joint_index)
+{
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        {  
+              buffers.write_door.lock(); //Lock write buffers
+              double torque_target = buffers.write[(JointNameIndexing)joint_index];
+              buffers.write_door.unlock(); //unLock write buffers
+              return torque_target;
+        }
+        default:
+            return std::nullopt;
+
+    }
+}
+
+std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector<int> &joint_indexes)
+{
+    const std::vector<int>& jointSerialization =
+        joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
+
+    std::vector<double> data;
+    data.reserve(jointSerialization.size());
+    buffers.write_door.lock(); //Lock write buffers
+    for(auto& joint_index : jointSerialization){
+        switch(joint_index)
+        {
+            case hip_joint:
+            case knee_joint:
+                data.push_back(buffers.write[(JointNameIndexing)joint_index]);
+                break;
+            default:
+                buffers.write_door.unlock();
+                return std::nullopt;
+        }
+    }
+    buffers.write_door.unlock(); //unLock write buffers
+    return data;
+}
 
 std::optional<double> Monopod::get_position(const int &joint_index)
 {
