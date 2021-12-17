@@ -28,7 +28,7 @@ void Monopod::start_loop()
     rt_thread_.create_realtime_thread(&Monopod::loop, this);
 }
 
-std::vector<std::string> Monopod::get_jointNames() const
+std::unordered_map<std::string, int> Monopod::get_jointNames() const
 {
     return joint_names;
 }

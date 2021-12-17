@@ -40,10 +40,6 @@ int main(int, char**)
     rt_printf("loops have started \n");
     double x = 0;
 
-    auto jointNames = monopod.get_jointNames();
-    for (std::string i: jointNames)
-        std::cout << i << ", ";
-    std::cout << std::endl << std::endl;
 
     while (!StopDemos)
     {

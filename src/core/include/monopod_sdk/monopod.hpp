@@ -49,7 +49,7 @@ public:
     *
     * @return vector of joint name strings
     */
-    std::vector<std::string> get_jointNames() const;
+    std::unordered_map<std::string, int> get_jointNames() const;
 
     // ======================================
     // setters
@@ -209,12 +209,12 @@ public:
    /**
    * @brief Joint names indexed same as enumerator
    */
-   const std::vector<std::string> joint_names = {
-       "hip_joint",
-       "knee_joint",
-       "boom_connector_joint",
-       "planarizer_yaw_joint",
-       "planarizer_pitch_joint"
+   const std::unordered_map<std::string, int> joint_names = {
+       {"hip_joint", hip_joint},
+       {"knee_joint", knee_joint},
+       {"boom_connector_joint", boom_connector_joint},
+       {"planarizer_yaw_joint", planarizer_yaw_joint},
+       {"planarizer_pitch_joint", planarizer_pitch_joint}
    };
 
 private:
