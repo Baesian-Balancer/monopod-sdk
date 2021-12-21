@@ -49,7 +49,7 @@ std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
         case knee_joint:
         {
               buffers.pid_door.lock(); //Lock pid buffers
-              const PID _pid = buffers.pid[(JointNameIndexing)joint_index];
+                const PID _pid = buffers.pid[(JointNameIndexing)joint_index];
               buffers.pid_door.unlock(); //unLock pid buffers
               return _pid;
         }
@@ -58,7 +58,6 @@ std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
 
     }
 }
-
 
 std::optional<Monopod::JointLimit> Monopod::get_joint_position_limit(const int &joint_index)
 {
@@ -71,7 +70,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_position_limit(const int &
       case planarizer_pitch_joint:
       {
           buffers.settings_door.lock();
-          const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].position_limit;
+            const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].position_limit;
           buffers.settings_door.unlock();
           return limit;
       }
@@ -92,7 +91,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_velocity_limit(const int &
       case planarizer_pitch_joint:
       {
           buffers.settings_door.lock();
-          const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].velocity_limit;
+            const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].velocity_limit;
           buffers.settings_door.unlock();
           return limit;
       }
@@ -113,7 +112,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_acceleration_limit(const i
       case planarizer_pitch_joint:
       {
           buffers.settings_door.lock();
-          const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].acceleration_limit;
+            const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].acceleration_limit;
           buffers.settings_door.unlock();
           return limit;
       }
@@ -131,13 +130,12 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index)
         case knee_joint:
         {
               buffers.write_door.lock(); //Lock write buffers
-              double torque_target = buffers.write[(JointNameIndexing)joint_index];
+                double torque_target = buffers.write[(JointNameIndexing)joint_index];
               buffers.write_door.unlock(); //unLock write buffers
               return torque_target;
         }
         default:
             return std::nullopt;
-
     }
 }
 
@@ -149,18 +147,18 @@ std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector
     std::vector<double> data;
     data.reserve(jointSerialization.size());
     buffers.write_door.lock(); //Lock write buffers
-    for(auto& joint_index : jointSerialization){
-        switch(joint_index)
-        {
-            case hip_joint:
-            case knee_joint:
-                data.push_back(buffers.write[(JointNameIndexing)joint_index]);
-                break;
-            default:
-                buffers.write_door.unlock();
-                return std::nullopt;
-        }
-    }
+      for(auto& joint_index : jointSerialization){
+          switch(joint_index)
+          {
+              case hip_joint:
+              case knee_joint:
+                  data.push_back(buffers.write[(JointNameIndexing)joint_index]);
+                  break;
+              default:
+                  buffers.write_door.unlock();
+                  return std::nullopt;
+          }
+      }
     buffers.write_door.unlock(); //unLock write buffers
     return data;
 
@@ -168,102 +166,122 @@ std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector
 
 std::optional<double> Monopod::get_position(const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.read_door.lock();
-          double position = buffers.read[(JointNameIndexing)joint_index].pos;
-          buffers.read_door.unlock();
-          return position;
-      }
-      default:
-          return std::nullopt;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.read_door.lock();
+              double position = buffers.read[(JointNameIndexing)joint_index].pos;
+            buffers.read_door.unlock();
+            return position;
+        }
+        default:
+            return std::nullopt;
 
-  }
+    }
 }
 
 std::optional<double> Monopod::get_velocity(const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.read_door.lock();
-          double velocity = buffers.read[(JointNameIndexing)joint_index].vel;
-          buffers.read_door.unlock();
-          return velocity;
-      }
-      default:
-          return std::nullopt;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.read_door.lock();
+              double velocity = buffers.read[(JointNameIndexing)joint_index].vel;
+            buffers.read_door.unlock();
+            return velocity;
+        }
+        default:
+            return std::nullopt;
 
-  }
+    }
 }
 
 
 std::optional<double> Monopod::get_acceleration(const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.read_door.lock();
-          double acceleration = buffers.read[(JointNameIndexing)joint_index].acc;
-          buffers.read_door.unlock();
-          return acceleration;
-      }
-      default:
-          return std::nullopt;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.read_door.lock();
+              double acceleration = buffers.read[(JointNameIndexing)joint_index].acc;
+            buffers.read_door.unlock();
+            return acceleration;
+        }
+        default:
+            return std::nullopt;
 
-  }
+    }
 }
 
 std::optional<std::vector<double>> Monopod::get_positions(const std::vector<int> &joint_indexes)
 {
-  auto lambda = [this](int joint_index) -> double  {
-      return buffers.read[(JointNameIndexing)joint_index].pos;
-  };
+    auto lambda = [this](int joint_index) -> double  {
+        return buffers.read[(JointNameIndexing)joint_index].pos;
+    };
 
-  buffers.read_door.lock();
-  auto data = getJointDataSerialized(this, joint_indexes, lambda);
-  buffers.read_door.unlock();
-  return data;
+    buffers.read_door.lock();
+      auto data = getJointDataSerialized(this, joint_indexes, lambda);
+    buffers.read_door.unlock();
+    return data;
 }
 
 std::optional<std::vector<double>> Monopod::get_velocities(const std::vector<int> &joint_indexes)
 {
-  auto lambda = [this](int joint_index) -> double  {
-      return buffers.read[(JointNameIndexing)joint_index].vel;
-  };
+    auto lambda = [this](int joint_index) -> double  {
+        return buffers.read[(JointNameIndexing)joint_index].vel;
+    };
 
-  buffers.read_door.lock();
-  auto data = getJointDataSerialized(this, joint_indexes, lambda);
-  buffers.read_door.unlock();
-  return data;
+    buffers.read_door.lock();
+      auto data = getJointDataSerialized(this, joint_indexes, lambda);
+    buffers.read_door.unlock();
+    return data;
 }
 
 std::optional<std::vector<double>> Monopod::get_accelerations(const std::vector<int> &joint_indexes)
 {
-  auto lambda = [this](int joint_index) -> double  {
-      return buffers.read[(JointNameIndexing)joint_index].acc;
-  };
+    auto lambda = [this](int joint_index) -> double  {
+        return buffers.read[(JointNameIndexing)joint_index].acc;
+    };
 
-  buffers.read_door.lock();
-  auto data = getJointDataSerialized(this, joint_indexes, lambda);
-  buffers.read_door.unlock();
-  return data;
+    buffers.read_door.lock();
+      auto data = getJointDataSerialized(this, joint_indexes, lambda);
+    buffers.read_door.unlock();
+    return data;
+}
+
+std::optional<double> Monopod::get_max_torque_target(const int &joint_index)
+{
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.settings_door.lock();
+              double max_target = buffers.settings[(JointNameIndexing)joint_index].max_torque_target;
+            buffers.settings_door.unlock();
+            return max_target;
+        }
+        default:
+            return std::nullopt;
+    }
 }
 
 // ========================================
@@ -277,9 +295,9 @@ bool Monopod::set_pid(const int &p, const int &i, const int &d, const int &joint
         case hip_joint:
         case knee_joint:
             buffers.pid_door.lock(); //Lock pid buffers
-            buffers.pid[(JointNameIndexing)joint_index].p = p;
-            buffers.pid[(JointNameIndexing)joint_index].i = i;
-            buffers.pid[(JointNameIndexing)joint_index].d = d;
+              buffers.pid[(JointNameIndexing)joint_index].p = p;
+              buffers.pid[(JointNameIndexing)joint_index].i = i;
+              buffers.pid[(JointNameIndexing)joint_index].d = d;
             buffers.pid_door.unlock(); //unLock pid buffers
             return true;
         default:
@@ -290,68 +308,89 @@ bool Monopod::set_pid(const int &p, const int &i, const int &d, const int &joint
 
 bool Monopod::set_joint_position_limit(const double& max, const double& min, const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.settings_door.lock();
-          buffers.settings[(JointNameIndexing)joint_index].position_limit.max = max;
-          buffers.settings[(JointNameIndexing)joint_index].position_limit.min = min;
-          buffers.settings_door.unlock();
-          return true;
-      }
-      default:
-          return false;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.settings_door.lock();
+              buffers.settings[(JointNameIndexing)joint_index].position_limit.max = max;
+              buffers.settings[(JointNameIndexing)joint_index].position_limit.min = min;
+            buffers.settings_door.unlock();
+            return true;
+        }
+        default:
+            return false;
 
-  }
+    }
 }
 
 bool Monopod::set_joint_velocity_limit(const double& max, const double& min, const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.settings_door.lock();
-          buffers.settings[(JointNameIndexing)joint_index].velocity_limit.max = max;
-          buffers.settings[(JointNameIndexing)joint_index].velocity_limit.min = min;
-          buffers.settings_door.unlock();
-          return true;
-      }
-      default:
-          return false;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.settings_door.lock();
+              buffers.settings[(JointNameIndexing)joint_index].velocity_limit.max = max;
+              buffers.settings[(JointNameIndexing)joint_index].velocity_limit.min = min;
+            buffers.settings_door.unlock();
+            return true;
+        }
+        default:
+            return false;
 
-  }
+    }
 }
 
 bool Monopod::set_joint_acceleration_limit(const double& max, const double& min, const int &joint_index)
 {
-  switch(joint_index)
-  {
-      case hip_joint:
-      case knee_joint:
-      case boom_connector_joint:
-      case planarizer_yaw_joint:
-      case planarizer_pitch_joint:
-      {
-          buffers.settings_door.lock();
-          buffers.settings[(JointNameIndexing)joint_index].acceleration_limit.max = max;
-          buffers.settings[(JointNameIndexing)joint_index].acceleration_limit.min = min;
-          buffers.settings_door.unlock();
-          return true;
-      }
-      default:
-          return false;
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.settings_door.lock();
+              buffers.settings[(JointNameIndexing)joint_index].acceleration_limit.max = max;
+              buffers.settings[(JointNameIndexing)joint_index].acceleration_limit.min = min;
+            buffers.settings_door.unlock();
+            return true;
+        }
+        default:
+            return false;
 
-  }
+    }
+}
+
+bool Monopod::set_max_torque_target(const double &max_torque_target,  const int &joint_index)
+{
+    switch(joint_index)
+    {
+        case hip_joint:
+        case knee_joint:
+        case boom_connector_joint:
+        case planarizer_yaw_joint:
+        case planarizer_pitch_joint:
+        {
+            buffers.settings_door.lock();
+              // printf("new max torque: %f\n", max_torque_target );
+              buffers.settings[(JointNameIndexing)joint_index].max_torque_target = max_torque_target;
+            buffers.settings_door.unlock();
+            return true;
+        }
+        default:
+            return false;
+    }
 }
 
 bool Monopod::set_torque_target(const double &torque_target, const int joint_index)
@@ -360,10 +399,24 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
     {
         case hip_joint:
         case knee_joint:
+        {
+            buffers.settings_door.lock(); //Lock settings buffers
+              double max_torque_target = buffers.settings[(JointNameIndexing)joint_index].max_torque_target;
+            buffers.settings_door.unlock(); //unLock settings buffers
+
             buffers.write_door.lock(); //Lock write buffers
-            buffers.write[(JointNameIndexing)joint_index] = torque_target;
+              // Clip to max if over.
+              if(std::abs(torque_target) > max_torque_target)
+              {
+                  int force_dir = Monopod::sgn(torque_target);
+                  buffers.write[(JointNameIndexing)joint_index] = force_dir * max_torque_target;
+              }else{
+                buffers.write[(JointNameIndexing)joint_index] = torque_target;
+              }
             buffers.write_door.unlock(); //unLock write buffers
+
             return true;
+        }
         default:
             return false;
 
@@ -403,7 +456,6 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
     return ok;
 }
 
-
 //===================================================================
 // Private methods
 //===================================================================
@@ -426,7 +478,7 @@ void Monopod::loop()
 
 
 
-      // print -----------------------------------------------------------
+      // Random tests ----------------------------------------------------
 
       if ((count % 2500) == 0)
       {

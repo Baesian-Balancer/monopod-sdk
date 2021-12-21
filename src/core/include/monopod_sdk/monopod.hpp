@@ -97,6 +97,7 @@ public:
      *
      * @param max A double with the maximum position of the joint.
      * @param min A double with the minimum position of the joint.
+     * @param joint_index name of the joint we want to access
      * @return True for success, false otherwise.
      */
     bool set_joint_position_limit(const double& max, const double& min, const int &joint_index);
@@ -108,6 +109,7 @@ public:
      *
      * @param max A double with the maximum velocity of the joint.
      * @param min A double with the minimum velocity of the joint.
+     * @param joint_index name of the joint we want to access
      * @return True for success, false otherwise.
      */
     bool set_joint_velocity_limit(const double& max, const double& min, const int &joint_index);
@@ -119,10 +121,21 @@ public:
      *
      * @param max A double with the maximum acceleration of the joint.
      * @param min A double with the minimum acceleration of the joint.
+     * @param joint_index name of the joint we want to access
      * @return True for success, false otherwise.
      */
     bool set_joint_acceleration_limit(const double& max, const double& min, const int &joint_index);
 
+    /**
+     * Set the maximum torque target of the joint.
+     *
+     * This limit when reached will kill the robot for safety
+     *
+     * @param max_torque_target A double with the maximum torque of the joint.
+     * @param joint_index name of the joint we want to access
+     * @return True for success, false otherwise.
+     */
+    bool set_max_torque_target(const double &max_torque_target,  const int &joint_index);
 
     // ======================================
     // getters
@@ -136,7 +149,6 @@ public:
      *
      * @return The joint PID parameters.
      */
-
     std::optional<PID> get_pid(const int &joint_index);
 
     /**
@@ -159,6 +171,14 @@ public:
      * @return The velocity limits of the joint.
      */
     std::optional<JointLimit> get_joint_acceleration_limit(const int &joint_index);
+
+    /**
+    * @brief Get the max torque
+    *
+    * @param joint_index
+    * @return std::optional<double> containing the max torque if success
+    */
+    std::optional<double> get_max_torque_target(const int &joint_index);
 
     /**
     * @brief Get the torque
@@ -330,6 +350,14 @@ public:
         double min;
         double max;
     };
+
+
+    /**
+    * @brief Template helper for getting sign
+    */
+    template <typename T> static int sgn(T val) {
+        return (T(0) < val) - (val < T(0));
+    }
 
 private:
 
