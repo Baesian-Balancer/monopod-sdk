@@ -14,7 +14,6 @@
 
 namespace monopod_drivers
 {
-
 /**
  * @brief This is a basic PD controller to be used in the demos of this package.
  */
@@ -22,6 +21,9 @@ class Monopod
 {
 
 public:
+
+    struct PID;
+    struct JointLimit;
 
     /**
     * @brief Construct a new Monopod object.
@@ -80,9 +82,83 @@ public:
     */
     bool set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes={});
 
+    /**
+     * Set the PID parameters of the joint.
+     *
+     * @param pid The desired PID parameters.
+     * @return True for success, false otherwise.
+     */
+    bool set_pid(const int &p, const int &i, const int &d, const int &joint_index);
+
+    /**
+     * Set the maximum Position of the joint.
+     *
+     * This limit when reached will kill the robot for safety
+     *
+     * @param max A double with the maximum position of the joint.
+     * @param min A double with the minimum position of the joint.
+     * @return True for success, false otherwise.
+     */
+    bool set_joint_position_limit(const double& max, const double& min, const int &joint_index);
+
+    /**
+     * Set the maximum velocity of the joint.
+     *
+     * This limit when reached will kill the robot for safety
+     *
+     * @param max A double with the maximum velocity of the joint.
+     * @param min A double with the minimum velocity of the joint.
+     * @return True for success, false otherwise.
+     */
+    bool set_joint_velocity_limit(const double& max, const double& min, const int &joint_index);
+
+    /**
+     * Set the maximum acceleration of the joint.
+     *
+     * This limit when reached will kill the robot for safety
+     *
+     * @param max A double with the maximum acceleration of the joint.
+     * @param min A double with the minimum acceleration of the joint.
+     * @return True for success, false otherwise.
+     */
+    bool set_joint_acceleration_limit(const double& max, const double& min, const int &joint_index);
+
+
     // ======================================
     // getters
     //=======================================
+
+    /**
+     * Get the PID parameters of the joint.
+     *
+     * If no PID parameters have been set, the default parameters are
+     * returned.
+     *
+     * @return The joint PID parameters.
+     */
+
+    std::optional<PID> get_pid(const int &joint_index);
+
+    /**
+     * Get the position limits of the joint.
+     *
+     * @return The position limits of the joint.
+     */
+    std::optional<JointLimit> get_joint_position_limit(const int &joint_index);
+
+    /**
+     * Get the velocity limits of the joint.
+     *
+     * @return The velocity limits of the joint.
+     */
+    std::optional<JointLimit> get_joint_velocity_limit(const int &joint_index);
+
+    /**
+     * Get the velocity limits of the joint.
+     *
+     * @return The velocity limits of the joint.
+     */
+    std::optional<JointLimit> get_joint_acceleration_limit(const int &joint_index);
 
     /**
     * @brief Get the torque
@@ -158,8 +234,8 @@ private:
     */
     static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
     {
-      ((Monopod*)(instance_pointer))->loop();
-      return THREAD_FUNCTION_RETURN_VALUE;
+        ((Monopod*)(instance_pointer))->loop();
+        return THREAD_FUNCTION_RETURN_VALUE;
     }
 
     /**
@@ -177,12 +253,10 @@ private:
     * Gets indees on joint index enum
     */
 
-    struct JointReadState; //Forward declaration
-
     std::optional<std::vector<double>> getJointDataSerialized(
     const Monopod* monopod,
     const std::vector<int>& joint_indexes,
-    std::function<double(JointReadState)> getJointData)
+    std::function<double(int)> getJointData)
     {
         // Take the joint index in lambda. Return the data you want.
         const std::vector<int>& jointSerialization =
@@ -190,7 +264,6 @@ private:
 
         std::vector<double> data;
         data.reserve(jointSerialization.size());
-        buffers.read_door.lock();
         for (auto& joint_index : jointSerialization) {
             switch(joint_index)
             {
@@ -199,15 +272,12 @@ private:
                 case boom_connector_joint:
                 case planarizer_yaw_joint:
                 case planarizer_pitch_joint:
-                    data.push_back(getJointData(buffers.read[(JointNameIndexing)joint_index]));
+                    data.push_back(getJointData(joint_index));
                     break;
                 default:
-                    buffers.read_door.unlock();
                     return std::nullopt;
-
             }
         }
-        buffers.read_door.unlock();
         return data;
     }
 
@@ -223,6 +293,43 @@ public:
        {"planarizer_yaw_joint", planarizer_yaw_joint},
        {"planarizer_pitch_joint", planarizer_pitch_joint}
    };
+
+    /**
+    * @brief Structure holding the observed state of a joint
+    */
+    struct PID
+    {
+        PID() = default;
+        PID( const double _p, const double _i, const double _d) :
+             p(_p), i(_i), d(_d)
+        {}
+
+        double p = 0;
+        double i = 0;
+        double d = 0;
+    };
+
+    /**
+    * @brief Structure holding joint limits
+    */
+    struct JointLimit
+    {
+        JointLimit()
+        {
+            constexpr double m = std::numeric_limits<double>::lowest();
+            constexpr double M = std::numeric_limits<double>::max();
+
+            min = m;
+            max = M;
+        }
+
+        JointLimit(const double _min, const double _max)
+            : min(_min), max(_max)
+        {}
+
+        double min;
+        double max;
+    };
 
 private:
 
@@ -299,56 +406,27 @@ private:
    };
 
    /**
-   * @brief Structure holding joint limits
-   */
-   struct JointLimit
-   {
-       JointLimit()
-       {
-           constexpr double m = std::numeric_limits<double>::lowest();
-           constexpr double M = std::numeric_limits<double>::max();
-
-           min = m;
-           max = M;
-       }
-
-       JointLimit(const double _min, const double _max)
-           : min(_min), max(_max)
-       {}
-
-       double min;
-       double max;
-   };
-
-   /**
    * @brief Structure holding the observed state of a joint
    */
-   struct JointSettingsState
+   struct JointSettingState
    {
-       JointSettingsState() = default;
-       JointSettingsState(const double _max_torque_target, const JointLimit _position_limit,
-         const JointLimit _velocity_limit, const JointLimit _acceleration_limit,
-         const double _p, const double _i, const double _d) :
-            position_limit(_position_limit), velocity_limit(_velocity_limit),
-            acceleration_limit(_acceleration_limit), max_torque_target(_max_torque_target),
-            p(_p), i(_i), d(_d)
+       JointSettingState() = default;
+       JointSettingState(const double _max_torque_target, const JointLimit _position_limit,
+         const JointLimit _velocity_limit, const JointLimit _acceleration_limit)
+          : position_limit(_position_limit), velocity_limit(_velocity_limit),
+            acceleration_limit(_acceleration_limit), max_torque_target(_max_torque_target)
        {}
 
        JointLimit position_limit = {};
        JointLimit velocity_limit = {};
        JointLimit acceleration_limit = {};
        double max_torque_target = 0;
-       double p = 0;
-       double i = 0;
-       double d = 0;
    };
-
-
 
    /**
     * @brief Read/Write buffer
     */
-   struct buffers
+   struct Buffers
    {
        /**
         * @brief Mutex lock for write buffer
@@ -385,28 +463,32 @@ private:
        */
       std::mutex settings_door;
 
+      /**
+       * @brief Setting Write Buffer
+       */
+      std::unordered_map<JointNameIndexing, JointSettingState> settings = {
+          {planarizer_pitch_joint, {}},
+          {planarizer_yaw_joint, {}},
+          {boom_connector_joint, {}},
+          {hip_joint, {}},
+          {knee_joint, {}}
+      };
+
+      /**
+       * @brief Mutex lock for PID buffer. PID is seperate because it is rarely
+       * changed and requires us to send commands to device. this means it is
+       */
+      std::mutex pid_door;
+
      /**
       * @brief Bool indicator whether Setting buffer was modified
       */
-     bool pid_modified = false;
-
-
-      // /**
-      //  * @brief Bool indicator whether Setting buffer was modified
-      //  */
-      // using JointSettingModified = bool;
-      // std::unordered_map<JointNameIndexing, JointSettingModified> settings_modified = {
-      //     {planarizer_pitch_joint, true},
-      //     {planarizer_yaw_joint, true},
-      //     {boom_connector_joint, true},
-      //     {hip_joint, true},
-      //     {knee_joint, true}
-      // };
+      bool pid_modified = false;
 
       /**
        * @brief Setting Write Buffer
        */
-      std::unordered_map<JointNameIndexing, JointSettingsState> settings = {
+      std::unordered_map<JointNameIndexing, PID> pid = {
           {planarizer_pitch_joint, {}},
           {planarizer_yaw_joint, {}},
           {boom_connector_joint, {}},
