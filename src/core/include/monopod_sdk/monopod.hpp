@@ -45,11 +45,18 @@ public:
     void start_loop();
 
     /**
-    * @brief Get a list of joint strings ordered by index
+    * @brief Get model name
     *
-    * @return vector of joint name strings
+    * @return String of model name
     */
-    std::unordered_map<std::string, int> get_jointNames() const;
+    std::string get_model_name() const;
+
+    /**
+    * @brief Get a map of joint strings indexing their enumerator index
+    *
+    * @return Unordered map of joint name strings as key and index as value
+    */
+    std::unordered_map<std::string, int> get_joint_names() const;
 
     // ======================================
     // setters
@@ -145,64 +152,64 @@ public:
 
 private:
 
-  /**
-  * @brief this function is just a wrapper around the actual loop function,
-  * such that it can be spawned as a posix thread.
-  */
-  static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
-  {
-    ((Monopod*)(instance_pointer))->loop();
-    return THREAD_FUNCTION_RETURN_VALUE;
-  }
+    /**
+    * @brief this function is just a wrapper around the actual loop function,
+    * such that it can be spawned as a posix thread.
+    */
+    static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
+    {
+      ((Monopod*)(instance_pointer))->loop();
+      return THREAD_FUNCTION_RETURN_VALUE;
+    }
 
-  /**
-   * @brief this is a simple control loop which runs at a kilohertz.
-   *
-   * it reads the measurement from the analog sensor, in this case the
-   * slider. then it scales it and sends it as the current target to
-   * the motor.
-   */
-  void loop();
+    /**
+     * @brief this is a simple control loop which runs at a kilohertz.
+     *
+     * it reads the measurement from the analog sensor, in this case the
+     * slider. then it scales it and sends it as the current target to
+     * the motor.
+     */
+    void loop();
 
-  /**
-  * @brief Simple helper method to serialized getting of data.
-  *
-  * Gets indees on joint index enum
-  */
+    /**
+    * @brief Simple helper method to serialized getting of data.
+    *
+    * Gets indees on joint index enum
+    */
 
-  struct JointReadState; //Forward declaration
+    struct JointReadState; //Forward declaration
 
-  std::optional<std::vector<double>> getJointDataSerialized(
-  const Monopod* monopod,
-  const std::vector<int>& joint_indexes,
-  std::function<double(JointReadState)> getJointData)
-  {
-      // Take the joint index in lambda. Return the data you want.
-      const std::vector<int>& jointSerialization =
-        joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
+    std::optional<std::vector<double>> getJointDataSerialized(
+    const Monopod* monopod,
+    const std::vector<int>& joint_indexes,
+    std::function<double(JointReadState)> getJointData)
+    {
+        // Take the joint index in lambda. Return the data you want.
+        const std::vector<int>& jointSerialization =
+          joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
 
-      std::vector<double> data;
-      data.reserve(jointSerialization.size());
-      buffers.read_door.lock();
-      for (auto& joint_index : jointSerialization) {
-          switch(joint_index)
-          {
-              case hip_joint:
-              case knee_joint:
-              case boom_connector_joint:
-              case planarizer_yaw_joint:
-              case planarizer_pitch_joint:
-                  data.push_back(getJointData(buffers.read[(JointNameIndexing)joint_index]));
-                  break;
-              default:
-                  buffers.read_door.unlock();
-                  return std::nullopt;
+        std::vector<double> data;
+        data.reserve(jointSerialization.size());
+        buffers.read_door.lock();
+        for (auto& joint_index : jointSerialization) {
+            switch(joint_index)
+            {
+                case hip_joint:
+                case knee_joint:
+                case boom_connector_joint:
+                case planarizer_yaw_joint:
+                case planarizer_pitch_joint:
+                    data.push_back(getJointData(buffers.read[(JointNameIndexing)joint_index]));
+                    break;
+                default:
+                    buffers.read_door.unlock();
+                    return std::nullopt;
 
-          }
-      }
-      buffers.read_door.unlock();
-      return data;
-  }
+            }
+        }
+        buffers.read_door.unlock();
+        return data;
+    }
 
 public:
 
@@ -292,9 +299,56 @@ private:
    };
 
    /**
+   * @brief Structure holding joint limits
+   */
+   struct JointLimit
+   {
+       JointLimit()
+       {
+           constexpr double m = std::numeric_limits<double>::lowest();
+           constexpr double M = std::numeric_limits<double>::max();
+
+           min = m;
+           max = M;
+       }
+
+       JointLimit(const double _min, const double _max)
+           : min(_min), max(_max)
+       {}
+
+       double min;
+       double max;
+   };
+
+   /**
+   * @brief Structure holding the observed state of a joint
+   */
+   struct JointSettingsState
+   {
+       JointSettingsState() = default;
+       JointSettingsState(const double _max_torque_target, const JointLimit _position_limit,
+         const JointLimit _velocity_limit, const JointLimit _acceleration_limit,
+         const double _p, const double _i, const double _d) :
+            position_limit(_position_limit), velocity_limit(_velocity_limit),
+            acceleration_limit(_acceleration_limit), max_torque_target(_max_torque_target),
+            p(_p), i(_i), d(_d)
+       {}
+
+       JointLimit position_limit = {};
+       JointLimit velocity_limit = {};
+       JointLimit acceleration_limit = {};
+       double max_torque_target = 0;
+       double p = 0;
+       double i = 0;
+       double d = 0;
+   };
+
+
+
+   /**
     * @brief Read/Write buffer
     */
-   struct
+   struct buffers
    {
        /**
         * @brief Mutex lock for write buffer
@@ -304,8 +358,8 @@ private:
        /**
         * @brief Write Buffer
         */
-       using JointWrite = double;
-       std::unordered_map<JointNameIndexing, JointWrite> write = {
+       using JointWriteState = double;
+       std::unordered_map<JointNameIndexing, JointWriteState> write = {
            {hip_joint, 0.0},
            {knee_joint, 0.0}
        };
@@ -318,8 +372,7 @@ private:
        /**
         * @brief Read Buffer
         */
-       using JointRead = JointReadState;
-       std::unordered_map<JointNameIndexing, JointRead> read = {
+       std::unordered_map<JointNameIndexing, JointReadState> read = {
            {planarizer_pitch_joint, {}},
            {planarizer_yaw_joint, {}},
            {boom_connector_joint, {}},
@@ -327,30 +380,41 @@ private:
            {knee_joint, {}}
        };
 
+      /**
+       * @brief Mutex lock for Setting buffer
+       */
+      std::mutex settings_door;
+
+     /**
+      * @brief Bool indicator whether Setting buffer was modified
+      */
+     bool pid_modified = false;
+
+
+      // /**
+      //  * @brief Bool indicator whether Setting buffer was modified
+      //  */
+      // using JointSettingModified = bool;
+      // std::unordered_map<JointNameIndexing, JointSettingModified> settings_modified = {
+      //     {planarizer_pitch_joint, true},
+      //     {planarizer_yaw_joint, true},
+      //     {boom_connector_joint, true},
+      //     {hip_joint, true},
+      //     {knee_joint, true}
+      // };
+
+      /**
+       * @brief Setting Write Buffer
+       */
+      std::unordered_map<JointNameIndexing, JointSettingsState> settings = {
+          {planarizer_pitch_joint, {}},
+          {planarizer_yaw_joint, {}},
+          {boom_connector_joint, {}},
+          {hip_joint, {}},
+          {knee_joint, {}}
+      };
    } buffers;
 
 };  // end class Monopod definition
 
 }  // namespace monopod_drivers
-
-
-
-   // /**
-   // * @brief Structure holding a joint PID
-   // */
-   // struct PID
-   // {
-   //    PID() = default;
-   //
-   //    PID(const double _torque_target, const double _p, const double _i, const double _d)
-   //      : torque_target(_torque_target)
-   //      , p(_p)
-   //      , i(_i)
-   //      , d(_d)
-   //    {}
-   //
-   //    double torque_target = 0;
-   //    double p = 0;
-   //    double i = 0;
-   //    double d = 0;
-   // };
