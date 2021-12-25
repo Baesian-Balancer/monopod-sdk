@@ -28,6 +28,21 @@ void Monopod::start_loop()
     rt_thread_.create_realtime_thread(&Monopod::loop, this);
 }
 
+bool Monopod::is_joint_controllable(const int joint_index)
+{
+  switch(joint_index)
+  {
+      case hip_joint:
+      case knee_joint:
+      {
+          return true;
+      }
+      default:
+          return false;
+
+  }
+}
+
 // ========================================
 // Getters
 // ========================================
@@ -476,6 +491,11 @@ void Monopod::loop()
 
       // Do stuff --------------------------------------------------------
 
+      // Get data from board
+
+      // Check Limits
+
+      // Set Torque
 
 
       // Random tests ----------------------------------------------------

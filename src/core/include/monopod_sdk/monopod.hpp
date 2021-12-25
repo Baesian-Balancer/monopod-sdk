@@ -60,6 +60,13 @@ public:
     */
     std::unordered_map<std::string, int> get_joint_names() const;
 
+    /**
+    * @brief check if the joint is controllable or only a observation
+    *
+    * @param joint_index name of the joint we want to access
+    * @return bool whether joint is controllable
+    */
+    bool is_joint_controllable(const int joint_index);
     // ======================================
     // setters
     //=======================================
