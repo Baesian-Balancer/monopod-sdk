@@ -386,9 +386,10 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
               // Clip to max if over.
               if(std::abs(torque_targets[i]) > max_torque_target)
               {
-                  int force_dir = Monopod::sgn(torque_targets[i]);
-                  buffers.write[(JointNameIndexing)jointSerialization[i]] = force_dir * max_torque_target;
-              }else{
+                  buffers.write[(JointNameIndexing)jointSerialization[i]] = sgn(torque_targets[i]) * max_torque_target;
+              }
+              else
+              {
                   buffers.write[(JointNameIndexing)jointSerialization[i]] = torque_targets[i];
               }
 
