@@ -1,6 +1,4 @@
 #include <math.h>
-// #include "real_time_tools/spinner.hpp"
-// #include "real_time_tools/timer.hpp"
 #include <monopod_sdk/monopod.hpp>
 
 #include <signal.h>
@@ -36,6 +34,7 @@ int main(int, char**)
     monopod_drivers::Monopod monopod;
     rt_printf("controllers are set up \n");
 
+    monopod.initialize();
     monopod.start_loop();
     rt_printf("loops have started \n");
     double x = 0;

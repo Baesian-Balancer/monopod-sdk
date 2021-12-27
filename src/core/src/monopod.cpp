@@ -1,4 +1,5 @@
 #include "monopod_sdk/monopod.hpp"
+#include <stdexcept>
 
 namespace monopod_drivers
 {
@@ -67,7 +68,14 @@ bool Monopod::initialized()
 
 void Monopod::start_loop()
 {
-    rt_thread_.create_realtime_thread(&Monopod::loop, this);
+    if (is_initialized)
+    {
+      rt_thread_.create_realtime_thread(&Monopod::loop, this);
+    }
+    else
+    {
+      throw std::runtime_error("Need to initialize monopod_sdk before starting the realtime loop.");
+    }
 }
 
 bool Monopod::is_joint_controllable(const int joint_index)
@@ -352,7 +360,6 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
             buffers.write[(JointNameIndexing)joint_index] = torque_target;
           }
         buffers.write_door.unlock(); //unLock write buffers
-
         return true;
     }
     return false;
@@ -361,7 +368,6 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
 
 bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, const std::vector<int> &joint_indexes)
 {
-
      // Note: if it fails the behaviour is undefined. For example if first 3 joints
      // are right but one bad index it will updatethe good ones the fail on the bad one
     const std::vector<int>& jointSerialization =
