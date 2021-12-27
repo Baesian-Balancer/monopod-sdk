@@ -426,19 +426,11 @@ void Monopod::loop()
   while (!stop_loop)
   {
 
-      // if (is_initialized) {
-      //
-      //   // Get data from board
-      //
-      //   // Check Limits
-      //
-      //   // Set Torque
-      //
-      // }else{
-      //   rt_printf("Monopod_sdk is not initialized. Waiting for initialization.");
-      //   real_time_tools::Timer::sleep_sec(1.0);
-      // }
+      // Get data from board
 
+      // Check Limits
+
+      // Set Torque
 
       // Random tests ----------------------------------------------------
 
