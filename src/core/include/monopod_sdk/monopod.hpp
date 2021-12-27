@@ -305,17 +305,13 @@ private:
         std::vector<double> data;
         data.reserve(jointSerialization.size());
         for (auto& joint_index : jointSerialization) {
-            switch(joint_index)
+            if (is_initialized && Contains(encoder_joint_indexing, joint_index))
             {
-                case hip_joint:
-                case knee_joint:
-                case boom_connector_joint:
-                case planarizer_yaw_joint:
-                case planarizer_pitch_joint:
-                    data.push_back(getJointData(joint_index));
-                    break;
-                default:
-                    return std::nullopt;
+                data.push_back(getJointData(joint_index));
+            }
+            else
+            {
+                return std::nullopt;
             }
         }
         return data;
@@ -455,7 +451,8 @@ private:
     };
 
     /**
-    * @brief Write Joint names indexed same as enumerator for actuators
+    * @brief Write Joint names indexed same as enumerator for actuators.  All valid
+    * controlled joints should be defined here.
     */
     std::vector<int>  motor_joint_indexing =
     {
@@ -464,7 +461,8 @@ private:
     };
 
    /**
-   * @brief Read Joint names indexed same as enumerator for encoders
+   * @brief Read Joint names indexed same as enumerator for encoders. All valid
+   * joints should be defined here.
    */
    std::vector<int>  encoder_joint_indexing =
     {
