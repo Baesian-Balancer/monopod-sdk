@@ -20,7 +20,49 @@ Monopod::~Monopod()
 
 bool Monopod::initialize()
 {
-    return true;
+    // First of all one need to initialize the communication with the can bus.
+    canbus_.leg = std::make_shared<blmc_drivers::CanBus>("can0");
+    canbus_.planarizer1 = std::make_shared<blmc_drivers::CanBus>("can1");
+    canbus_.planarizer2 = std::make_shared<blmc_drivers::CanBus>("can2");
+    rt_printf("Canbus is set up \n");
+
+    // Then we create a motor board object that will use the can bus in order
+    // communicate between this application and the actual motor board.
+    // Important: the blmc motors are alinged during this stage.
+    auto motor_board = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.leg);
+    auto planarizer_board1 = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.planarizer1);
+    auto planarizer_board2 = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.planarizer2);
+    rt_printf("Board are set up \n");
+
+    // create the motor object that have an index that define the port on which
+    // they are plugged on the motor board. This object takes also a MotorBoard
+    // object to be able to get the sensors and send the control consistantly.
+    // These safe motors have the ability to bound the current that is given
+    // as input.
+    auto motor_hip = std::make_shared<blmc_drivers::SafeMotor>(motor_board, 0);
+    auto motor_knee = std::make_shared<blmc_drivers::SafeMotor>(motor_board, 1);
+    rt_printf("motors are set up \n");
+
+    auto encoder_planarizer_yaw = std::make_shared<monopod_drivers::Encoder>(planarizer_board1, 0);
+    auto encoder_planarizer_pitch = std::make_shared<monopod_drivers::Encoder>(planarizer_board1, 1);
+    auto encoder_connector = std::make_shared<monopod_drivers::Encoder>(planarizer_board2, 0);
+    rt_printf("encoders are set up. \n");
+
+    leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
+    planarizer_ = std::make_unique<monopod_drivers::Planarizer>(encoder_planarizer_yaw, encoder_planarizer_pitch, encoder_connector);
+    rt_printf("initialization is complete. \n");
+
+    // TODO: Auto detect the number of boards for the encoders. want to be able to detect if only fixed hip with single TI for encoders
+    // Or if only 1 encoder is attached to the first planarizer board (fixed yaw). This will be a little bit complicated as it will change the
+    // Logic used below too
+
+    is_initialized = true;
+    return initialized();
+}
+
+bool Monopod::initialized()
+{
+    return is_initialized;
 }
 
 void Monopod::start_loop()
@@ -484,57 +526,64 @@ void Monopod::loop()
 {
   real_time_tools::Spinner spinner;
   spinner.set_period(0.001);  // 1kz loop
-  size_t count = 0;
-  size_t count_in = 0;
+
+  // size_t count = 0;
+  // size_t count_in = 0;
+
   while (!stop_loop)
   {
 
-      // Do stuff --------------------------------------------------------
+      if (is_initialized) {
 
-      // Get data from board
+        // Get data from board
 
-      // Check Limits
+        // Check Limits
 
-      // Set Torque
+        // Set Torque
 
-
-      // Random tests ----------------------------------------------------
-
-      if ((count % 2500) == 0)
-      {
-          rt_printf("Loop number: %ld\n", count);
-          // Write buffers print ------------------------------------------
-
-          // buffers.write_door.lock(); //Lock write buffers
-          //
-          // rt_printf("buffers.write: ");
-          // for (auto const &pair: buffers.write) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
-          // }
-          // rt_printf("\n");
-          //
-          // buffers.write_door.unlock(); //unLock write buffers
-
-          // Read buffers print -------------------------------------------
-
-          buffers.read_door.lock(); //Lock read buffers
-
-          // rt_printf("buffers.read: ");
-          // for (auto const &pair: buffers.read) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
-          // }
-          // rt_printf("\n");
-
-          buffers.read[(JointNameIndexing)(count_in%5)].pos++;
-          buffers.read[(JointNameIndexing)(count_in%5)].vel++;
-          buffers.read[(JointNameIndexing)(count_in%5)].acc++;
-
-          buffers.read_door.unlock(); //unLock read buffers
-          count_in++;
+      }else{
+        rt_printf("Monopod_sdk is not initialized. Waiting for initialization.");
+        real_time_tools::Timer::sleep_sec(1.0);
       }
-      count++;
+
+
+      // // Random tests ----------------------------------------------------
+      //
+      // if ((count % 2500) == 0)
+      // {
+      //     rt_printf("Loop number: %ld\n", count);
+      //     // Write buffers print ------------------------------------------
+      //
+      //     // buffers.write_door.lock(); //Lock write buffers
+      //     //
+      //     // rt_printf("buffers.write: ");
+      //     // for (auto const &pair: buffers.write) {
+      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
+      //     // }
+      //     // rt_printf("\n");
+      //     //
+      //     // buffers.write_door.unlock(); //unLock write buffers
+      //
+      //     // Read buffers print -------------------------------------------
+      //
+      //     buffers.read_door.lock(); //Lock read buffers
+      //
+      //     // rt_printf("buffers.read: ");
+      //     // for (auto const &pair: buffers.read) {
+      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
+      //     // }
+      //     // rt_printf("\n");
+      //
+      //     buffers.read[(JointNameIndexing)(count_in%5)].pos++;
+      //     buffers.read[(JointNameIndexing)(count_in%5)].vel++;
+      //     buffers.read[(JointNameIndexing)(count_in%5)].acc++;
+      //
+      //     buffers.read_door.unlock(); //unLock read buffers
+      //     count_in++;
+      // }
+      // count++;
 
       spinner.spin();
   }

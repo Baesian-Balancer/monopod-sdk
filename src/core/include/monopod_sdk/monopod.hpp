@@ -10,7 +10,15 @@
 #include <mutex>
 #include <unordered_map>
 #include <optional>
+#include <tuple>
+#include <algorithm>
 
+#include "monopod_sdk/blmc_drivers/devices/can_bus.hpp"
+#include "monopod_sdk/blmc_drivers/devices/motor.hpp"
+#include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
+#include "monopod_sdk/monopod_drivers/encoder.hpp"
+#include "monopod_sdk/monopod_drivers/leg.hpp"
+#include "monopod_sdk/monopod_drivers/planarizer.hpp"
 
 namespace monopod_drivers
 {
@@ -40,6 +48,11 @@ public:
     * @brief Initialize canbus connections to encoder board and motor board.
     */
     bool initialize();
+
+    /**
+    * @brief is the monopod sdk Initialized?.
+    */
+    bool initialized();
 
     /**
     * @brief This method is a helper to start the thread loop.
@@ -366,6 +379,17 @@ public:
         return (T(0) < val) - (val < T(0));
     }
 
+    /**
+    * @brief Template helper checking if vector contains an element.
+    */
+    template <typename T>
+    const bool Contains( std::vector<T>& Vec, const T& Element )
+    {
+        if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
+            return true;
+
+        return false;
+    }
 private:
 
    /**
@@ -373,10 +397,35 @@ private:
     */
    real_time_tools::RealTimeThread rt_thread_;
 
+    /**
+    * @brief robot Leg interface object
+    */
+   struct CanBus
+   {
+      std::shared_ptr<blmc_drivers::CanBusInterface> leg;
+      std::shared_ptr<blmc_drivers::CanBusInterface> planarizer1;
+      std::shared_ptr<blmc_drivers::CanBusInterface> planarizer2;
+   } canbus_;
+
+    /**
+    * @brief robot Leg interface object
+    */
+    std::unique_ptr<monopod_drivers::Planarizer> planarizer_;
+
+    /**
+    * @brief robot Leg interface object
+    */
+    std::unique_ptr<monopod_drivers::Leg> leg_;
+
    /**
     * @brief managing the stopping of the loop
     */
-   bool stop_loop;
+    bool stop_loop;
+
+    /**
+     * @brief boolen defining if sdk is initialized.
+     */
+    bool is_initialized;
 
     /**
     * @brief MotorMeasurementIndexing this enum allow to access the different
