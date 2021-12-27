@@ -80,11 +80,7 @@ void Monopod::start_loop()
 
 bool Monopod::is_joint_controllable(const int joint_index)
 {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index))
-    {
-          return true;
-    }
-    return false;
+    return is_initialized && Contains(motor_joint_indexing, joint_index);
 }
 
 // ========================================
@@ -356,8 +352,10 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
           {
               int force_dir = Monopod::sgn(torque_target);
               buffers.write[(JointNameIndexing)joint_index] = force_dir * max_torque_target;
-          }else{
-            buffers.write[(JointNameIndexing)joint_index] = torque_target;
+          }
+          else
+          {
+              buffers.write[(JointNameIndexing)joint_index] = torque_target;
           }
         buffers.write_door.unlock(); //unLock write buffers
         return true;
@@ -396,8 +394,9 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
 
               ok = ok && true;
           }
-          else{
-            ok = ok &&  false;
+          else
+          {
+              ok = ok &&  false;
           }
       }
 
