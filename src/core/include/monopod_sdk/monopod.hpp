@@ -379,12 +379,20 @@ public:
     * @brief Template helper checking if vector contains an element.
     */
     template <typename T>
-    const bool Contains( std::vector<T>& Vec, const T& Element )
+    bool Contains( std::vector<T>& Vec, const T& Element ) const
     {
         if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
             return true;
 
         return false;
+    }
+
+        /**
+        * @brief Template helper checking if vector contains an element.
+        */
+    template <typename T>
+    static bool in_range(T value, T min, T max) {
+        return min <= value  && value < max;
     }
 private:
 

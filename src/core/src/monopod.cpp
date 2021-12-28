@@ -379,7 +379,7 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
     buffers.write_door.lock(); //Lock write buffers
     buffers.settings_door.lock(); //Lock settings buffers
 
-      for(std::vector<int>::size_type i = 0; i != torque_targets.size(); i++){
+      for(size_t i = 0; i != torque_targets.size(); i++){
           if (is_initialized && Contains(motor_joint_indexing, jointSerialization[i]))
           {
               double max_torque_target = buffers.settings[(JointNameIndexing)jointSerialization[i]].max_torque_target;
@@ -420,55 +420,96 @@ void Monopod::loop()
   real_time_tools::Spinner spinner;
   spinner.set_period(0.001);  // 1kz loop
 
-  size_t count = 0;
-  size_t count_in = 0;
+  // size_t count = 0;
+  // size_t count_in = 0;
 
   while (!stop_loop)
   {
 
-      // Get data from board
+      /* Get data from board */
+      std::vector<double> cur_pos(encoder_joint_indexing.size(), 0);
+      std::vector<double> cur_vel(encoder_joint_indexing.size(), 0);
+      // std::vector<double> cur_acc(encoder_joint_indexing.size(), 0);
 
-      // Check Limits
+      /* Check Limits */
+      Monopod::JointLimit limit;
+      bool valid = true;
 
-      // Set Torque
+      buffers.settings_door.lock(); //Lock settings buffers
 
-      // Random tests ----------------------------------------------------
+        for(size_t i = 0; i != encoder_joint_indexing.size(); i++){
+            limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].position_limit;
+            valid = valid && in_range(cur_pos[i], limit.min, limit.max);
 
-      if ((count % 2500) == 0)
-      {
-          rt_printf("Loop number: %ld\n", count);
-          // Write buffers print ------------------------------------------
+            limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].velocity_limit;
+            valid = valid && in_range(cur_vel[i], limit.min, limit.max);
 
-          // buffers.write_door.lock(); //Lock write buffers
-          //
-          // rt_printf("buffers.write: ");
-          // for (auto const &pair: buffers.write) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
-          // }
-          // rt_printf("\n");
-          //
-          // buffers.write_door.unlock(); //unLock write buffers
+            // limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].acceleration_limit;
+            // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
+        }
 
-          // Read buffers print -------------------------------------------
+      buffers.settings_door.unlock(); //Unlock settings buffers
 
-          buffers.read_door.lock(); //Lock read buffers
+      /* Set Torque */
 
-          // rt_printf("buffers.read: ");
-          // for (auto const &pair: buffers.read) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
-          // }
-          // rt_printf("\n");
+      if (valid) {
+          buffers.write_door.lock(); //Lock write buffers
+            for(auto& joint_index : motor_joint_indexing){
+                auto torque = buffers.write[(JointNameIndexing)joint_index];
+                /* code - set torque target to that in write buffer. need to
+                think of a way to have _leg know which joint is which index.
+                might just want to hard code this. we will never have the motor
+                numbers change.  */
+            }
+            // /* Could instead use a hard code like below */
+            // double hip_torque = this->get_torque_target(hip_joint);
+            // /* Set the hip torque in the _leg class. */
+            // double knee_torque = this->get_torque_target(knee_joint);
+            // /* Set the knee torque in the _leg class. */
 
-          buffers.read[(JointNameIndexing)(count_in%5)].pos++;
-          buffers.read[(JointNameIndexing)(count_in%5)].vel++;
-          buffers.read[(JointNameIndexing)(count_in%5)].acc++;
-
-          buffers.read_door.unlock(); //unLock read buffers
-          count_in++;
+          buffers.write_door.unlock(); //unLock write buffers
       }
-      count++;
+      else {
+        /* code - either enter safe mode or kill motor torque */
+      }
+
+      // // Random tests ----------------------------------------------------
+      //
+      // if ((count % 2500) == 0)
+      // {
+      //     rt_printf("Loop number: %ld\n", count);
+      //     // Write buffers print ------------------------------------------
+      //
+      //     // buffers.write_door.lock(); //Lock write buffers
+      //     //
+      //     // rt_printf("buffers.write: ");
+      //     // for (auto const &pair: buffers.write) {
+      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
+      //     // }
+      //     // rt_printf("\n");
+      //     //
+      //     // buffers.write_door.unlock(); //unLock write buffers
+      //
+      //     // Read buffers print -------------------------------------------
+      //
+      //     buffers.read_door.lock(); //Lock read buffers
+      //
+      //     // rt_printf("buffers.read: ");
+      //     // for (auto const &pair: buffers.read) {
+      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
+      //     // }
+      //     // rt_printf("\n");
+      //
+      //     buffers.read[(JointNameIndexing)(count_in%5)].pos++;
+      //     buffers.read[(JointNameIndexing)(count_in%5)].vel++;
+      //     buffers.read[(JointNameIndexing)(count_in%5)].acc++;
+      //
+      //     buffers.read_door.unlock(); //unLock read buffers
+      //     count_in++;
+      // }
+      // count++;
 
       spinner.spin();
   }
