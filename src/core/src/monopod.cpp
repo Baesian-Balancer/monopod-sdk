@@ -102,7 +102,7 @@ std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
     {
           buffers.pid_door.lock(); //Lock pid buffers
             const PID _pid = buffers.pid[(JointNameIndexing)joint_index];
-          buffers.pid_door.unlock(); //unLock pid buffers
+          buffers.pid_door.unlock(); //Unlock pid buffers
           return _pid;
     }
     return std::nullopt;
@@ -151,7 +151,7 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index)
     {
           buffers.write_door.lock(); //Lock write buffers
             double torque_target = buffers.write[(JointNameIndexing)joint_index];
-          buffers.write_door.unlock(); //unLock write buffers
+          buffers.write_door.unlock(); //Unlock write buffers
           return torque_target;
     }
     return std::nullopt;
@@ -177,7 +177,7 @@ std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector
               return std::nullopt;
           }
       }
-    buffers.write_door.unlock(); //unLock write buffers
+    buffers.write_door.unlock(); //Unlock write buffers
     return data;
 
 }
@@ -280,7 +280,7 @@ bool Monopod::set_pid(const int &p, const int &i, const int &d, const int &joint
           buffers.pid[(JointNameIndexing)joint_index].p = p;
           buffers.pid[(JointNameIndexing)joint_index].i = i;
           buffers.pid[(JointNameIndexing)joint_index].d = d;
-        buffers.pid_door.unlock(); //unLock pid buffers
+        buffers.pid_door.unlock(); //Unlock pid buffers
         return true;
     }
     return false;
@@ -344,7 +344,7 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
     {
         buffers.settings_door.lock(); //Lock settings buffers
           double max_torque_target = buffers.settings[(JointNameIndexing)joint_index].max_torque_target;
-        buffers.settings_door.unlock(); //unLock settings buffers
+        buffers.settings_door.unlock(); //Unlock settings buffers
 
         buffers.write_door.lock(); //Lock write buffers
           // Clip to max if over.
@@ -357,7 +357,7 @@ bool Monopod::set_torque_target(const double &torque_target, const int joint_ind
           {
               buffers.write[(JointNameIndexing)joint_index] = torque_target;
           }
-        buffers.write_door.unlock(); //unLock write buffers
+        buffers.write_door.unlock(); //Unlock write buffers
         return true;
     }
     return false;
@@ -401,8 +401,8 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
           }
       }
 
-    buffers.settings_door.unlock(); //unLock settings buffers
-    buffers.write_door.unlock(); //unLock write buffers
+    buffers.settings_door.unlock(); //Unlock settings buffers
+    buffers.write_door.unlock(); //Unlock write buffers
     return ok;
 }
 
@@ -461,13 +461,13 @@ void Monopod::loop()
                 might just want to hard code this. we will never have the motor
                 numbers change.  */
             }
-            // /* Could instead use a hard code like below */
-            // double hip_torque = this->get_torque_target(hip_joint);
-            // /* Set the hip torque in the _leg class. */
-            // double knee_torque = this->get_torque_target(knee_joint);
-            // /* Set the knee torque in the _leg class. */
+          buffers.write_door.unlock(); //Unlock write buffers
 
-          buffers.write_door.unlock(); //unLock write buffers
+          // /* Could instead use a hard code like below */
+          // double hip_torque = this->get_torque_target(hip_joint);
+          // /* Set the hip torque in the _leg class. */
+          // double knee_torque = this->get_torque_target(knee_joint);
+          // /* Set the knee torque in the _leg class. */
       }
       else {
         /* code - either enter safe mode or kill motor torque */
@@ -489,7 +489,7 @@ void Monopod::loop()
       //     // }
       //     // rt_printf("\n");
       //     //
-      //     // buffers.write_door.unlock(); //unLock write buffers
+      //     // buffers.write_door.unlock(); //Unlock write buffers
       //
       //     // Read buffers print -------------------------------------------
       //
@@ -506,7 +506,7 @@ void Monopod::loop()
       //     buffers.read[(JointNameIndexing)(count_in%5)].vel++;
       //     buffers.read[(JointNameIndexing)(count_in%5)].acc++;
       //
-      //     buffers.read_door.unlock(); //unLock read buffers
+      //     buffers.read_door.unlock(); //Unlock read buffers
       //     count_in++;
       // }
       // count++;
