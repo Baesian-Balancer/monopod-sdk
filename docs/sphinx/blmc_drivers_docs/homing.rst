@@ -1,5 +1,7 @@
-Homing (Joint Position Calibration)
-===================================
+Homing
+======
+
+Joint Position Calibration
 
 What is “Homing” and Why is it Needed?
 --------------------------------------
