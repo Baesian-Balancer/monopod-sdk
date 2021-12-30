@@ -124,11 +124,13 @@ include(InstallBasicPackageFiles)
 # =========
 add_subdirectory(src)
 
-# # =========
-# # Add Demos, Tests, and Misc
-# # =========
-# add_subdirectory(tests)
-# add_subdirectory(demos)
+# # ========
+# # DOCS
+# # ========
+
+if(BUILD_DOCS)
+    add_subdirectory(docs)
+endif()
 
 # ===================
 # Add unistall target
