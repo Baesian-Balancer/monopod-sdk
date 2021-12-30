@@ -86,7 +86,6 @@ html_theme_options = {
 # The name of the Pygments (syntax highlighting) style to use.
 pygments_style = "pastie"
 
-
 # -- Extension configuration -------------------------------------------------
 
 # -- Options for todo extension ----------------------------------------------

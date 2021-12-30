@@ -23,7 +23,9 @@
 namespace monopod_drivers
 {
 /**
- * @brief This is a basic PD controller to be used in the demos of this package.
+ * @brief Drivers for open sim2real monopod. Interfaces with the monopod TI motors
+ * using blmc_drivers::blmc_joint_module. This class creates a real time control thread
+ * which reads and writes from a buffer exposed to the public api. 
  */
 class Monopod
 {
@@ -55,7 +57,8 @@ public:
     bool initialized();
 
     /**
-    * @brief This method is a helper to start the thread loop.
+    * @brief This method is a helper to start the thread loop. Requires the class
+    * to be initialized before the loop can be started.
     */
     void start_loop();
 
@@ -74,7 +77,8 @@ public:
     std::unordered_map<std::string, int> get_joint_names() const;
 
     /**
-    * @brief check if the joint is controllable or only a observation
+    * @brief check if the joint is a controllable joint (has a motor) or only
+    * a observation joint (encoder only).
     *
     * @param joint_index name of the joint we want to access
     * @return bool whether joint is controllable
@@ -85,7 +89,7 @@ public:
     //=======================================
 
     /**
-    * @brief Set the torque target for some joint index. Return the bool whether success
+    * @brief Set the torque target for some joint index. Return a bool whether successful.
     *
     * @param torque_target is the desired torque target for indexed joint
     * @param joint_index name of the joint we want to access
@@ -94,7 +98,7 @@ public:
     bool set_torque_target(const double &torque_target, const int joint_index);
 
     /**
-    * @brief Set the torque targets for all joint indexes. Return the bool whether success
+    * @brief Set the torque targets for all joint indexes. Return a bool whether successful.
     *
     * @param torque_targets vector of desired torque targets for indexed joints
     * @param joint_indexes names of the joints we want to access

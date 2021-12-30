@@ -7,6 +7,10 @@ add_custom_target(apidoc ALL DEPENDS doxygen)
 set(SPHINX_BUILD ${CMAKE_BINARY_DIR}/html)
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 
+# Copy over the image for blmc drivers
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy
+"${SPHINX_SOURCE}/blmc_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg")
+
 # Copy over the breathe doxygen xml
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
 "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml")
