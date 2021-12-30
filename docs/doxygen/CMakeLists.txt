@@ -7,10 +7,9 @@ find_package(Doxygen REQUIRED)
 set(DOXYGEN_GENERATE_XML YES)
 set(DOXYGEN_GENERATE_HTML NO)
 set(DOXYGEN_GENERATE_LATEX YES)
-set(DOXYGEN_FILE_PATTERNS "*.h")
+set(DOXYGEN_FILE_PATTERNS "*.h" "*.hpp")
 set(DOXYGEN_BUILTIN_STL_SUPPORT YES)
-set(DOXYGEN_EXCLUDE_PATTERNS
-    */demos/* */easylogging++.*)
+set(DOXYGEN_EXCLUDE_PATTERNS */demos/*)
 
 doxygen_add_docs(
     doxygen
