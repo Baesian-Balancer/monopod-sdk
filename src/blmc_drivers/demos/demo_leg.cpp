@@ -6,15 +6,15 @@
 
 #include <math.h>
 #include <monopod_sdk/blmc_drivers/devices/analog_sensor.hpp>
-#include <monopod_sdk/blmc_drivers/devices/leg.hpp>
 #include <monopod_sdk/blmc_drivers/devices/motor.hpp>
+#include <monopod_sdk/monopod_drivers/leg.hpp>
 #include "real_time_tools/spinner.hpp"
 #include "real_time_tools/timer.hpp"
 
 #include <signal.h>
 #include <atomic>
 
-#include <pd_control.hpp>
+#include "pd_control.hpp"
 
 /**
  * @brief This boolean is here to kill cleanly the application upon ctrl+c

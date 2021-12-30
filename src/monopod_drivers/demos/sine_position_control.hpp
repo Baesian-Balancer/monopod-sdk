@@ -6,13 +6,14 @@
 
 #include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/leg.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
 /**
  * @brief This is a simple shortcut
  */
-typedef std::shared_ptr<blmc_drivers::SafeMotor> SafeMotor_ptr;
+typedef std::shared_ptr<Leg> Leg_ptr;
 
 /**
  * @brief This is a basic PD controller to be used in the demos of this package.
@@ -23,17 +24,17 @@ public:
     /**
      * @brief Construct a new SinePositionControl object.
      *
-     * @param motor_slider_pairs
+     * @param leg
      */
-    SinePositionControl(std::vector<SafeMotor_ptr> motor_list)
-        : motor_list_(motor_list)
+    SinePositionControl(Leg_ptr leg)
     {
+        leg_ = leg;
         encoders_.clear();
         velocities_.clear();
         currents_.clear();
         control_buffer_.clear();
 
-        for (size_t i = 0; i < motor_list.size(); ++i)
+        for (size_t i = 0; i < leg->motors_.size(); ++i)
         {
             encoders_.push_back(std::deque<double>());
             currents_.push_back(std::deque<double>());
@@ -78,10 +79,10 @@ public:
     }
 
 private:
-    /**
-     * @brief This is list of motors
-     */
-    std::vector<SafeMotor_ptr> motor_list_;
+    // /**
+    //  * @brief This is list of motors
+    //  */
+    // std::vector<SafeMotor_ptr> motor_list_;
     /**
      * @brief This is the real time thread object.
      */
@@ -116,6 +117,8 @@ private:
      */
     unsigned memory_buffer_size_;
 
+    Leg_ptr leg_;
+
     /**
      * @brief Encoder data
      */
@@ -148,4 +151,4 @@ private:
 
 };  // end class SinePositionControl definition
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

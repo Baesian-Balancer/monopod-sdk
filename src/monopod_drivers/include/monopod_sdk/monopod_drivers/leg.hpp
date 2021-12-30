@@ -17,13 +17,13 @@
 #include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
 #include <monopod_sdk/blmc_drivers/devices/motor.hpp>
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
 /**
  * @brief This class defines an interface to control a leg.
  * This legg is composed of 2 motor, one for the hip and one for the knee.
  */
-class LegInterface : public DeviceInterface
+class LegInterface
 {
 public:
     /**
@@ -83,7 +83,7 @@ public:
      * @return Ptr<const ScalarTimeseries>  is the list of the lasts time
      * stamped acquiered.
      */
-    virtual Ptr<const ScalarTimeseries> get_motor_measurement(
+    virtual Ptr<const ScalarTimeseries> get_measurement(
         const int& motor_index, const int& measurement_index) const = 0;
 
     /**
@@ -146,8 +146,8 @@ public:
      * @param hip_motor is the pointer to the hip motor
      * @param knee_motor is the pointer to the knee motor
      */
-    Leg(std::shared_ptr<MotorInterface> hip_motor,
-        std::shared_ptr<MotorInterface> knee_motor)
+    Leg(std::shared_ptr<blmc_drivers::SafeMotor> hip_motor,
+        std::shared_ptr<blmc_drivers::SafeMotor> knee_motor)
     {
         motors_[hip] = hip_motor;
         motors_[knee] = knee_motor;
@@ -171,7 +171,7 @@ public:
      * @param measurement_index
      * @return Ptr<const ScalarTimeseries>
      */
-    virtual Ptr<const ScalarTimeseries> get_motor_measurement(
+    virtual Ptr<const ScalarTimeseries> get_measurement(
         const int& motor_index, const int& measurement_index) const
     {
         return motors_[motor_index]->get_measurement(measurement_index);
@@ -204,12 +204,12 @@ public:
     }
 
     /// ========================================================================
-private:
     /**
      * @brief This list contains pointers to two motors. This motors are
      * respectively the hip and the knee of the leg.
      */
-    std::array<std::shared_ptr<MotorInterface>, 2> motors_;
+    std::array<std::shared_ptr<blmc_drivers::SafeMotor>, 2> motors_;
+
 };
 
 }  // namespace blmc_drivers

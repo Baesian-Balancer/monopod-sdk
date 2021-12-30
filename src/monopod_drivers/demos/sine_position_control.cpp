@@ -9,13 +9,13 @@
 #include "real_time_tools/spinner.hpp"
 #include "real_time_tools/timer.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
 void SinePositionControl::loop()
 {
-    const int& blmc_position_index = MotorInterface::MeasurementIndex::position;
-    const int& blmc_velocity_index = MotorInterface::MeasurementIndex::velocity;
-    const int& blmc_current_index = MotorInterface::MeasurementIndex::current;
+    const int& blmc_position_index = blmc_drivers::MotorInterface::MeasurementIndex::position;
+    const int& blmc_velocity_index = blmc_drivers::MotorInterface::MeasurementIndex::velocity;
+    const int& blmc_current_index = blmc_drivers::MotorInterface::MeasurementIndex::current;
     // some data
     double actual_position = 0.0;
     double actual_velocity = 0.0;
@@ -40,16 +40,13 @@ void SinePositionControl::loop()
         local_time = count * control_period;
 
         // compute the control
-        for (size_t i = 0; i < motor_list_.size(); ++i)
+        for (size_t i = 0; i < leg_->motors_.size(); ++i)
         {
-            actual_position = motor_list_[i]
-                                  ->get_measurement(blmc_position_index)
+            actual_position = leg_->get_measurement(i, blmc_position_index)
                                   ->newest_element();
-            actual_velocity = motor_list_[i]
-                                  ->get_measurement(blmc_velocity_index)
+            actual_velocity = leg_->get_measurement(i, blmc_velocity_index)
                                   ->newest_element();
-            actual_current = motor_list_[i]
-                                 ->get_measurement(blmc_current_index)
+            actual_current = leg_->get_measurement(i, blmc_current_index)
                                  ->newest_element();
 
             desired_position =
@@ -59,13 +56,13 @@ void SinePositionControl::loop()
                 ;
             desired_current = kp_ * (desired_position - actual_position) +
                               kd_ * (desired_velocity - actual_velocity);
-            motor_list_[i]->set_current_target(desired_current);
+            leg_->set_current_target(desired_current, i);
         }
         // Send the controls and log stuff
 
-        for (size_t i = 0; i < motor_list_.size(); ++i)
+        for (size_t i = 0; i < leg_->motors_.size(); ++i)
         {
-            motor_list_[i]->send_if_input_changed();
+            leg_->send_if_input_changed();
 
             encoders_[i].push_back(actual_position);
             velocities_[i].push_back(actual_velocity);
@@ -82,10 +79,10 @@ void SinePositionControl::loop()
         if ((count % (int)(0.2 / control_period)) == 0)
         {
             rt_printf("\33[H\33[2J");  // clear screen
-            for (size_t i = 0; i < motor_list_.size(); ++i)
+            for (size_t i = 0; i < leg_->motors_.size(); ++i)
             {
                 rt_printf("des_pose: %8f ; ", desired_position);
-                motor_list_[i]->print();
+                leg_->motors_[i]->print();
             }
             time_logger.print_statistics();
             fflush(stdout);
@@ -132,4 +129,4 @@ void SinePositionControl::stop_loop()
     rt_printf("dumped the trajectory");
 }
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers
