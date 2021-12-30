@@ -12,5 +12,5 @@ _deps
 build
 .vscode
 
-*.tags
-*.tags1
+.tags
+.tags1
