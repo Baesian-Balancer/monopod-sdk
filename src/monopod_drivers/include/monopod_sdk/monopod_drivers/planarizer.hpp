@@ -52,8 +52,8 @@ class Planarizer
 
         enum MeasurementIndexing
         {
-            position,
-            velocity,
+            position = 1,
+            velocity = 2,
         };
 
         /**

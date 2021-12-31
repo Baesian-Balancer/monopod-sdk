@@ -40,7 +40,10 @@ public:
      */
     typedef Eigen::Matrix<double, 2, 3> DVector;
 
-
+    /**
+     * @brief Enumerate the num_joints For readability
+     * 
+     */
     static constexpr int num_joints_ = 2; 
 
     /**
@@ -58,10 +61,10 @@ public:
      */
     enum MotorMeasurementIndexing
     {
-        position,
-        velocity,
-        torque,
-        current
+        position = 1,
+        velocity = 2,
+        torque = 3,
+        current = 4
     };
 
     /**
@@ -188,6 +191,14 @@ public:
     {
         switch(measurement_index)
         {
+            case position:
+            {
+                return joints_.get_measured_angles();
+            }
+            case velocity:
+            {
+                return joints_.get_measured_velocities();
+            }
             case torque:
             {
                 return joints_.get_measured_torques();
@@ -196,14 +207,6 @@ public:
             {
                 Vector torques = joints_.get_measured_torques();
                 return joint_torque_to_motor_current(torques);
-            }
-            case position:
-            {
-                return joints_.get_measured_angles();
-            }
-            case velocity:
-            {
-                return joints_.get_measured_velocities();
             }
             default:
             {
@@ -222,9 +225,9 @@ public:
     virtual DVector get_data()
     {
         DVector data;
-        data.col(position) = joints_.get_measured_angles();
-        data.col(velocity) = joints_.get_measured_velocities();
-        data.col(torque) = joints_.get_measured_torques();
+        data.col(position - 1) = joints_.get_measured_angles();
+        data.col(velocity - 1 ) = joints_.get_measured_velocities();
+        data.col(torque - 1) = joints_.get_measured_torques();
         return data;
     }
 

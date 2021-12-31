@@ -70,7 +70,7 @@ namespace monopod_drivers
         }
         else
         {
-            printf("Wrong measurement index passed. Must be position or velocity")
+            printf("Wrong measurement index passed. Must be position or velocity");
         }
 
         return data;
@@ -84,8 +84,8 @@ namespace monopod_drivers
         {
             if(fixed_ && pidx == boom_connector){continue;}
 
-            all_data(pidx, position) = encoders_[pidx]->get_measurement(position)->newest_element();
-            all_data(pidx, velocity) = encoders_[pidx]->get_measurement(velocity)->newest_element();
+            all_data(pidx, position - 1) = encoders_[pidx]->get_measurement(position)->newest_element();
+            all_data(pidx, velocity - 1) = encoders_[pidx]->get_measurement(velocity)->newest_element();
         }
         return all_data;
     }
