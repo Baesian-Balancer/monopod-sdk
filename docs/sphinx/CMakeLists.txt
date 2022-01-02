@@ -26,19 +26,19 @@ add_custom_target(image_copy ALL
 
 add_custom_target(source_rst_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs"
     COMMENT "copy source doc build files."
   )
 
 add_custom_target(index_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/index.rst"
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_index.rst"
     COMMENT "copy index rst."
   )
 
 add_custom_target(doxygen_xml_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs/xml"
     COMMENT "copy source doxygen xml build files."
   )
 # Extend the Python path including before generating the website
