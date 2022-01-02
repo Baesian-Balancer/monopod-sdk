@@ -17,7 +17,10 @@ execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
 
 # Copy over the breathe docs
 execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
-${SPHINX_SOURCE} "${SPHINX_BUILD}/sphinx_build")
+"${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs")
+
+execute_process(COMMAND ${CMAKE_COMMAND} -E copy
+"${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/index_monopod_sdk.rst")
 
 # # Remove other stuff
 # execute_process(COMMAND ${CMAKE_COMMAND} -E remove "${SPHINX_BUILD}/sphinx_build/conf.py")
