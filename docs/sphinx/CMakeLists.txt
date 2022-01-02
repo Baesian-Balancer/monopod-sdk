@@ -5,7 +5,7 @@ add_custom_target(apidoc ALL DEPENDS doxygen)
 # Create built package for overlord webpage in /html
 # =============
 set(SPHINX_BUILD ${CMAKE_BINARY_DIR}/html)
-set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
+set(SPHINX_SOURCE "${CMAKE_CURRENT_SOURCE_DIR}")
 
 # =============
 # SPHINX TARGET
@@ -20,7 +20,8 @@ endif()
 
 add_custom_target(copy1 ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/blmc_drivers_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/monopod_sdk_docs/\
+    blmc_drivers_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
     COMMENT "copy device class device svg into doxygen xml."
   )
 
@@ -36,7 +37,7 @@ add_custom_target(copy3 ALL
     COMMENT "copy index rst."
   )
 
-add_custom_target(copy2 ALL
+add_custom_target(copy4 ALL
     DEPENDS apidoc
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml"
     COMMENT "copy source doxygen xml build files."
