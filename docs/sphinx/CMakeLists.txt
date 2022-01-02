@@ -18,27 +18,27 @@ if(${DOXYGEN_OUTPUT_DIRECTORY} STREQUAL "")
     message(FATAL_ERROR "Doxygen was not configured properly")
 endif()
 
-add_custom_target(copy1 ALL
+add_custom_target(image_copy ALL
     DEPENDS apidoc
     COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/monopod_sdk_docs/blmc_drivers_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
     COMMENT "copy device class device svg into doxygen xml."
   )
 
-add_custom_target(copy2 ALL
+add_custom_target(source_rst_copy ALL
     DEPENDS apidoc
     COMMAND ${CMAKE_COMMAND} -E copy_directory "${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs"
     COMMENT "copy source doc build files."
   )
 
-add_custom_target(copy3 ALL
+add_custom_target(index_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/index_monopod_sdk.rst"
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_index.rst"
     COMMENT "copy index rst."
   )
 
-add_custom_target(copy4 ALL
+add_custom_target(doxygen_xml_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml"
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_xml"
     COMMENT "copy source doxygen xml build files."
   )
 # Extend the Python path including before generating the website
