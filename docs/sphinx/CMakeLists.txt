@@ -7,25 +7,6 @@ add_custom_target(apidoc ALL DEPENDS doxygen)
 set(SPHINX_BUILD ${CMAKE_BINARY_DIR}/html)
 set(SPHINX_SOURCE ${CMAKE_CURRENT_SOURCE_DIR})
 
-# Copy over the image for blmc drivers
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy
-"${SPHINX_SOURCE}/blmc_drivers_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg")
-
-# Copy over the breathe doxygen xml
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
-"${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml")
-
-# Copy over the breathe docs
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy_directory
-"${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs")
-
-execute_process(COMMAND ${CMAKE_COMMAND} -E copy
-"${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/index_monopod_sdk.rst")
-
-# # Remove other stuff
-# execute_process(COMMAND ${CMAKE_COMMAND} -E remove "${SPHINX_BUILD}/sphinx_build/conf.py")
-# execute_process(COMMAND ${CMAKE_COMMAND} -E remove "${SPHINX_BUILD}/sphinx_build/index.html")
-
 # =============
 # SPHINX TARGET
 # =============
@@ -37,7 +18,29 @@ if(${DOXYGEN_OUTPUT_DIRECTORY} STREQUAL "")
     message(FATAL_ERROR "Doxygen was not configured properly")
 endif()
 
+add_custom_target(copy1 ALL
+    DEPENDS apidoc
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/blmc_drivers_docs/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
+    COMMENT "copy device class device svg into doxygen xml."
+  )
 
+add_custom_target(copy2 ALL
+    DEPENDS apidoc
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${SPHINX_SOURCE}/monopod_sdk_docs" "${SPHINX_BUILD}/sphinx_build/monopod_sdk_docs"
+    COMMENT "copy source doc build files."
+  )
+
+add_custom_target(copy3 ALL
+    DEPENDS apidoc
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/index.rst" "${SPHINX_BUILD}/sphinx_build/index_monopod_sdk.rst"
+    COMMENT "copy index rst."
+  )
+
+add_custom_target(copy2 ALL
+    DEPENDS apidoc
+    COMMAND ${CMAKE_COMMAND} -E copy_directory "${DOXYGEN_OUTPUT_DIRECTORY}/xml" "${SPHINX_BUILD}/sphinx_build/xml"
+    COMMENT "copy source doxygen xml build files."
+  )
 # Extend the Python path including before generating the website
 
 # Sphinx build command
