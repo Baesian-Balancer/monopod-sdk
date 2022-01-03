@@ -3,7 +3,7 @@ Introduction
 ============
 
 .. toctree::
-  :caption: Monopod Drivers:
+  :caption: Introduction:
 
   intro
   install
