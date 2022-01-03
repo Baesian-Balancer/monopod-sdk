@@ -24,7 +24,7 @@ namespace monopod_drivers
 {
 /**
  * @brief Drivers for open sim2real monopod. Interfaces with the monopod TI motors
- * using `blmc_drivers::blmc_joint_module`. This class creates a real time control thread
+ * using blmc_drivers::BlmcJointModule. This class creates a real time control thread
  * which reads and writes from a buffer exposed to the public api.
  */
 class Monopod
