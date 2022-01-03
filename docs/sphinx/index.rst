@@ -5,6 +5,8 @@ Monopod Sdk
 ***********
 
 .. toctree::
+   :hidden:
+   :maxdepth: 4
    :caption: Monopod Sdk Package:
 
   monopod_sdk_docs/introduction/index
