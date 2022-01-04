@@ -14,6 +14,7 @@
 
 #include <time_series/time_series.hpp>
 
+#include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
 #include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
 #include <monopod_sdk/blmc_drivers/devices/motor.hpp>
 
@@ -26,10 +27,24 @@ namespace monopod_drivers
 class LegInterface
 {
 public:
+    
     /**
-     * @brief ScalarTimeseries is a simple shortcut for more intelligible code.
+     * @brief Defines a static Eigen vector type in order to define the
+     * interface. Two is for number of joints
      */
-    typedef time_series::TimeSeries<double> ScalarTimeseries;
+    typedef Eigen::Matrix<double, 2, 1> Vector;
+
+    /**
+     * @brief Defines a static Eigen vector type in order to define the
+     * interface. Two is for number of joints, 3 is for pos, vel, torque
+     */
+    typedef Eigen::Matrix<double, 2, 3> DVector;
+
+    /**
+     * @brief Enumerate the num_joints For readability
+     * 
+     */
+    static constexpr int num_joints_ = 2; 
 
     /**
      * @brief This is a shortcut for creating shared pointer in a simpler
@@ -46,11 +61,10 @@ public:
      */
     enum MotorMeasurementIndexing
     {
-        current,
-        position,
-        velocity,
-        encoder_index,
-        motor_measurement_count
+        position = 1,
+        velocity = 2,
+        torque = 3,
+        current = 4
     };
 
     /**
@@ -60,7 +74,6 @@ public:
     {
         hip,
         knee,
-        motor_count
     };
 
     /**
@@ -77,60 +90,58 @@ public:
     /**
      * @brief Get the device output
      *
-     * @param[in] motor_index designate the motor from which we want the data
-     * from.
-     * @param[in] measurement_index is teh kind of data we are looking for.
-     * @return Ptr<const ScalarTimeseries>  is the list of the lasts time
+     * @param[in] measurement_index is th kind of data we are looking for.
+     * @return Vector of measurements
+     */
+    virtual Vector get_measurements(const int& measurement_index) const = 0;
+
+ 
+    /**
+     * @brief Get the last sent target currentS.
+     *
+     * @return Vector is the list of the lasts time
      * stamped acquiered.
      */
-    virtual Ptr<const ScalarTimeseries> get_measurement(
-        const int& motor_index, const int& measurement_index) const = 0;
+    virtual Vector get_sent_current_targets() const = 0;
+
 
     /**
-     * @brief Get the actual target current
+     * @brief Get the last sent target torque
      *
-     * @param[in] motor_index designate the motor from which we want the data
+     * @param[in] joint_index designate the joint/motor from which we want the data
      * from.
-     * @return Ptr<const ScalarTimeseries> is the list of the lasts time
+     * @return Vector is the list of the lasts time
      * stamped acquiered.
      */
-    virtual Ptr<const ScalarTimeseries> get_current_target(
-        const int& motor_index) const = 0;
-
-    /**
-     * @brief Get the last sent target current.
-     *
-     * @param[in] motor_index designate the motor from which we want the data
-     * from.
-     * @return Ptr<const ScalarTimeseries> is the list of the lasts time
-     * stamped acquiered.
-     */
-    virtual Ptr<const ScalarTimeseries> get_sent_current_target(
-        const int& motor_index) const = 0;
+    virtual Vector get_sent_torque_targets() const = 0;
 
     /**
      * Setters
      */
 
     /**
-     * @brief Set the current target saves internally the desired current. This
-     * data is not send to the motor yet. Please call send_if_input_changed in
-     * order to actually send the data to the card.
-     *
-     * @param current_target is the current to achieve on the motor card.
-     * @param motor_index is the motor to control.
+     * @brief Set the torque targets for each joint. Sends if input is different
+     * 
+     * @param torque_target is the current to achieve on the motor card.
+     * @param joint_index is the motor to control.
      */
-    virtual void set_current_target(const double& current_target,
-                                    const int& motor_index) = 0;
+    virtual void set_target_torques(const Vector& torque_targets) = 0;
 
     /**
-     * Sender
+     * @brief Converts torque to current
+     * 
+     * @param torque 
+     * @return double 
      */
+    double joint_torque_to_motor_current(const Vector& torque) const;
 
     /**
-     * @brief Actually send the target current to the motor cards.
+     * @brief Converts torque to current
+     * 
+     * @param torque 
+     * @return double 
      */
-    virtual void send_if_input_changed() = 0;
+    double joint_current_to_motor_torque(const Vector& current) const;
 };
 
 /**
@@ -140,17 +151,22 @@ public:
 class Leg : public LegInterface
 {
 public:
+
     /**
      * @brief Construct a new Leg object
-     *
-     * @param hip_motor is the pointer to the hip motor
-     * @param knee_motor is the pointer to the knee motor
+     * 
+     * @param joints 
+     * @param motor_constant 
+     * @param gear_ratio 
      */
-    Leg(std::shared_ptr<blmc_drivers::SafeMotor> hip_motor,
-        std::shared_ptr<blmc_drivers::SafeMotor> knee_motor)
+    Leg(blmc_drivers::BlmcJointModules<2> joints,
+        const Vector& motor_constants,
+        const Vector& gear_ratios)
     {
-        motors_[hip] = hip_motor;
-        motors_[knee] = knee_motor;
+        motor_constants_ = motor_constants;
+        gear_ratios_ = gear_ratios;
+        joints_ = joints;
+
     }
 
     /**
@@ -164,51 +180,128 @@ public:
      * Getters
      */
 
+    
     /**
-     * @brief Get the motor measurements.
-     *
-     * @param motor_index
+     * @brief Get specific measurements for both joints: pos, vel, torque, current.
+     * 
      * @param measurement_index
-     * @return Ptr<const ScalarTimeseries>
+     * @return Vector
      */
-    virtual Ptr<const ScalarTimeseries> get_measurement(
-        const int& motor_index, const int& measurement_index) const
+    virtual Vector get_measurements(const int& measurement_index) const
     {
-        return motors_[motor_index]->get_measurement(measurement_index);
+        switch(measurement_index)
+        {
+            case position:
+            {
+                return joints_.get_measured_angles();
+            }
+            case velocity:
+            {
+                return joints_.get_measured_velocities();
+            }
+            case torque:
+            {
+                return joints_.get_measured_torques();
+            }
+            case current:
+            {
+                Vector torques = joints_.get_measured_torques();
+                return joint_torque_to_motor_current(torques);
+            }
+            default:
+            {
+                printf("Invalid measurement index passed");
+                Vector res(NAN, NAN);
+                return res;
+            }
+        }
+    }
+
+    /**
+     * @brief Get all data returned as a matrix. Rows correspond
+     * to joints; columns to position, velocity, torque.
+     * @return DVector (2, 3)
+     */
+    virtual DVector get_data()
+    {
+        DVector data;
+        data.col(position - 1) = joints_.get_measured_angles();
+        data.col(velocity - 1 ) = joints_.get_measured_velocities();
+        data.col(torque - 1) = joints_.get_measured_torques();
+        return data;
     }
 
     // input logs --------------------------------------------------------------
-    virtual Ptr<const ScalarTimeseries> get_current_target(
-        const int& motor_index) const
+    
+    virtual Vector get_sent_current_targets() const
     {
-        return motors_[motor_index]->get_current_target();
-    }
-    virtual Ptr<const ScalarTimeseries> get_sent_current_target(
-        const int& motor_index) const
+        return joint_torque_to_motor_current(joints_.get_sent_torques());
+    }  
+
+    virtual Vector get_sent_torque_targets() const
     {
-        return motors_[motor_index]->get_sent_current_target();
+        return joints_.get_sent_torques();
     }
 
-    /// setters ================================================================
-    virtual void set_current_target(const double& current_target,
-                                    const int& motor_index)
+    /// setter ================================================================
+    virtual void set_target_torques(const Vector& torque_targets)
     {
-        motors_[motor_index]->set_current_target(current_target);
+        joints_.set_torques(torque_targets);
     }
 
-    /// sender =================================================================
-    virtual void send_if_input_changed()
+    Vector joint_torque_to_motor_current(Vector torques) const
     {
-        for (size_t i = 0; i < motors_.size(); i++)
-            motors_[i]->send_if_input_changed();
+        Vector currents; 
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
+        }
+        return currents;
     }
 
-    /// ========================================================================
+    void send_target_torques(){
+        joints_.send_torques();
+    }
+
     /**
-     * @brief This list contains pointers to two motors. This motors are
-     * respectively the hip and the knee of the leg.
+     * @brief Convert from motor current to joint torque.
+     *
+     * @param current is the motor current.
+     * @return double is the equivalent joint torque.
      */
-    std::array<std::shared_ptr<blmc_drivers::SafeMotor>, 2> motors_;
+    Vector motor_current_to_joint_torque(Vector currents) const
+    {
+        Vector torques;
+        for(size_t i = 0; i < 2; i++)
+        {
+            torques[i] = currents[i] * gear_ratios_[i] * motor_constants_[i];
+        }
+        return torques;
+
+    }
+
+    
+
+private:
+
+    /**
+     * @brief Hip and knee joint modules for the leg
+     */
+
+    blmc_drivers::BlmcJointModules<2> joints_;
+
+    /**
+     * @brief This is the torque constant of the motor:
+     * \f$ \tau_{motor} = k * i_{motor} \f$
+     */
+    Vector motor_constants_;
+    /**
+     * @brief This correspond to the reduction (\f$ \beta \f$) between the motor
+     * rotation and the joint. \f$ \theta_{joint} = \theta_{motor} / \beta \f$
+     */
+    Vector gear_ratios_;
+
+    
 
 };
 
