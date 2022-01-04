@@ -10,6 +10,12 @@
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 
 /**
+ * @brief Defines a static Eigen vector type in order to define the
+ * interface. Two is for number of joints
+ */
+typedef Eigen::Matrix<double, 2, 1> Vector;
+
+/**
  * @brief This boolean is here to kill cleanly the application upon ctrl+c
  */
 std::atomic_bool StopDemos(false);
@@ -57,9 +63,30 @@ int main(int, char **)
     auto motor_hip = std::make_shared<blmc_drivers::SafeMotor>(board, 0);
     auto motor_knee = std::make_shared<blmc_drivers::SafeMotor>(board, 1);
 
+    std::array<std::shared_ptr<blmc_drivers::MotorInterface>, monopod_drivers::Leg::num_joints_> motors_;
+    motors_[monopod_drivers::Leg::MotorIndexing::hip] = motor_hip;
+    motors_[monopod_drivers::Leg::MotorIndexing::knee] = motor_knee;
+
+    // Create joint modules
+    double motor_constant1;
+    double motor_constant2;
+    double gear_ratio1;
+    double gear_ratio2;
+    double zero_angle1;
+    double zero_angle2;
+    double max_current1;
+    double max_current2;
+
+    const Vector motor_constants(motor_constant1, motor_constant2);
+    const Vector gear_ratios(gear_ratio1, gear_ratio2);
+    const Vector zero_angles(zero_angle1, zero_angle2);
+    const Vector max_currents(max_current1, max_current2);
+
+    blmc_drivers::BlmcJointModules<2> joint_modules(motors_, motor_constants, gear_ratios, zero_angles, max_currents);
+
     rt_printf("motors are set up \n");
 
-    auto leg = std::make_shared<monopod_drivers::Leg>(motor_hip, motor_knee);
+    auto leg = std::make_shared<monopod_drivers::Leg>(joint_modules, motor_constants, gear_ratios);
 
     rt_printf("leg is set up \n");
 
