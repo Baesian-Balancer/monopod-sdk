@@ -21,7 +21,7 @@ struct CanBus
 };
 
 
-static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* canbus_ptr)
+static THREAD_FUNCTION_RETURN_TYPE can_printing_loop(void* canbus_ptr)
 {
     // cast input arguments to the right format --------------------------------
     CanBus& canbus = *(static_cast<CanBus*>(canbus_ptr));
@@ -46,6 +46,28 @@ static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* canbus_ptr)
         rt_printf("timeindex: %ld\n", timeindex);
         can_frame1.print();
         can_frame2.print();
+    }
+    return THREAD_FUNCTION_RETURN_VALUE;
+}
+
+static THREAD_FUNCTION_RETURN_TYPE plan_printing_loop(void* leg_ptr)
+{
+    // cast input arguments to the right format --------------------------------
+    
+    monopod_drivers::Planarizer& planarizer = *(static_cast<monopod_drivers::Planarizer*>(leg_ptr));
+
+    while (true)
+    {
+        auto all_data = planarizer.get_data();
+        auto pos_data = planarizer.get_measurements(1);
+        auto vel_data = planarizer.get_measurements(2);
+
+        // rt_fprintf("The data is \n%l")
+        std::cout << all_data << '\n' << std::endl;
+
+        std::cout << "Position is: " << pos_data << std::endl;
+        std::cout << "Velocity is: " << vel_data << std::endl;
+
     }
     return THREAD_FUNCTION_RETURN_VALUE;
 }
@@ -79,16 +101,16 @@ int main(int, char**)
     
     auto planarizer = std::make_shared<monopod_drivers::Planarizer>(encoder_by, encoder_bp, encoder_bc);
 
-    // // start real-time control loop --------------------------------------------
-    // real_time_tools::RealTimeThread control_thread;
-    // control_thread.create_realtime_thread(&control_loop, &hardware);
+    // // start real-time leg loop --------------------------------------------
+    real_time_tools::RealTimeThread plan_printing_thread;
+    plan_printing_thread.create_realtime_thread(&plan_printing_loop, &planarizer);
 
     // start real-time printing loop -------------------------------------------
-    real_time_tools::RealTimeThread printing_thread;
-    printing_thread.create_realtime_thread(&printing_loop, &canbus);
+    real_time_tools::RealTimeThread can_printing_thread;
+    can_printing_thread.create_realtime_thread(&can_printing_loop, &canbus);
 
     rt_printf("control loop started \n");
-    // control_thread.join();
-    printing_thread.join();
+    plan_printing_thread.join();
+    can_printing_thread.join();
     return 0;
 }

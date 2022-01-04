@@ -9,6 +9,7 @@
  * @copyright Copyright (c) 2018
  *
  */
+
 // #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
 #include "monopod_sdk/monopod_drivers/encoder.hpp"
 

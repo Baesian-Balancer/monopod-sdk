@@ -11,15 +11,17 @@
 
 namespace monopod_drivers
 {
+
 void SinePositionControl::loop()
 {
-    const int& blmc_position_index = blmc_drivers::MotorInterface::MeasurementIndex::position;
-    const int& blmc_velocity_index = blmc_drivers::MotorInterface::MeasurementIndex::velocity;
-    const int& blmc_current_index = blmc_drivers::MotorInterface::MeasurementIndex::current;
+    const int& position_index = monopod_drivers::Leg::MotorMeasurementIndexing::position;
+    const int& velocity_index = monopod_drivers::Leg::MotorMeasurementIndexing::velocity;
+    const int& current_index = monopod_drivers::Leg::MotorMeasurementIndexing::current;
     // some data
-    double actual_position = 0.0;
-    double actual_velocity = 0.0;
-    double actual_current = 0.0;
+    
+    Vector actual_position(0.0, 0.0);
+    Vector actual_velocity(0.0, 0.0);
+    Vector actual_current(0.0, 0.0);
     double local_time = 0.0;
     double control_period = 0.001;
     // sine torque params
@@ -28,7 +30,10 @@ void SinePositionControl::loop()
     // here is the control in current (Ampere)
     double desired_position = 0.0;
     double desired_velocity = 0.0;
-    double desired_current = 0.0;
+    Vector desired_torque;
+
+    Vector desired_pos;
+    Vector desired_vel;
 
     real_time_tools::Spinner spinner;
     spinner.set_period(control_period);  // here we spin every 1ms
@@ -40,34 +45,56 @@ void SinePositionControl::loop()
         local_time = count * control_period;
 
         // compute the control
-        for (size_t i = 0; i < leg_->motors_.size(); ++i)
-        {
-            actual_position = leg_->get_measurement(i, blmc_position_index)
-                                  ->newest_element();
-            actual_velocity = leg_->get_measurement(i, blmc_velocity_index)
-                                  ->newest_element();
-            actual_current = leg_->get_measurement(i, blmc_current_index)
-                                 ->newest_element();
+        actual_position = leg_->get_measurements(position_index);
 
-            desired_position =
-                amplitude * sin(2 * M_PI * frequence * local_time);
-            desired_velocity = 0.0 /* 2 * M_PI * frequence * amplitude *
-                                cos(2 * M_PI * frequence * local_time)*/
-                ;
-            desired_current = kp_ * (desired_position - actual_position) +
-                              kd_ * (desired_velocity - actual_velocity);
-            leg_->set_current_target(desired_current, i);
-        }
+        actual_velocity = leg_->get_measurements(velocity_index);
+        
+        actual_current = leg_->get_measurements(current_index);
+
+        desired_position =
+            amplitude * sin(2 * M_PI * frequence * local_time);
+        desired_velocity = 0.0; /* 2 * M_PI * frequence * amplitude *
+                            cos(2 * M_PI * frequence * local_time)*/
+        
+        desired_pos[0] = desired_position;
+        desired_pos[1] = desired_position;
+        desired_vel[0] = desired_velocity;
+        desired_vel[1] = desired_velocity;
+
+        desired_torque = kp_ * (desired_pos - actual_position) +
+                              kd_ * (desired_vel - actual_velocity);
+        
+        leg_->set_target_torques(desired_torque);
+        leg_->send_target_torques();
+        
+        
+        // for (size_t i = 0; i < leg_->motors_.size(); ++i)
+        // {
+        //     actual_position = leg_->get_measurement(i, blmc_position_index)
+        //                           ->newest_element();
+        //     actual_velocity = leg_->get_measurement(i, blmc_velocity_index)
+        //                           ->newest_element();
+        //     actual_current = leg_->get_measurement(i, blmc_current_index)
+        //                          ->newest_element();
+
+        //     desired_position =
+        //         amplitude * sin(2 * M_PI * frequence * local_time);
+
+        //     desired_velocity = 0.0 /* 2 * M_PI * frequence * amplitude *
+        //                         cos(2 * M_PI * frequence * local_time)*/
+        //         ;
+        //     desired_torque = kp_ * (desired_position - actual_position) +
+        //                       kd_ * (desired_velocity - actual_velocity);
+        //     leg_->set_current_target(desired_torque, i);
+        // }
         // Send the controls and log stuff
 
-        for (size_t i = 0; i < leg_->motors_.size(); ++i)
+        for (int i = 0; i < 2; i++)
         {
-            leg_->send_if_input_changed();
-
-            encoders_[i].push_back(actual_position);
-            velocities_[i].push_back(actual_velocity);
-            currents_[i].push_back(actual_current);
-            control_buffer_[i].push_back(desired_current);
+            encoders_[i].push_back(actual_position[i]);
+            velocities_[i].push_back(actual_velocity[i]);
+            currents_[i].push_back(actual_current[i]);
+            control_buffer_[i].push_back(desired_torque[i]);
         }
 
         // we sleep here 1ms.
@@ -79,10 +106,10 @@ void SinePositionControl::loop()
         if ((count % (int)(0.2 / control_period)) == 0)
         {
             rt_printf("\33[H\33[2J");  // clear screen
-            for (size_t i = 0; i < leg_->motors_.size(); ++i)
+            for (unsigned int i = 0; i < leg_->num_joints_; ++i)
             {
                 rt_printf("des_pose: %8f ; ", desired_position);
-                leg_->motors_[i]->print();
+                // leg_->motors_[i]->print();
             }
             time_logger.print_statistics();
             fflush(stdout);
