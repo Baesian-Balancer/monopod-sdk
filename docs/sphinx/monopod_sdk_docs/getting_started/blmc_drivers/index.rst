@@ -1,10 +1,9 @@
-
 Blmc Drivers
 ============
 
 .. toctree::
   :caption: Blmc Drivers:
 
-  intro
+  introduction
   homing
-  blmc_drivers
+  quick_start
