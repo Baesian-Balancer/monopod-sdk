@@ -2,6 +2,7 @@ Blmc Drivers
 ============
 
 .. toctree::
+  :hidden:
   :caption: Blmc Drivers:
 
   introduction
