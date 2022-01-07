@@ -76,9 +76,8 @@ class Planarizer
          */
         ~Planarizer(){};
 
-        /**
-         * Getters
-         */
+
+        /// getters ================================================================
 
         /**
          * @brief Get the specified measurement (pos or vel) for all joints

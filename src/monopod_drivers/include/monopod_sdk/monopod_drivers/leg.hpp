@@ -131,7 +131,7 @@ public:
      * @brief Calibrate the leg. See blmc_joint_module.hpp for explanation of parameters
      * and logic. 
      */
-    virtual bool calibrate(const Vector& home_offset_rad)
+    virtual bool calibrate(const Vector& home_offset_rad) = 0;
 
     /**
      * @brief Converts torque to current
@@ -325,6 +325,7 @@ public:
             currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
         }
         return currents;
+    }
 
 private:
 

@@ -58,8 +58,8 @@ namespace monopod_drivers
         }
 
         /**
-          * @brief Destroy the SinePositionControl object
-          */
+         * @brief Destroy the SinePositionControl object
+         */
         ~SinePositionControl()
         {
             stop_loop_ = true;
@@ -67,16 +67,16 @@ namespace monopod_drivers
         }
 
         /**
-          * @brief This method is a helper to start the thread loop.
-          */
+         * @brief This method is a helper to start the thread loop.
+         */
         void start_loop()
         {
             rt_thread_.create_realtime_thread(&SinePositionControl::loop, this);
         }
 
         /**
-          * @brief Stop the control and dump the data
-          */
+         * @brief Stop the control and dump the data
+         */
         void stop_loop();
 
         void set_gains(double kp, double kd)
@@ -86,19 +86,15 @@ namespace monopod_drivers
         }
 
     private:
-        // /**
-        //  * @brief This is list of motors
-        //  */
-        // std::vector<SafeMotor_ptr> motor_list_;
         /**
-          * @brief This is the real time thread object.
-          */
+         * @brief This is the real time thread object.
+         */
         real_time_tools::RealTimeThread rt_thread_;
 
         /**
-          * @brief this function is just a wrapper around the actual loop function,
-          * such that it can be spawned as a posix thread.
-          */
+         * @brief this function is just a wrapper around the actual loop function,
+         * such that it can be spawned as a posix thread.
+         */
         static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer)
         {
             ((SinePositionControl *)(instance_pointer))->loop();
@@ -106,57 +102,57 @@ namespace monopod_drivers
         }
 
         /**
-          * @brief this is a simple control loop which runs at a kilohertz.
-          *
-          * it reads the measurement from the analog sensor, in this case the
-          * slider. then it scales it and sends it as the current target to
-          * the motor.
-          */
+         * @brief this is a simple control loop which runs at a kilohertz.
+         *
+         * it reads the measurement from the analog sensor, in this case the
+         * slider. then it scales it and sends it as the current target to
+         * the motor.
+         */
         void loop();
 
         /**
-          * @brief managing the stopping of the loop
-          */
+         * @brief managing the stopping of the loop
+         */
         bool stop_loop_;
 
         /**
-          * @brief memory_buffer_size_ is the max size of the memory buffer.
-          */
+         * @brief memory_buffer_size_ is the max size of the memory buffer.
+         */
         unsigned memory_buffer_size_;
 
         /**
-          * @brief Pointer to the leg object
-          */
+         * @brief Pointer to the leg object
+         */
         Leg_ptr leg_;
 
         /**
-       * @brief Encoder data
-       */
+         * @brief Encoder data
+         */
         std::vector<std::deque<double>> encoders_;
 
         /**
-       * @brief Velocity data
-       */
+         * @brief Velocity data
+         */
         std::vector<std::deque<double>> velocities_;
 
         /**
-       * @brief current data
-       */
+         * @brief current data
+         */
         std::vector<std::deque<double>> currents_;
 
         /**
-       * @brief control_buffer_
-       */
+         * @brief control_buffer_
+         */
         std::vector<std::deque<double>> control_buffer_;
 
         /**
-       * @brief Controller proportional gain.
-       */
+         * @brief Controller proportional gain.
+         */
         double kp_;
 
         /**
-       * @brief Controller derivative gain.
-       */
+         * @brief Controller derivative gain.
+         */
         double kd_;
 
     }; // end class SinePositionControl definition
