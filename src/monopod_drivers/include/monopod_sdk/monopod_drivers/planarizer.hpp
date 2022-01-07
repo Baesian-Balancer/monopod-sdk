@@ -6,24 +6,24 @@
 
 namespace monopod_drivers
 {
+/**
+ * @brief This class defines an interface to the planarizer, which consists of
+ * the encoders for boom yaw, boom pitch, and boom-connector angle (free angle between
+ * the hip piece and boom)
+ * 
+ */
 class Planarizer
 {
     public:
         /**
-         * @brief ScalarTimeseries is a simple shortcut for more intelligible code.
-         */
-        typedef time_series::TimeSeries<double> ScalarTimeseries;
-
-
-        /**
-         * @brief Defines a static Eigen vector type in order to define the
-         * interface. Three for number of encoders
+         * @brief Defines a dynamic sized Eigen vector type to hold the encoders.
+         * May have two or three encoders for optional fixed/free hip
          */
         typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vector;
 
         /**
-         * @brief Defines a static Eigen matrix type in order to define the
-         * interface. Three rows for encoders, 2 columns for pos and vel.
+         * @brief Defines a dynamic sized Eigen matrix type to store all the data
+         * from the encoders. The two columns correspond to pos and vel.
          */
         typedef Eigen::Matrix<double, Eigen::Dynamic, 2> Matrix;
 
@@ -35,12 +35,6 @@ class Planarizer
          */
         template <typename Type>
         using Ptr = std::shared_ptr<Type>;
-
-        // struct ReturnValueStatus
-        // {
-        //     bool valid;
-        //     Ptr<ScalarTimeseries> value_series;
-        // };
 
         enum PlanarizerIndexing
         {
@@ -63,9 +57,9 @@ class Planarizer
          * @param encoder_by  boom yaw encoder
          * @param encoder_bp  boom pitch encoder
          */
-        Planarizer(std::shared_ptr<EncoderInterface> encoder_by,
-                    std::shared_ptr<EncoderInterface> encoder_bp,
-                    std::shared_ptr<EncoderInterface> encoder_bc);
+        Planarizer(Ptr<EncoderInterface> encoder_by,
+                    Ptr<EncoderInterface> encoder_bp,
+                    Ptr<EncoderInterface> encoder_bc);
 
         /**
          * @brief Construct a new Planarizer object with 2 encoders;
@@ -74,8 +68,8 @@ class Planarizer
          * @param encoder_by boom yaw encoder
          * @param encoder_bp boom pitch encoder
          */
-        Planarizer(std::shared_ptr<EncoderInterface> encoder_by,
-                    std::shared_ptr<EncoderInterface> encoder_bp);
+        Planarizer(Ptr<EncoderInterface> encoder_by,
+                    Ptr<EncoderInterface> encoder_bp);
 
         /**
          * @brief Destroy the Planarizer object
@@ -106,7 +100,7 @@ class Planarizer
         /**
          * @brief Vector to hold the encoders of the planarizer
          */
-        std::vector<std::shared_ptr<EncoderInterface>> encoders_;
+        std::vector<Ptr<EncoderInterface>> encoders_;
 
         /**
          * @brief Flag to indicate if using fixed boom connector
