@@ -11,6 +11,7 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <math.h>
 
 #include <time_series/time_series.hpp>
 
@@ -22,23 +23,22 @@ namespace monopod_drivers
 {
 /**
  * @brief This class defines an interface to control a leg.
- * This legg is composed of 2 motor, one for the hip and one for the knee.
+ * This leg is composed of 2 motors, one for the hip and one for the knee.
  */
 class LegInterface
 {
 public:
     
     /**
-     * @brief Defines a static Eigen vector type in order to define the
-     * interface. Two is for number of joints
+     * @brief Defines a static Eigen vector type to store data from the two joint motors
      */
     typedef Eigen::Matrix<double, 2, 1> Vector;
 
     /**
-     * @brief Defines a static Eigen vector type in order to define the
-     * interface. Two is for number of joints, 3 is for pos, vel, torque
+     * @brief Defines a static Eigen vector type to store all the data from both the motors.
+     * Data columns are pos, vel, torque
      */
-    typedef Eigen::Matrix<double, 2, 3> DVector;
+    typedef Eigen::Matrix<double, 2, 3> Matrix;
 
     /**
      * @brief Enumerate the num_joints For readability
@@ -128,6 +128,12 @@ public:
     virtual void set_target_torques(const Vector& torque_targets) = 0;
 
     /**
+     * @brief Calibrate the leg. See blmc_joint_module.hpp for explanation of parameters
+     * and logic. 
+     */
+    virtual bool calibrate(const Vector& home_offset_rad)
+
+    /**
      * @brief Converts torque to current
      * 
      * @param torque 
@@ -176,13 +182,11 @@ public:
     {
     }
 
-    /**
-     * Getters
-     */
+    /// getters ================================================================
 
-    
     /**
-     * @brief Get specific measurements for both joints: pos, vel, torque, current.
+     * @brief Get specific measurements: pos, vel, torque, current. Returns
+     * data for both joints.
      * 
      * @param measurement_index
      * @return Vector
@@ -218,56 +222,83 @@ public:
     }
 
     /**
-     * @brief Get all data returned as a matrix. Rows correspond
-     * to joints; columns to position, velocity, torque.
-     * @return DVector (2, 3)
+     * @brief Get all data returned as a matrix. Rows correspond to joints;
+     * columns to position, velocity, torque.
+     * 
+     * @return Matrix (2, 3)
      */
-    virtual DVector get_data()
+    virtual Matrix get_data()
     {
-        DVector data;
+        Matrix data;
         data.col(position - 1) = joints_.get_measured_angles();
-        data.col(velocity - 1 ) = joints_.get_measured_velocities();
+        data.col(velocity - 1) = joints_.get_measured_velocities();
         data.col(torque - 1) = joints_.get_measured_torques();
         return data;
     }
 
-    // input logs --------------------------------------------------------------
-    
+    /**
+     * @brief Get the sent current targets
+     * 
+     * @return Vector 
+     */
     virtual Vector get_sent_current_targets() const
     {
         return joint_torque_to_motor_current(joints_.get_sent_torques());
-    }  
-
+    }
+    
+    /**
+     * @brief Get the sent torque targets
+     * 
+     * @return Vector 
+     */
     virtual Vector get_sent_torque_targets() const
     {
         return joints_.get_sent_torques();
     }
 
-    /// setter ================================================================
+    /// setters ================================================================
+    
+    /**
+     * @brief Set the target torques 
+     * 
+     * @param torque_targets 
+     */
     virtual void set_target_torques(const Vector& torque_targets)
     {
         joints_.set_torques(torque_targets);
     }
 
-    Vector joint_torque_to_motor_current(Vector torques) const
-    {
-        Vector currents; 
-        for (unsigned i = 0; i < 2; ++i)
-        {
-            currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
-        }
-        return currents;
-    }
-
+    /**
+     * @brief Send target torques 
+     */
     void send_target_torques(){
         joints_.send_torques();
     }
 
     /**
+     * @brief Calibrate the legs 
+     * 
+     * @param home_offset_rad angle between zero position
+     * @return true if calibration is successful
+     */
+    virtual bool calibrate(const Vector& home_offset_rad)
+    {
+        // One rotation
+        double search_distance_limit_rad = 2 * M_PI;
+        Vector profile_step_size_rad = Vector::Constant(0.001);
+        joints_.execute_homing(
+            search_distance_limit_rad, home_offset_rad, profile_step_size_rad);
+        Vector zero_pose = Vector::Zero();
+        joints_.go_to(zero_pose);
+        return true;
+    }
+    /// convert ================================================================
+
+    /**
      * @brief Convert from motor current to joint torque.
      *
      * @param current is the motor current.
-     * @return double is the equivalent joint torque.
+     * @return Vector of joint torques.
      */
     Vector motor_current_to_joint_torque(Vector currents) const
     {
@@ -280,7 +311,20 @@ public:
 
     }
 
-    
+    /**
+     * @brief Convert from joint torque to motor current
+     * 
+     * @param torques 
+     * @return Vector of currents
+     */
+    Vector joint_torque_to_motor_current(Vector torques) const
+    {
+        Vector currents; 
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
+        }
+        return currents;
 
 private:
 
