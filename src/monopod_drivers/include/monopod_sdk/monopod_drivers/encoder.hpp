@@ -12,10 +12,11 @@
 #include <string>
 
 #include <real_time_tools/timer.hpp>
-#include <time_series/time_series.hpp>
+// #include <time_series/time_series.hpp>
 
 #include "monopod_sdk/blmc_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
+#include "monopod_sdk/monopod_drivers/common_header.hpp"
 
 namespace monopod_drivers
 {
@@ -26,17 +27,6 @@ namespace monopod_drivers
 class EncoderInterface : public blmc_drivers::DeviceInterface
 {
 public:
-    /**
-     * @brief This is a useful alias.
-     */
-    typedef time_series::TimeSeries<double> ScalarTimeseries;
-    /**
-     * @brief This a useful alias for the shared Pointer creation.
-     *
-     * @tparam Type is the Class to crate the pointer from.
-     */
-    template <typename Type>
-    using Ptr = std::shared_ptr<Type>;
 
     /**
      * @brief Here is a list of the different measurement available on the

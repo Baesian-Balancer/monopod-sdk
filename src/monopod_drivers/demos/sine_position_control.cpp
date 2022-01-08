@@ -17,21 +17,22 @@ void SinePositionControl::loop()
     const int& position_index = monopod_drivers::Leg::MotorMeasurementIndexing::position;
     const int& velocity_index = monopod_drivers::Leg::MotorMeasurementIndexing::velocity;
     const int& current_index = monopod_drivers::Leg::MotorMeasurementIndexing::current;
-    // some data
-    
+
     Vector actual_position(0.0, 0.0);
     Vector actual_velocity(0.0, 0.0);
     Vector actual_current(0.0, 0.0);
     double local_time = 0.0;
     double control_period = 0.001;
+    
     // sine torque params
     double amplitude = 0.1 /*3.1415*/;
     double frequence = 0.5;
+    
     // here is the control in current (Ampere)
     double desired_position = 0.0;
     double desired_velocity = 0.0;
+    
     Vector desired_torque;
-
     Vector desired_pos;
     Vector desired_vel;
 

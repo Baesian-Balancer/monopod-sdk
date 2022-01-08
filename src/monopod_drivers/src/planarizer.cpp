@@ -3,47 +3,21 @@
 
 namespace monopod_drivers
 {
-
-
-    /**
-     * @brief Defines a static Eigen vector type in order to define the
-     * interface. Three or two encoders
-     */
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 1> Vector;
-
-    /**
-     * @brief Defines a static Eigen matrix type in order to define the
-     * interface. Three rows for encoders, 2 columns for pos and vel.
-     */
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 2> Matrix;
-    /**
-     * @brief This is a shortcut for creating shared pointer in a simpler
-     * writing expression.
-     *
-     * @tparam Type is the template parameter of the shared pointer.
-     */
-    template <typename Type>
-    using Ptr = std::shared_ptr<Type>;
-
     Planarizer::Planarizer(
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_by,
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp,
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bc)
+            Ptr<monopod_drivers::EncoderInterface> encoder_by,
+            Ptr<monopod_drivers::EncoderInterface> encoder_bp,
+            Ptr<monopod_drivers::EncoderInterface> encoder_bc)
     {
         encoders_.push_back(encoder_by);
         encoders_.push_back(encoder_bp);
         encoders_.push_back(encoder_bc);
 
         fixed_ = false;
-
-        // encoders_[boom_yaw] = encoder_by;
-        // encoders_[boom_pitch] = encoder_bp;
-        // encoders_[boom_connector] = encoder_bc;
     }
 
     Planarizer::Planarizer(
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_by,
-            std::shared_ptr<monopod_drivers::EncoderInterface> encoder_bp)
+            Ptr<monopod_drivers::EncoderInterface> encoder_by,
+            Ptr<monopod_drivers::EncoderInterface> encoder_bp)
     {
         encoders_.push_back(encoder_by);
         encoders_.push_back(encoder_bp);
@@ -51,9 +25,9 @@ namespace monopod_drivers
         fixed_ = true;
     }
 
-    Vector Planarizer::get_measurements(const int &measurement_index) const
+    PVector Planarizer::get_measurements(const int &measurement_index) const
     {
-        Vector data;
+        PVector data;
         if(measurement_index == position || measurement_index == velocity)
         {
             if(fixed_)
@@ -76,9 +50,9 @@ namespace monopod_drivers
         return data;
     }
 
-    Matrix Planarizer::get_data()
+    PMatrix Planarizer::get_data()
     {
-        Matrix all_data;
+        PMatrix all_data;
 
         for(int pidx = boom_yaw; pidx != PI_end; pidx++)
         {
