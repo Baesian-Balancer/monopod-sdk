@@ -9,7 +9,9 @@
       include/monopod_sdk/monopod_drivers/encoder.hpp
       include/monopod_sdk/monopod_drivers/leg.hpp
       include/monopod_sdk/monopod_drivers/planarizer.hpp
-  )
+      include/monopod_sdk/monopod_drivers/common_header.hpp
+    )
+    
   add_library(MonopodDrivers
       ${MONOPOD_DRIVERS_PUBLIC_HDRS}
           src/encoder.cpp
