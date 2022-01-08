@@ -25,9 +25,9 @@ namespace monopod_drivers
         fixed_ = true;
     }
 
-    Planarizer::Vector Planarizer::get_measurements(const int &measurement_index) const
+    PVector Planarizer::get_measurements(const int &measurement_index) const
     {
-        Planarizer::Vector data;
+        PVector data;
         if(measurement_index == position || measurement_index == velocity)
         {
             if(fixed_)
@@ -50,9 +50,9 @@ namespace monopod_drivers
         return data;
     }
 
-    Planarizer::Matrix Planarizer::get_data()
+    PMatrix Planarizer::get_data()
     {
-        Planarizer::Matrix all_data;
+        PMatrix all_data;
 
         for(int pidx = boom_yaw; pidx != PI_end; pidx++)
         {

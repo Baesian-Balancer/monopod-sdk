@@ -10,7 +10,6 @@
  *
  */
 
-// #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
 #include "monopod_sdk/monopod_drivers/encoder.hpp"
 
 namespace monopod_drivers
@@ -20,7 +19,7 @@ Encoder::Encoder(Ptr<blmc_drivers::MotorBoardInterface> board, bool encoder_id)
 {
 }
 
-Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
+Ptr<const ScalarTimeseries> Encoder::get_measurement(
     const int& index) const
 {
     if (encoder_id_ == 0)
