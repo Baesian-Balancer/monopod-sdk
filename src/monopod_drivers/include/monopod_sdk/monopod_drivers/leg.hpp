@@ -11,49 +11,33 @@
 #include <map>
 #include <memory>
 #include <string>
+#include <math.h>
 
 #include <time_series/time_series.hpp>
+
+
 
 #include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
 #include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
 #include <monopod_sdk/blmc_drivers/devices/motor.hpp>
 
+#include "monopod_sdk/monopod_drivers/common_header.hpp"
+
 namespace monopod_drivers
 {
 /**
  * @brief This class defines an interface to control a leg.
- * This legg is composed of 2 motor, one for the hip and one for the knee.
+ * This leg is composed of 2 motors, one for the hip and one for the knee.
  */
 class LegInterface
 {
 public:
     
     /**
-     * @brief Defines a static Eigen vector type in order to define the
-     * interface. Two is for number of joints
-     */
-    typedef Eigen::Matrix<double, 2, 1> Vector;
-
-    /**
-     * @brief Defines a static Eigen vector type in order to define the
-     * interface. Two is for number of joints, 3 is for pos, vel, torque
-     */
-    typedef Eigen::Matrix<double, 2, 3> DVector;
-
-    /**
      * @brief Enumerate the num_joints For readability
      * 
      */
     static constexpr int num_joints_ = 2; 
-
-    /**
-     * @brief This is a shortcut for creating shared pointer in a simpler
-     * writting expression.
-     *
-     * @tparam Type is the template paramer of the shared pointer.
-     */
-    template <typename Type>
-    using Ptr = std::shared_ptr<Type>;
 
     /**
      * @brief MotorMeasurementIndexing this enum allow to access the different
@@ -91,18 +75,18 @@ public:
      * @brief Get the device output
      *
      * @param[in] measurement_index is th kind of data we are looking for.
-     * @return Vector of measurements
+     * @return LVector of measurements
      */
-    virtual Vector get_measurements(const int& measurement_index) const = 0;
+    virtual LVector get_measurements(const int& measurement_index) const = 0;
 
  
     /**
      * @brief Get the last sent target currentS.
      *
-     * @return Vector is the list of the lasts time
+     * @return LVector is the list of the lasts time
      * stamped acquiered.
      */
-    virtual Vector get_sent_current_targets() const = 0;
+    virtual LVector get_sent_current_targets() const = 0;
 
 
     /**
@@ -110,22 +94,34 @@ public:
      *
      * @param[in] joint_index designate the joint/motor from which we want the data
      * from.
-     * @return Vector is the list of the lasts time
+     * @return LVector is the list of the lasts time
      * stamped acquiered.
      */
-    virtual Vector get_sent_torque_targets() const = 0;
+    virtual LVector get_sent_torque_targets() const = 0;
 
     /**
      * Setters
      */
 
     /**
-     * @brief Set the torque targets for each joint. Sends if input is different
+     * @brief Set the torque targets for each joint.
      * 
-     * @param torque_target is the current to achieve on the motor card.
+     * @param torque_target is the torque to achieve on the motor card.
      * @param joint_index is the motor to control.
      */
-    virtual void set_target_torques(const Vector& torque_targets) = 0;
+    virtual void set_target_torques(const LVector& torque_targets) = 0;
+
+ 
+    /**
+     * @brief Send the set torque 
+     */
+    virtual void send_target_torques() = 0;
+
+    /**
+     * @brief Calibrate the leg. See blmc_joint_module.hpp for explanation of parameters
+     * and logic. 
+     */
+    virtual bool calibrate(const LVector& home_offset_rad) = 0;
 
     /**
      * @brief Converts torque to current
@@ -133,7 +129,7 @@ public:
      * @param torque 
      * @return double 
      */
-    double joint_torque_to_motor_current(const Vector& torque) const;
+    double joint_torque_to_motor_current(const LVector& torque) const;
 
     /**
      * @brief Converts torque to current
@@ -141,7 +137,7 @@ public:
      * @param torque 
      * @return double 
      */
-    double joint_current_to_motor_torque(const Vector& current) const;
+    double joint_current_to_motor_torque(const LVector& current) const;
 };
 
 /**
@@ -160,8 +156,8 @@ public:
      * @param gear_ratio 
      */
     Leg(blmc_drivers::BlmcJointModules<2> joints,
-        const Vector& motor_constants,
-        const Vector& gear_ratios)
+        const LVector& motor_constants,
+        const LVector& gear_ratios)
     {
         motor_constants_ = motor_constants;
         gear_ratios_ = gear_ratios;
@@ -176,18 +172,16 @@ public:
     {
     }
 
-    /**
-     * Getters
-     */
+    /// getters ================================================================
 
-    
     /**
-     * @brief Get specific measurements for both joints: pos, vel, torque, current.
+     * @brief Get specific measurements: pos, vel, torque, current. Returns
+     * data for both joints.
      * 
      * @param measurement_index
-     * @return Vector
+     * @return LVector
      */
-    virtual Vector get_measurements(const int& measurement_index) const
+    virtual LVector get_measurements(const int& measurement_index) const
     {
         switch(measurement_index)
         {
@@ -205,73 +199,103 @@ public:
             }
             case current:
             {
-                Vector torques = joints_.get_measured_torques();
+                LVector torques = joints_.get_measured_torques();
                 return joint_torque_to_motor_current(torques);
             }
             default:
             {
                 printf("Invalid measurement index passed");
-                Vector res(NAN, NAN);
+                LVector res(NAN, NAN);
                 return res;
             }
         }
     }
 
     /**
-     * @brief Get all data returned as a matrix. Rows correspond
-     * to joints; columns to position, velocity, torque.
-     * @return DVector (2, 3)
+     * @brief Get all data returned as a matrix. Rows correspond to joints;
+     * columns to position, velocity, torque.
+     * 
+     * @return LMatrix (2, 3)
      */
-    virtual DVector get_data()
+    virtual LMatrix get_data()
     {
-        DVector data;
+        LMatrix data;
         data.col(position - 1) = joints_.get_measured_angles();
-        data.col(velocity - 1 ) = joints_.get_measured_velocities();
+        data.col(velocity - 1) = joints_.get_measured_velocities();
         data.col(torque - 1) = joints_.get_measured_torques();
         return data;
     }
 
-    // input logs --------------------------------------------------------------
-    
-    virtual Vector get_sent_current_targets() const
+    /**
+     * @brief Get the sent current targets
+     * 
+     * @return LVector 
+     */
+    virtual LVector get_sent_current_targets() const
     {
         return joint_torque_to_motor_current(joints_.get_sent_torques());
-    }  
-
-    virtual Vector get_sent_torque_targets() const
+    }
+    
+    /**
+     * @brief Get the sent torque targets
+     * 
+     * @return LVector 
+     */
+    virtual LVector get_sent_torque_targets() const
     {
         return joints_.get_sent_torques();
     }
 
-    /// setter ================================================================
-    virtual void set_target_torques(const Vector& torque_targets)
+    /// setters ================================================================
+    
+    /**
+     * @brief Set the target torques 
+     * 
+     * @param torque_targets 
+     */
+    virtual void set_target_torques(const LVector& torque_targets)
     {
         joints_.set_torques(torque_targets);
     }
 
-    Vector joint_torque_to_motor_current(Vector torques) const
-    {
-        Vector currents; 
-        for (unsigned i = 0; i < 2; ++i)
-        {
-            currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
-        }
-        return currents;
-    }
-
-    void send_target_torques(){
+    /**
+     * @brief Send target torques 
+     */
+    virtual void send_target_torques(){
         joints_.send_torques();
     }
+
+    /**
+     * @brief Calibrate the legs 
+     * 
+     * @param home_offset_rad angle between zero position
+     * @return true if calibration is successful
+     */
+    virtual bool calibrate(const LVector& home_offset_rad)
+    {
+        /**
+         * TODO: double check search_distance_limit_rad
+         */
+
+        double search_distance_limit_rad = 2 * M_PI;
+        LVector profile_step_size_rad = LVector::Constant(0.001);
+        joints_.execute_homing(
+            search_distance_limit_rad, home_offset_rad, profile_step_size_rad);
+        LVector zero_pose = LVector::Zero();
+        joints_.go_to(zero_pose);
+        return true;
+    }
+    /// convert ================================================================
 
     /**
      * @brief Convert from motor current to joint torque.
      *
      * @param current is the motor current.
-     * @return double is the equivalent joint torque.
+     * @return LVector of joint torques.
      */
-    Vector motor_current_to_joint_torque(Vector currents) const
+    LVector motor_current_to_joint_torque(LVector currents) const
     {
-        Vector torques;
+        LVector torques;
         for(size_t i = 0; i < 2; i++)
         {
             torques[i] = currents[i] * gear_ratios_[i] * motor_constants_[i];
@@ -280,7 +304,21 @@ public:
 
     }
 
-    
+    /**
+     * @brief Convert from joint torque to motor current
+     * 
+     * @param torques 
+     * @return LVector of currents
+     */
+    LVector joint_torque_to_motor_current(LVector torques) const
+    {
+        LVector currents; 
+        for (unsigned i = 0; i < 2; ++i)
+        {
+            currents[i] = torques[i] / gear_ratios_[i] / motor_constants_[i];
+        }
+        return currents;
+    }
 
 private:
 
@@ -294,12 +332,12 @@ private:
      * @brief This is the torque constant of the motor:
      * \f$ \tau_{motor} = k * i_{motor} \f$
      */
-    Vector motor_constants_;
+    LVector motor_constants_;
     /**
      * @brief This correspond to the reduction (\f$ \beta \f$) between the motor
      * rotation and the joint. \f$ \theta_{joint} = \theta_{motor} / \beta \f$
      */
-    Vector gear_ratios_;
+    LVector gear_ratios_;
 
     
 
