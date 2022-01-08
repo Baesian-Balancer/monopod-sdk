@@ -16,7 +16,7 @@ add_library(utils
             ${BLMC_UTILS_PUBLIC_HDRS}
              src/utils/polynome.cpp)
 
-add_library(blmc_drivers::utils ALIAS utils)
+add_library(BlmcDrivers::utils ALIAS utils)
 
 target_include_directories(utils PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -24,7 +24,7 @@ target_include_directories(utils PUBLIC
 
 add_dependencies(utils rt::rt)
 
-target_link_libraries( utils
+target_link_libraries(utils
     PUBLIC
     real_time_tools::real_time_tools
     time_series::time_series
@@ -50,33 +50,33 @@ set(BLMC_DRIVERS_PUBLIC_HDRS
     include/monopod_sdk/blmc_drivers/blmc_joint_module.hpp
 )
 
-add_library(blmc_drivers
+add_library(BlmcDrivers
     ${BLMC_DRIVERS_PUBLIC_HDRS}
      src/blmc_joint_module.cpp
      src/serial_reader.cpp
   )
 
 if(Xenomai_FOUND)
-  target_include_directories(blmc_drivers PUBLIC ${Xenomai_INCLUDE_DIR})
+  target_include_directories(BlmcDrivers PUBLIC ${Xenomai_INCLUDE_DIR})
 endif()
 
 
-add_library(blmc_drivers::blmc_drivers ALIAS blmc_drivers)
+add_library(BlmcDrivers::BlmcDrivers ALIAS BlmcDrivers)
 
-add_dependencies(blmc_drivers rt::rt)
+add_dependencies(BlmcDrivers rt::rt)
 
-target_link_libraries( blmc_drivers
+target_link_libraries( BlmcDrivers
     PUBLIC
     real_time_tools::real_time_tools
     time_series::time_series
     Eigen3::Eigen
     Threads::Threads)
 
-target_include_directories(blmc_drivers PUBLIC
+target_include_directories(BlmcDrivers PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
 
-set_target_properties(blmc_drivers PROPERTIES
+set_target_properties(BlmcDrivers PROPERTIES
     PUBLIC_HEADER "${BLMC_DRIVERS_PUBLIC_HDRS}")
 
 
@@ -100,7 +100,7 @@ add_library(devices
   src/motor.cpp
 )
 
-add_library(blmc_drivers::devices ALIAS devices)
+add_library(BlmcDrivers::devices ALIAS devices)
 
 target_include_directories(devices PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -131,7 +131,7 @@ add_executable(can_encoder_index_test
     src/programs/can_encoder_index_test.cpp
 )
 target_link_libraries(can_encoder_index_test
-    blmc_drivers
+    BlmcDrivers
     utils
     devices
 )
@@ -150,7 +150,7 @@ macro(add_demo demo_name)
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>
   )
   target_link_libraries(${demo_name}
-                        blmc_drivers
+                        BlmcDrivers
                         utils
                         devices)
   list(APPEND misc_targets ${demo_name})
@@ -170,8 +170,8 @@ add_demo(demo_print_analog_sensors)
 
 install(
     TARGETS
-    blmc_drivers ${misc_targets}
-    EXPORT blmc_driversExport
+    BlmcDrivers ${misc_targets}
+    EXPORT BlmcDriversExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
@@ -181,7 +181,7 @@ install(
 install(
     TARGETS
     utils
-    EXPORT blmc_driversExport
+    EXPORT BlmcDriversExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
@@ -191,19 +191,19 @@ install(
 install(
     TARGETS
     devices
-    EXPORT blmc_driversExport
+    EXPORT BlmcDriversExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers/devices
   )
 
-install_basic_package_files(blmc_drivers
-    COMPONENT blmc_drivers
+install_basic_package_files(BlmcDrivers
+    COMPONENT BlmcDrivers
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
-    EXPORT blmc_driversExport
-    NAMESPACE blmc_drivers::
+    EXPORT BlmcDriversExport
+    NAMESPACE BlmcDrivers::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
     ${MONOPODSDK_INSTALL_LIBDIR}/cmake/blmc_drivers
