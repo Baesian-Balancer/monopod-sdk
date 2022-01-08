@@ -1,12 +1,11 @@
 # ==============
 # Find Monopod SDK dependencies
 # ==============
-set(MONOPODSDK_COMPONENTS MonopodSdkCore blmc_drivers MonopodDrivers)
+set(MONOPODSDK_COMPONENTS blmc_drivers MonopodDrivers)
 set(MONOPODSDK_PRIVATE_DEPENDENCIES time_series real_time_tools)
 
 add_subdirectory(blmc_drivers)
 add_subdirectory(monopod_drivers)
-add_subdirectory(core)
 
 # Dummy meta target for the top-level EXPORT
 add_library(MonopodSdk INTERFACE)

@@ -46,7 +46,7 @@ int main(int, char**)
 
         // monopod.set_torque_target(x, 0);
         // monopod.set_torque_target(x + 0.69, 1);
-        monopod.set_torque_targets({x, x + 1});
+        // monopod.set_torque_targets({x, x + 1});
 
         std::vector<double> poss = monopod.get_velocities().value();
         for (auto i: poss)
