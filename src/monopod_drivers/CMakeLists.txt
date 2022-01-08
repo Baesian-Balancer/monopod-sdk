@@ -34,9 +34,9 @@
 
   target_link_libraries(MonopodDrivers
       PUBLIC
-      blmc_drivers::blmc_drivers
-      blmc_drivers::devices
-      blmc_drivers::utils
+      BlmcDrivers::BlmcDrivers
+      BlmcDrivers::devices
+      BlmcDrivers::utils
       PRIVATE
       real_time_tools::real_time_tools
       time_series::time_series)
@@ -86,9 +86,9 @@
 
   target_link_libraries(MonopodSdkCore
     PUBLIC
-    blmc_drivers::blmc_drivers
-    blmc_drivers::devices
-    blmc_drivers::utils
+    BlmcDrivers::BlmcDrivers
+    BlmcDrivers::devices
+    BlmcDrivers::utils
     MonopodDrivers
     PRIVATE
     time_series::time_series
@@ -152,7 +152,7 @@ install_basic_package_files(MonopodDrivers
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
     EXPORT MonopodDriversExport
-    DEPENDENCIES blmc_drivers real_time_tools time_series
+    DEPENDENCIES BlmcDrivers real_time_tools time_series
     NAMESPACE MonopodDrivers::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
