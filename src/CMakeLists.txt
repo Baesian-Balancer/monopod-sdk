@@ -1,7 +1,7 @@
 # ==============
 # Find Monopod SDK dependencies
 # ==============
-set(MONOPODSDK_COMPONENTS blmc_drivers MonopodDrivers)
+set(MONOPODSDK_COMPONENTS BlmcDrivers MonopodDrivers)
 set(MONOPODSDK_PRIVATE_DEPENDENCIES time_series real_time_tools)
 
 add_subdirectory(blmc_drivers)
