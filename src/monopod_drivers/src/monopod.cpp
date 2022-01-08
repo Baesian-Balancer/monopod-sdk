@@ -413,103 +413,101 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
 /**
 * @brief this is a simple loop which runs at a kilohertz.
 *
-* Prints every 1k iterations
 */
 void Monopod::loop()
 {
   real_time_tools::Spinner spinner;
   spinner.set_period(0.001);  // 1kz loop
 
-  // size_t count = 0;
-  // size_t count_in = 0;
+  size_t count = 0;
+  size_t count_in = 0;
 
   while (!stop_loop)
   {
 
-      /* Get data from board */
-      std::vector<double> cur_pos(encoder_joint_indexing.size(), 0);
-      std::vector<double> cur_vel(encoder_joint_indexing.size(), 0);
-      // std::vector<double> cur_acc(encoder_joint_indexing.size(), 0);
-
-      /* Check Limits */
-      Monopod::JointLimit limit;
-      bool valid = true;
-
-      buffers.settings_door.lock(); //Lock settings buffers
-
-        for(size_t i = 0; i != encoder_joint_indexing.size(); i++){
-            limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].position_limit;
-            valid = valid && in_range(cur_pos[i], limit.min, limit.max);
-
-            limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].velocity_limit;
-            valid = valid && in_range(cur_vel[i], limit.min, limit.max);
-
-            // limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].acceleration_limit;
-            // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
-        }
-
-      buffers.settings_door.unlock(); //Unlock settings buffers
-
-      /* Set Torque */
-
-      if (valid) {
-          buffers.write_door.lock(); //Lock write buffers
-            for(auto& joint_index : motor_joint_indexing){
-                auto torque = buffers.write[(JointNameIndexing)joint_index];
-                /* code - set torque target to that in write buffer. need to
-                think of a way to have _leg know which joint is which index.
-                might just want to hard code this. we will never have the motor
-                numbers change.  */
-            }
-          buffers.write_door.unlock(); //Unlock write buffers
-
-          // /* Could instead use a hard code like below */
-          // double hip_torque = this->get_torque_target(hip_joint);
-          // /* Set the hip torque in the _leg class. */
-          // double knee_torque = this->get_torque_target(knee_joint);
-          // /* Set the knee torque in the _leg class. */
-      }
-      else {
-        /* code - either enter safe mode or kill motor torque */
-      }
-
-      // // Random tests ----------------------------------------------------
+      // /* Get data from board */
+      // std::vector<double> cur_pos(encoder_joint_indexing.size(), 0);
+      // std::vector<double> cur_vel(encoder_joint_indexing.size(), 0);
+      // // std::vector<double> cur_acc(encoder_joint_indexing.size(), 0);
       //
-      // if ((count % 2500) == 0)
-      // {
-      //     rt_printf("Loop number: %ld\n", count);
-      //     // Write buffers print ------------------------------------------
+      // /* Check Limits */
+      // Monopod::JointLimit limit;
+      // bool valid = true;
       //
-      //     // buffers.write_door.lock(); //Lock write buffers
-      //     //
-      //     // rt_printf("buffers.write: ");
-      //     // for (auto const &pair: buffers.write) {
-      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
-      //     // }
-      //     // rt_printf("\n");
-      //     //
-      //     // buffers.write_door.unlock(); //Unlock write buffers
+      // buffers.settings_door.lock(); //Lock settings buffers
       //
-      //     // Read buffers print -------------------------------------------
+      //   for(size_t i = 0; i != encoder_joint_indexing.size(); i++){
+      //       limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].position_limit;
+      //       valid = valid && in_range(cur_pos[i], limit.min, limit.max);
       //
-      //     buffers.read_door.lock(); //Lock read buffers
+      //       limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].velocity_limit;
+      //       valid = valid && in_range(cur_vel[i], limit.min, limit.max);
       //
-      //     // rt_printf("buffers.read: ");
-      //     // for (auto const &pair: buffers.read) {
-      //     //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-      //     //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
-      //     // }
-      //     // rt_printf("\n");
+      //       // limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].acceleration_limit;
+      //       // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
+      //   }
       //
-      //     buffers.read[(JointNameIndexing)(count_in%5)].pos++;
-      //     buffers.read[(JointNameIndexing)(count_in%5)].vel++;
-      //     buffers.read[(JointNameIndexing)(count_in%5)].acc++;
+      // buffers.settings_door.unlock(); //Unlock settings buffers
       //
-      //     buffers.read_door.unlock(); //Unlock read buffers
-      //     count_in++;
+      // /* Set Torque */
+      //
+      // if (valid) {
+      //     buffers.write_door.lock(); //Lock write buffers
+      //       for(auto& joint_index : motor_joint_indexing){
+      //           auto torque = buffers.write[(JointNameIndexing)joint_index];
+      //           /* code - set torque target to that in write buffer. need to
+      //           think of a way to have _leg know which joint is which index.
+      //           might just want to hard code this. we will never have the motor
+      //           numbers change.  */
+      //       }
+      //     buffers.write_door.unlock(); //Unlock write buffers
+      //
+      //     // /* Could instead use a hard code like below */
+      //     // double hip_torque = this->get_torque_target(hip_joint);
+      //     // /* Set the hip torque in the _leg class. */
+      //     // double knee_torque = this->get_torque_target(knee_joint);
+      //     // /* Set the knee torque in the _leg class. */
       // }
-      // count++;
+      // else {
+      //   /* code - either enter safe mode or kill motor torque */
+      // }
+
+      // Random tests ----------------------------------------------------
+      if ((count % 2500) == 0)
+      {
+          rt_printf("Loop number: %ld\n", count);
+          // Write buffers print ------------------------------------------
+
+          // buffers.write_door.lock(); //Lock write buffers
+          //
+          // rt_printf("buffers.write: ");
+          // for (auto const &pair: buffers.write) {
+          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
+          // }
+          // rt_printf("\n");
+          //
+          // buffers.write_door.unlock(); //Unlock write buffers
+
+          // Read buffers print -------------------------------------------
+
+          buffers.read_door.lock(); //Lock read buffers
+
+          // rt_printf("buffers.read: ");
+          // for (auto const &pair: buffers.read) {
+          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
+          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
+          // }
+          // rt_printf("\n");
+
+          buffers.read[(JointNameIndexing)(count_in%5)].pos++;
+          buffers.read[(JointNameIndexing)(count_in%5)].vel++;
+          buffers.read[(JointNameIndexing)(count_in%5)].acc++;
+
+          buffers.read_door.unlock(); //Unlock read buffers
+          count_in++;
+      }
+      count++;
 
       spinner.spin();
   }

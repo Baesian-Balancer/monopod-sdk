@@ -93,11 +93,13 @@ set(BLMC_DEVICES_PUBLIC_HDRS
     )
 
 add_library(devices
-            ${BLMC_DEVICES_PUBLIC_HDRS}
-             src/analog_sensors.cpp
-             src/can_bus.cpp
-             src/motor_board.cpp
-             src/motor.cpp)
+  ${BLMC_DEVICES_PUBLIC_HDRS}
+  src/analog_sensors.cpp
+  src/can_bus.cpp
+  src/motor_board.cpp
+  src/motor.cpp
+)
+
 add_library(blmc_drivers::devices ALIAS devices)
 
 target_include_directories(devices PUBLIC
@@ -105,13 +107,13 @@ target_include_directories(devices PUBLIC
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
 
 add_dependencies(devices rt::rt)
-target_link_libraries( devices
-    PUBLIC
+target_link_libraries(devices PUBLIC
     utils
     real_time_tools::real_time_tools
     time_series::time_series
     Eigen3::Eigen
-    Threads::Threads)
+    Threads::Threads
+  )
 # If on xenomai we need to link to the real time os librairies.
 if(Xenomai_FOUND)
   target_link_libraries(devices ${Xenomai_LIBRARY_XENOMAI}
@@ -142,11 +144,11 @@ macro(add_demo demo_name)
     demos/pd_control.cpp demos/sine_torque_control.cpp
     demos/sine_position_control.cpp demos/const_torque_control.cpp
     demos/${demo_name}.cpp)
-  target_include_directories(
-    ${demo_name}
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-           $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
-         $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>)
+  target_include_directories(${demo_name} PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
+    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>
+  )
   target_link_libraries(${demo_name}
                         blmc_drivers
                         utils
@@ -173,7 +175,8 @@ install(
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers)
+    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers
+  )
 
 install(
     TARGETS
@@ -182,7 +185,8 @@ install(
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers/utils)
+    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers/utils
+  )
 
 install(
     TARGETS
@@ -191,7 +195,8 @@ install(
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers/devices)
+    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/blmc_drivers/devices
+  )
 
 install_basic_package_files(blmc_drivers
     COMPONENT blmc_drivers
