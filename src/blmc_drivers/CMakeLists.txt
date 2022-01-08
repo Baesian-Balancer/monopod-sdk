@@ -206,5 +206,5 @@ install_basic_package_files(BlmcDrivers
     NAMESPACE BlmcDrivers::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/blmc_drivers
+    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/BlmcDrivers
 )
