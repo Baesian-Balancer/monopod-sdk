@@ -25,3 +25,10 @@ monopod_drivers::Planarizer
 .. doxygenclass:: monopod_drivers::Planarizer
   :project: monopod_sdk
   :members:
+
+monopod_drivers::Encoder
+---------------------------
+
+.. doxygenclass:: monopod_drivers::Encoder
+  :project: monopod_sdk
+  :members:

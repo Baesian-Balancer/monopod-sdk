@@ -17,7 +17,7 @@ namespace monopod_drivers
      * from the encoders. The two columns correspond to pos and vel.
      */
     typedef Eigen::Matrix<double, Eigen::Dynamic, 2> PMatrix;
-    
+
 
     // Leg matrices for storing data ==================================
 
@@ -47,5 +47,19 @@ namespace monopod_drivers
      */
     template <typename Type>
     using Ptr = std::shared_ptr<Type>;
+
+    // ====================================================================================
+
+    /**
+    * @brief Enumerates the joint names for indexing
+    */
+    enum JointNameIndexing
+    {
+      hip_joint,
+      knee_joint,
+      boom_connector_joint,
+      planarizer_yaw_joint,
+      planarizer_pitch_joint
+    };
 
 } // end namespace monopod_drivers

@@ -19,6 +19,7 @@
 #include "monopod_sdk/monopod_drivers/encoder.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
+#include "monopod_sdk/monopod_drivers/common_header.hpp"
 
 namespace monopod_drivers
 {
@@ -61,6 +62,11 @@ public:
     * to be initialized before the loop can be started.
     */
     void start_loop();
+
+    /**
+    * @brief Calibrate the Encoders.
+    */
+    void calibrate();
 
     /**
     * @brief Get model name
@@ -304,12 +310,12 @@ private:
     {
         // Take the joint index in lambda. Return the data you want.
         const std::vector<int>& jointSerialization =
-          joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
+          joint_indexes.empty() ? monopod->read_joint_indexing : joint_indexes;
 
         std::vector<double> data;
         data.reserve(jointSerialization.size());
         for (auto& joint_index : jointSerialization) {
-            if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+            if (is_initialized && Contains(read_joint_indexing, joint_index))
             {
                 data.push_back(getJointData(joint_index));
             }
@@ -436,54 +442,16 @@ private:
     bool is_initialized;
 
     /**
-    * @brief MotorMeasurementIndexing this enum allow to access the different
-    * kind of sensor measurements in an understandable way in the code.
-    *
-    * Note: This is same as in leg.hpp for consistency
-    */
-    enum MotorMeasurementIndexing
-    {
-      current,
-      position,
-      velocity,
-      encoder_index,
-      motor_measurement_count
-    };
-
-    /**
-    * @brief Enumerates the joint names for indexing
-    */
-    enum JointNameIndexing
-    {
-      hip_joint,
-      knee_joint,
-      boom_connector_joint,
-      planarizer_yaw_joint,
-      planarizer_pitch_joint
-    };
-
-    /**
     * @brief Write Joint names indexed same as enumerator for actuators.  All valid
     * controlled joints should be defined here.
     */
-    std::vector<int>  motor_joint_indexing =
-    {
-      hip_joint,
-      knee_joint
-    };
+    std::vector<int>  write_joint_indexing;
 
    /**
    * @brief Read Joint names indexed same as enumerator for encoders. All valid
    * joints should be defined here.
    */
-   std::vector<int>  encoder_joint_indexing =
-    {
-      hip_joint,
-      knee_joint,
-      boom_connector_joint,
-      planarizer_yaw_joint,
-      planarizer_pitch_joint
-    };
+   std::vector<int>  read_joint_indexing;
 
    /**
    * @brief Structure holding the observed state of a joint

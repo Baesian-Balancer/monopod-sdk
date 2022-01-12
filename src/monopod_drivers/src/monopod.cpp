@@ -11,6 +11,19 @@ namespace monopod_drivers
 Monopod::Monopod()
 {
     stop_loop = false;
+    read_joint_indexing =
+     {
+       hip_joint,
+       knee_joint,
+       boom_connector_joint,
+       planarizer_yaw_joint,
+       planarizer_pitch_joint
+     };
+     write_joint_indexing =
+     {
+       hip_joint,
+       knee_joint
+     };
 }
 
 Monopod::~Monopod()
@@ -21,41 +34,15 @@ Monopod::~Monopod()
 
 bool Monopod::initialize()
 {
-    // // First of all one need to initialize the communication with the can bus.
-    // canbus_.leg = std::make_shared<blmc_drivers::CanBus>("can0");
-    // canbus_.planarizer1 = std::make_shared<blmc_drivers::CanBus>("can1");
-    // canbus_.planarizer2 = std::make_shared<blmc_drivers::CanBus>("can2");
-    // rt_printf("Canbus is set up \n");
-    //
-    // // Then we create a motor board object that will use the can bus in order
-    // // communicate between this application and the actual motor board.
-    // // Important: the blmc motors are alinged during this stage.
-    // auto motor_board = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.leg);
-    // auto planarizer_board1 = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.planarizer1);
-    // auto planarizer_board2 = std::make_shared<blmc_drivers::CanBusMotorBoard>(canbus_.planarizer2);
-    // rt_printf("Board are set up \n");
-    //
-    // // create the motor object that have an index that define the port on which
-    // // they are plugged on the motor board. This object takes also a MotorBoard
-    // // object to be able to get the sensors and send the control consistantly.
-    // // These safe motors have the ability to bound the current that is given
-    // // as input.
-    // auto motor_hip = std::make_shared<blmc_drivers::SafeMotor>(motor_board, 0);
-    // auto motor_knee = std::make_shared<blmc_drivers::SafeMotor>(motor_board, 1);
-    // rt_printf("motors are set up \n");
-    //
-    // auto encoder_planarizer_yaw = std::make_shared<monopod_drivers::Encoder>(planarizer_board1, 0);
-    // auto encoder_planarizer_pitch = std::make_shared<monopod_drivers::Encoder>(planarizer_board1, 1);
-    // auto encoder_connector = std::make_shared<monopod_drivers::Encoder>(planarizer_board2, 0);
-    // rt_printf("encoders are set up. \n");
-    //
+
+
     // leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
     // planarizer_ = std::make_unique<monopod_drivers::Planarizer>(encoder_planarizer_yaw, encoder_planarizer_pitch, encoder_connector);
     // rt_printf("initialization is complete. \n");
-    //
-    // // TODO: Auto detect the number of boards for the encoders. want to be able to detect if only fixed hip with single TI for encoders
-    // // Or if only 1 encoder is attached to the first planarizer board (fixed yaw). This will be a little bit complicated as it will change the
-    // // Logic used below too
+
+    // TODO: Auto detect the number of boards for the encoders. want to be able to detect if only fixed hip with single TI for encoders
+    // Or if only 1 encoder is attached to the first planarizer board (fixed yaw). This will be a little bit complicated as it will change the
+    // Logic used below too
 
     is_initialized = true;
     return initialized();
@@ -80,7 +67,7 @@ void Monopod::start_loop()
 
 bool Monopod::is_joint_controllable(const int joint_index)
 {
-    return is_initialized && Contains(motor_joint_indexing, joint_index);
+    return is_initialized && Contains(write_joint_indexing, joint_index);
 }
 
 // ========================================
@@ -98,7 +85,7 @@ std::unordered_map<std::string, int> Monopod::get_joint_names() const
 
 std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
 {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index))
+    if (is_initialized && Contains(write_joint_indexing, joint_index))
     {
           buffers.pid_door.lock(); //Lock pid buffers
             const PID _pid = buffers.pid[(JointNameIndexing)joint_index];
@@ -111,7 +98,7 @@ std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
 
 std::optional<Monopod::JointLimit> Monopod::get_joint_position_limit(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].position_limit;
@@ -123,7 +110,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_position_limit(const int &
 
 std::optional<Monopod::JointLimit> Monopod::get_joint_velocity_limit(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].velocity_limit;
@@ -135,7 +122,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_velocity_limit(const int &
 
 std::optional<Monopod::JointLimit> Monopod::get_joint_acceleration_limit(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           const Monopod::JointLimit limit = buffers.settings[(JointNameIndexing)joint_index].acceleration_limit;
@@ -147,7 +134,7 @@ std::optional<Monopod::JointLimit> Monopod::get_joint_acceleration_limit(const i
 
 std::optional<double> Monopod::get_torque_target(const int &joint_index)
 {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index))
+    if (is_initialized && Contains(write_joint_indexing, joint_index))
     {
           buffers.write_door.lock(); //Lock write buffers
             double torque_target = buffers.write[(JointNameIndexing)joint_index];
@@ -160,13 +147,13 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index)
 std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector<int> &joint_indexes)
 {
     const std::vector<int>& jointSerialization =
-        joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
+        joint_indexes.empty() ? write_joint_indexing : joint_indexes;
 
     std::vector<double> data;
     data.reserve(jointSerialization.size());
     buffers.write_door.lock(); //Lock write buffers
       for(auto& joint_index : jointSerialization){
-          if (is_initialized && Contains(motor_joint_indexing, joint_index))
+          if (is_initialized && Contains(write_joint_indexing, joint_index))
           {
               data.push_back(buffers.write[(JointNameIndexing)joint_index]);
               continue;
@@ -184,7 +171,7 @@ std::optional<std::vector<double>> Monopod::get_torque_targets(const std::vector
 
 std::optional<double> Monopod::get_position(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
           double position = buffers.read[(JointNameIndexing)joint_index].pos;
@@ -196,7 +183,7 @@ std::optional<double> Monopod::get_position(const int &joint_index)
 
 std::optional<double> Monopod::get_velocity(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
           double velocity = buffers.read[(JointNameIndexing)joint_index].vel;
@@ -209,7 +196,7 @@ std::optional<double> Monopod::get_velocity(const int &joint_index)
 
 std::optional<double> Monopod::get_acceleration(const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
           double acceleration = buffers.read[(JointNameIndexing)joint_index].acc;
@@ -258,7 +245,7 @@ std::optional<std::vector<double>> Monopod::get_accelerations(const std::vector<
 std::optional<double> Monopod::get_max_torque_target(const int &joint_index)
 {
 
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           double max_target = buffers.settings[(JointNameIndexing)joint_index].max_torque_target;
@@ -274,7 +261,7 @@ std::optional<double> Monopod::get_max_torque_target(const int &joint_index)
 
 bool Monopod::set_pid(const int &p, const int &i, const int &d, const int &joint_index)
 {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index))
+    if (is_initialized && Contains(write_joint_indexing, joint_index))
     {
         buffers.pid_door.lock(); //Lock pid buffers
           buffers.pid[(JointNameIndexing)joint_index].p = p;
@@ -288,7 +275,7 @@ bool Monopod::set_pid(const int &p, const int &i, const int &d, const int &joint
 
 bool Monopod::set_joint_position_limit(const double& max, const double& min, const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           buffers.settings[(JointNameIndexing)joint_index].position_limit.max = max;
@@ -301,7 +288,7 @@ bool Monopod::set_joint_position_limit(const double& max, const double& min, con
 
 bool Monopod::set_joint_velocity_limit(const double& max, const double& min, const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           buffers.settings[(JointNameIndexing)joint_index].velocity_limit.max = max;
@@ -314,7 +301,7 @@ bool Monopod::set_joint_velocity_limit(const double& max, const double& min, con
 
 bool Monopod::set_joint_acceleration_limit(const double& max, const double& min, const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           buffers.settings[(JointNameIndexing)joint_index].acceleration_limit.max = max;
@@ -327,7 +314,7 @@ bool Monopod::set_joint_acceleration_limit(const double& max, const double& min,
 
 bool Monopod::set_max_torque_target(const double &max_torque_target,  const int &joint_index)
 {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index))
+    if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.settings_door.lock();
           // printf("new max torque: %f\n", max_torque_target );
@@ -340,7 +327,7 @@ bool Monopod::set_max_torque_target(const double &max_torque_target,  const int 
 
 bool Monopod::set_torque_target(const double &torque_target, const int joint_index)
 {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index))
+    if (is_initialized && Contains(write_joint_indexing, joint_index))
     {
         buffers.settings_door.lock(); //Lock settings buffers
           double max_torque_target = buffers.settings[(JointNameIndexing)joint_index].max_torque_target;
@@ -369,7 +356,7 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
      // Note: if it fails the behaviour is undefined. For example if first 3 joints
      // are right but one bad index it will updatethe good ones the fail on the bad one
     const std::vector<int>& jointSerialization =
-        joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
+        joint_indexes.empty() ? write_joint_indexing : joint_indexes;
 
     if(torque_targets.size() != jointSerialization.size())
         // This means the inputs do not match
@@ -380,7 +367,7 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
     buffers.settings_door.lock(); //Lock settings buffers
 
       for(size_t i = 0; i != torque_targets.size(); i++){
-          if (is_initialized && Contains(motor_joint_indexing, jointSerialization[i]))
+          if (is_initialized && Contains(write_joint_indexing, jointSerialization[i]))
           {
               double max_torque_target = buffers.settings[(JointNameIndexing)jointSerialization[i]].max_torque_target;
               // Clip to max if over.
@@ -414,6 +401,83 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
 * @brief this is a simple loop which runs at a kilohertz.
 *
 */
+// void Monopod::loop()
+// {
+//   real_time_tools::Spinner spinner;
+//   spinner.set_period(0.001);  // 1kz loop
+//
+//   // size_t count = 0;
+//   // size_t count_in = 0;
+//
+//   while (!stop_loop)
+//   {
+//
+//       /*
+//       * This section gets data from encoder joints then
+//       */
+//       std::vector<double> cur_pos(read_joint_indexing.size(), 0);
+//       std::vector<double> cur_vel(read_joint_indexing.size(), 0);
+//       // std::vector<double> cur_acc(read_joint_indexing.size(), 0);
+//
+//       /*
+//       * Check Limits of all the observations. If it is outside the limits we
+//       * have an issue and will want to enter a 'safe mode' instead of allowing
+//       * more actions. Safe mode will not prevent observations from being updated.
+//       */
+//       Monopod::JointLimit limit;
+//       bool valid = true;
+//
+//       buffers.settings_door.lock(); //Lock settings buffers
+//       buffers.read_door.lock(); //Lock read buffers
+//       {
+//         for(size_t i = 0; i != read_joint_indexing.size(); i++){
+//             limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].position_limit;
+//             valid = valid && in_range(cur_pos[i], limit.min, limit.max);
+//             buffers.read[(JointNameIndexing)read_joint_indexing[i]].pos = cur_pos[i];
+//
+//             limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].velocity_limit;
+//             valid = valid && in_range(cur_vel[i], limit.min, limit.max);
+//             buffers.read[(JointNameIndexing)read_joint_indexing[i]].vel = cur_vel[i];
+//
+//             // limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].acceleration_limit;
+//             // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
+//             // buffers.read[(JointNameIndexing)read_joint_indexing[i]].acc = cur_acc[i];
+//         }
+//       }
+//       buffers.read_door.unlock(); //Unlock read buffers
+//       buffers.settings_door.unlock(); //Unlock settings buffers
+//
+//       /*
+//       * Set the new torque values if observation was valid
+//       */
+//
+//       // Note: Might want to move the lock outside of the conditional.
+//
+//       if (valid) {
+//           buffers.write_door.lock(); //Lock write buffers
+//             for(auto& joint_index : write_joint_indexing){
+//                 auto torque = buffers.write[(JointNameIndexing)joint_index];
+//                 /* code - set torque target to that in write buffer. need to
+//                 think of a way to have _leg know which joint is which index.
+//                 might just want to hard code this. we will never have the motor
+//                 numbers change.*/
+//             }
+//           buffers.write_door.unlock(); //Unlock write buffers
+//
+//           // /* Could instead use a hard code like below */
+//           // double hip_torque = this->get_torque_target(hip_joint);
+//           // /* Set the hip torque in the _leg class. */
+//           // double knee_torque = this->get_torque_target(knee_joint);
+//           // /* Set the knee torque in the _leg class. */
+//       }
+//       else {
+//         /* code - either enter safe mode or kill motor torque */
+//       }
+//
+//       spinner.spin();
+//   }
+// }
+
 void Monopod::loop()
 {
   real_time_tools::Spinner spinner;
@@ -424,53 +488,6 @@ void Monopod::loop()
 
   while (!stop_loop)
   {
-
-      // /* Get data from board */
-      // std::vector<double> cur_pos(encoder_joint_indexing.size(), 0);
-      // std::vector<double> cur_vel(encoder_joint_indexing.size(), 0);
-      // // std::vector<double> cur_acc(encoder_joint_indexing.size(), 0);
-      //
-      // /* Check Limits */
-      // Monopod::JointLimit limit;
-      // bool valid = true;
-      //
-      // buffers.settings_door.lock(); //Lock settings buffers
-      //
-      //   for(size_t i = 0; i != encoder_joint_indexing.size(); i++){
-      //       limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].position_limit;
-      //       valid = valid && in_range(cur_pos[i], limit.min, limit.max);
-      //
-      //       limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].velocity_limit;
-      //       valid = valid && in_range(cur_vel[i], limit.min, limit.max);
-      //
-      //       // limit = buffers.settings[(JointNameIndexing)encoder_joint_indexing[i]].acceleration_limit;
-      //       // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
-      //   }
-      //
-      // buffers.settings_door.unlock(); //Unlock settings buffers
-      //
-      // /* Set Torque */
-      //
-      // if (valid) {
-      //     buffers.write_door.lock(); //Lock write buffers
-      //       for(auto& joint_index : motor_joint_indexing){
-      //           auto torque = buffers.write[(JointNameIndexing)joint_index];
-      //           /* code - set torque target to that in write buffer. need to
-      //           think of a way to have _leg know which joint is which index.
-      //           might just want to hard code this. we will never have the motor
-      //           numbers change.  */
-      //       }
-      //     buffers.write_door.unlock(); //Unlock write buffers
-      //
-      //     // /* Could instead use a hard code like below */
-      //     // double hip_torque = this->get_torque_target(hip_joint);
-      //     // /* Set the hip torque in the _leg class. */
-      //     // double knee_torque = this->get_torque_target(knee_joint);
-      //     // /* Set the knee torque in the _leg class. */
-      // }
-      // else {
-      //   /* code - either enter safe mode or kill motor torque */
-      // }
 
       // Random tests ----------------------------------------------------
       if ((count % 2500) == 0)
