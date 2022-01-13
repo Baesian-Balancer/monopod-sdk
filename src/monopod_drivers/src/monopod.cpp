@@ -24,6 +24,11 @@ Monopod::Monopod()
        hip_joint,
        knee_joint
      };
+
+     leg_ = std::make_unique<monopod_drivers::Leg>("can0");
+     planarizer_ = std::make_unique<monopod_drivers::Planarizer>(2, "can1");
+
+
 }
 
 Monopod::~Monopod()
@@ -35,16 +40,8 @@ Monopod::~Monopod()
 bool Monopod::initialize()
 {
 
-    // Either here or in the constructor determine whether the number of provided can port strings (assuming default is can0, can1, can2)
-    // is the same length as the
-
-    // leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
-    // planarizer_ = std::make_unique<monopod_drivers::Planarizer>(encoder_planarizer_yaw, encoder_planarizer_pitch, encoder_connector);
-    // rt_printf("initialization is complete. \n");
-
-    // TODO: Auto detect the number of boards for the encoders. want to be able to detect if only fixed hip with single TI for encoders
-    // Or if only 1 encoder is attached to the first planarizer board (fixed yaw). This will be a little bit complicated as it will change the
-    // Logic used below too
+    leg_->initialize();
+    planarizer_->initialize();
 
     is_initialized = true;
     return initialized();
@@ -410,133 +407,100 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets, cons
 * @brief this is a simple loop which runs at a kilohertz.
 *
 */
-// void Monopod::loop()
-// {
-//   real_time_tools::Spinner spinner;
-//   spinner.set_period(0.001);  // 1kz loop
-//
-//   // size_t count = 0;
-//   // size_t count_in = 0;
-//
-//   while (!stop_loop)
-//   {
-//
-//       /*
-//       * This section gets data from encoder joints then
-//       */
-//       std::vector<double> cur_pos(read_joint_indexing.size(), 0);
-//       std::vector<double> cur_vel(read_joint_indexing.size(), 0);
-//       // std::vector<double> cur_acc(read_joint_indexing.size(), 0);
-//
-//       /*
-//       * Check Limits of all the observations. If it is outside the limits we
-//       * have an issue and will want to enter a 'safe mode' instead of allowing
-//       * more actions. Safe mode will not prevent observations from being updated.
-//       */
-//       Monopod::JointLimit limit;
-//       bool valid = true;
-//
-//       buffers.settings_door.lock(); //Lock settings buffers
-//       buffers.read_door.lock(); //Lock read buffers
-//       {
-//         for(size_t i = 0; i != read_joint_indexing.size(); i++){
-//             limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].position_limit;
-//             valid = valid && in_range(cur_pos[i], limit.min, limit.max);
-//             buffers.read[(JointNameIndexing)read_joint_indexing[i]].pos = cur_pos[i];
-//
-//             limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].velocity_limit;
-//             valid = valid && in_range(cur_vel[i], limit.min, limit.max);
-//             buffers.read[(JointNameIndexing)read_joint_indexing[i]].vel = cur_vel[i];
-//
-//             // limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].acceleration_limit;
-//             // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
-//             // buffers.read[(JointNameIndexing)read_joint_indexing[i]].acc = cur_acc[i];
-//         }
-//       }
-//       buffers.read_door.unlock(); //Unlock read buffers
-//       buffers.settings_door.unlock(); //Unlock settings buffers
-//
-//       /*
-//       * Set the new torque values if observation was valid
-//       */
-//
-//       // Note: Might want to move the lock outside of the conditional.
-//
-//       if (valid) {
-//           buffers.write_door.lock(); //Lock write buffers
-//             for(auto& joint_index : write_joint_indexing){
-//                 auto torque = buffers.write[(JointNameIndexing)joint_index];
-//                 /* code - set torque target to that in write buffer. need to
-//                 think of a way to have _leg know which joint is which index.
-//                 might just want to hard code this. we will never have the motor
-//                 numbers change.*/
-//             }
-//           buffers.write_door.unlock(); //Unlock write buffers
-//
-//           // /* Could instead use a hard code like below */
-//           // double hip_torque = this->get_torque_target(hip_joint);
-//           // /* Set the hip torque in the _leg class. */
-//           // double knee_torque = this->get_torque_target(knee_joint);
-//           // /* Set the knee torque in the _leg class. */
-//       }
-//       else {
-//         /* code - either enter safe mode or kill motor torque */
-//       }
-//
-//       spinner.spin();
-//   }
-// }
-
 void Monopod::loop()
 {
   real_time_tools::Spinner spinner;
   spinner.set_period(0.001);  // 1kz loop
 
-  size_t count = 0;
-  size_t count_in = 0;
+  // size_t count = 0;
+  // size_t count_in = 0;
 
   while (!stop_loop)
   {
+      /*
+      * Collect data
+      */
+      auto data_leg = leg_->get_measurements();
+      auto data_planarizer = planarizer_->get_measurements();
+      /*
+      * This section gets data from encoder joints then
+      */
+      std::vector<double> cur_pos;
+      std::vector<double> cur_vel;
 
-      // Random tests ----------------------------------------------------
-      if ((count % 2500) == 0)
+      cur_pos.reserve(read_joint_indexing.size());
+      cur_vel.reserve(read_joint_indexing.size());
+      // std::vector<double> cur_acc(read_joint_indexing.size(), 0);
+
+      for (const auto &joint_index : read_joint_indexing)
       {
-          rt_printf("Loop number: %ld\n", count);
-          // Write buffers print ------------------------------------------
+          int data_index = monopod_drivers::JointModulesIndexMapping.at((JointNameIndexing)joint_index);
 
-          // buffers.write_door.lock(); //Lock write buffers
-          //
-          // rt_printf("buffers.write: ");
-          // for (auto const &pair: buffers.write) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second);
-          // }
-          // rt_printf("\n");
-          //
-          // buffers.write_door.unlock(); //Unlock write buffers
-
-          // Read buffers print -------------------------------------------
-
-          buffers.read_door.lock(); //Lock read buffers
-
-          // rt_printf("buffers.read: ");
-          // for (auto const &pair: buffers.read) {
-          //     // std::cout << "{" << pair.first << ": " << pair.second << "}";
-          //     rt_printf("{key: %s, Val: %f}", joint_names[pair.first].c_str(), pair.second.pos);
-          // }
-          // rt_printf("\n");
-
-          buffers.read[(JointNameIndexing)(count_in%5)].pos++;
-          buffers.read[(JointNameIndexing)(count_in%5)].vel++;
-          buffers.read[(JointNameIndexing)(count_in%5)].acc++;
-
-          buffers.read_door.unlock(); //Unlock read buffers
-          count_in++;
+          if (Contains(write_joint_indexing, joint_index))
+          {
+            /* handle Leg data here */
+            cur_pos.push_back(data_leg[monopod_drivers::position][data_index]);
+            cur_vel.push_back(data_leg[monopod_drivers::velocity][data_index]);
+          }
+          else
+          {
+            /* handle Planarizer data here */
+            cur_pos.push_back(data_planarizer[monopod_drivers::position][data_index]);
+            cur_vel.push_back(data_planarizer[monopod_drivers::velocity][data_index]);
+          }
       }
-      count++;
+
+      /*
+      * Check Limits of all the observations. If it is outside the limits we
+      * have an issue and will want to enter a 'safe mode' instead of allowing
+      * more actions. Safe mode will not prevent observations from being updated.
+      */
+      Monopod::JointLimit limit;
+      bool valid = true;
+
+      buffers.settings_door.lock(); //Lock settings buffers
+      buffers.read_door.lock(); //Lock read buffers
+      {
+        for(size_t i = 0; i != read_joint_indexing.size(); i++){
+            limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].position_limit;
+            valid = valid && in_range(cur_pos[i], limit.min, limit.max);
+            buffers.read[(JointNameIndexing)read_joint_indexing[i]].pos = cur_pos[i];
+
+            limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].velocity_limit;
+            valid = valid && in_range(cur_vel[i], limit.min, limit.max);
+            buffers.read[(JointNameIndexing)read_joint_indexing[i]].vel = cur_vel[i];
+
+            // limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]].acceleration_limit;
+            // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
+            // buffers.read[(JointNameIndexing)read_joint_indexing[i]].acc = cur_acc[i];
+        }
+      }
+      buffers.read_door.unlock(); //Unlock read buffers
+      buffers.settings_door.unlock(); //Unlock settings buffers
+
+      /*
+      * Set the new torque values if observation was valid
+      */
+
+      if (valid) {
+          auto torques = get_torque_targets();
+          monopod_drivers::LVector torques_eigen(torques.value().data());
+
+          leg_->set_target_torques(torques_eigen);
+          leg_->send_target_torques();
+      }
+      else {
+          /* code - either enter safe mode or kill motor torque */
+          monopod_drivers::LVector torques;
+          torques.setZero();
+
+          leg_->set_target_torques(torques);
+          leg_->send_target_torques();
+      }
 
       spinner.spin();
   }
 }
+
 
 } // end monopod_drivers namespace
