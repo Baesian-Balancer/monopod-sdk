@@ -484,13 +484,14 @@ void Monopod::loop()
 
       if (valid) {
           auto torques = get_torque_targets();
+          //TODO: This assumes torques has a value. This might not be the case those? In which case it must be handled
           monopod_drivers::LVector torques_eigen(torques.value().data());
 
           leg_->set_target_torques(torques_eigen);
           leg_->send_target_torques();
       }
       else {
-          /* code - either enter safe mode or kill motor torque */
+          // TODO: This sets torques to 0 as the safe mode right now? We might want to handle this in a mor creative way...
           monopod_drivers::LVector torques;
           torques.setZero();
 
