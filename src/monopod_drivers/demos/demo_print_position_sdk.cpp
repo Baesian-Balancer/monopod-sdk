@@ -35,24 +35,23 @@ int main(int, char**)
     rt_printf("controllers are set up \n");
 
     monopod.initialize();
+    rt_printf("initialized monopod sdk \n");
+
     monopod.start_loop();
     rt_printf("loops have started \n");
-    double x = 0;
 
 
     while (!StopDemos)
     {
         real_time_tools::Timer::sleep_sec(1);
 
-        // monopod.set_torque_target(x, 0);
-        // monopod.set_torque_target(x + 0.69, 1);
-        // monopod.set_torque_targets({x, x + 1});
-
-        std::vector<double> poss = monopod.get_velocities().value();
-        for (auto i: poss)
-            std::cout << i << ", ";
+        std::vector<double> poss = monopod.get_positions().value();
+        std::cout << "Joint Positions: ";
+        for (const auto &pos: poss){
+            std::cout << pos << " ";
+        }
         std::cout << std::endl << std::endl;
-        x++;
+
     }
 
     return 0;

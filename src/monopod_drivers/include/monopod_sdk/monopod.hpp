@@ -436,43 +436,43 @@ private:
     */
     std::vector<int>  write_joint_indexing;
 
-   /**
-   * @brief Read Joint names indexed same as enumerator for encoders. All valid
-   * joints should be defined here.
-   */
-   std::vector<int>  read_joint_indexing;
+     /**
+     * @brief Read Joint names indexed same as enumerator for encoders. All valid
+     * joints should be defined here.
+     */
+     std::vector<int>  read_joint_indexing;
 
-   /**
-   * @brief Structure holding the observed state of a joint
-   */
-   struct JointReadState
-   {
-       JointReadState() = default;
-       JointReadState(const double _pos, const double _vel, const double _acc)
-           : pos(_pos), vel(_vel), acc(_acc)
-           {}
-       double pos = 0.0;
-       double vel = 0.0;
-       double acc = 0.0;
-   };
+     /**
+     * @brief Structure holding the observed state of a joint
+     */
+     struct JointReadState
+     {
+         JointReadState() = default;
+         JointReadState(const double _pos, const double _vel, const double _acc)
+             : pos(_pos), vel(_vel), acc(_acc)
+             {}
+         double pos = 0.0;
+         double vel = 0.0;
+         double acc = 0.0;
+     };
 
-   /**
-   * @brief Structure holding the observed state of a joint
-   */
-   struct JointSettingState
-   {
-       JointSettingState() = default;
-       JointSettingState(const double _max_torque_target, const JointLimit _position_limit,
-         const JointLimit _velocity_limit, const JointLimit _acceleration_limit)
-          : position_limit(_position_limit), velocity_limit(_velocity_limit),
-            acceleration_limit(_acceleration_limit), max_torque_target(_max_torque_target)
-       {}
+     /**
+     * @brief Structure holding the observed state of a joint
+     */
+     struct JointSettingState
+     {
+         JointSettingState() = default;
+         JointSettingState(const double _max_torque_target, const JointLimit _position_limit,
+           const JointLimit _velocity_limit, const JointLimit _acceleration_limit)
+            : position_limit(_position_limit), velocity_limit(_velocity_limit),
+              acceleration_limit(_acceleration_limit), max_torque_target(_max_torque_target)
+         {}
 
-       JointLimit position_limit = {};
-       JointLimit velocity_limit = {};
-       JointLimit acceleration_limit = {};
-       double max_torque_target = 0;
-   };
+         JointLimit position_limit = {};
+         JointLimit velocity_limit = {};
+         JointLimit acceleration_limit = {};
+         double max_torque_target = 0;
+     };
 
    /**
     * @brief Read/Write buffer

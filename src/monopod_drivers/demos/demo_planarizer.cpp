@@ -13,7 +13,7 @@
 
 const int NUMBER_JOINTS = 3;
 
-static THREAD_FUNCTION_RETURN_TYPE plan_printing_loop(void* planarizer_ptr)
+static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* planarizer_ptr)
 {
     // cast input arguments to the right format --------------------------------
 
@@ -27,7 +27,16 @@ static THREAD_FUNCTION_RETURN_TYPE plan_printing_loop(void* planarizer_ptr)
          << "(planarizer_yaw_joint: "   << data[monopod_drivers::position][1] << ")"
          << "(planarizer_pitch_joint: " << data[monopod_drivers::position][0] << ")"
          << std::endl;
-        // std::cout << "Velocity is: " << data[monopod_drivers::velocity] << std::endl;
+
+         std::cout << "Current Velocity for: "
+          << "(boom_connector_joint: "   << data[monopod_drivers::velocity][2] << ")"
+          << "(planarizer_yaw_joint: "   << data[monopod_drivers::velocity][1] << ")"
+          << "(planarizer_pitch_joint: " << data[monopod_drivers::velocity][0] << ")"
+          << std::endl;
+
+          /*
+          * You get the indexes from the common header files. you can use the map to get them better.
+          */
 
     }
     return THREAD_FUNCTION_RETURN_VALUE;
@@ -39,11 +48,11 @@ int main(int, char**)
     auto planarizer = std::make_shared<monopod_drivers::Planarizer>(3, "can1", "can2");
 
     // // start real-time leg loop --------------------------------------------
-    real_time_tools::RealTimeThread plan_printing_thread;
-    plan_printing_thread.create_realtime_thread(&plan_printing_loop, &planarizer);
+    real_time_tools::RealTimeThread printing_thread;
+    printing_thread.create_realtime_thread(&printing_loop, &planarizer);
 
 
     rt_printf("control loop started \n");
-    plan_printing_thread.join();
+    printing_thread.join();
     return 0;
 }
