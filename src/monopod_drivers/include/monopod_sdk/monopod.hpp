@@ -16,7 +16,6 @@
 #include "monopod_sdk/blmc_drivers/devices/can_bus.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor.hpp"
 #include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
-#include "monopod_sdk/monopod_drivers/encoder.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
 #include "monopod_sdk/monopod_drivers/common_header.hpp"
@@ -76,7 +75,7 @@ public:
     std::string get_model_name() const;
 
     /**
-    * @brief Get a map of joint strings indexing their enumerator index
+    * @brief Get a map of 'active' joint strings indexing their enumerator index
     *
     * @return Unordered map of joint name strings as key and index as value
     */
@@ -389,7 +388,7 @@ public:
     * @brief Template helper checking if vector contains an element.
     */
     template <typename T>
-    bool Contains( std::vector<T>& Vec, const T& Element ) const
+    bool Contains(const std::vector<T>& Vec, const T& Element ) const
     {
         if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
             return true;
@@ -412,17 +411,7 @@ private:
    real_time_tools::RealTimeThread rt_thread_;
 
     /**
-    * @brief robot Leg interface object
-    */
-   struct CanBus
-   {
-      std::shared_ptr<blmc_drivers::CanBusInterface> leg;
-      std::shared_ptr<blmc_drivers::CanBusInterface> planarizer1;
-      std::shared_ptr<blmc_drivers::CanBusInterface> planarizer2;
-   } canbus_;
-
-    /**
-    * @brief robot Leg interface object
+    * @brief robot Planarizer interface object
     */
     std::unique_ptr<monopod_drivers::Planarizer> planarizer_;
 

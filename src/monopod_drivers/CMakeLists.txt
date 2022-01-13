@@ -6,15 +6,16 @@
   # add library
   # ===============================
   set(MONOPOD_DRIVERS_PUBLIC_HDRS
-      include/monopod_sdk/monopod_drivers/encoder.hpp
       include/monopod_sdk/monopod_drivers/leg.hpp
       include/monopod_sdk/monopod_drivers/planarizer.hpp
   )
   add_library(MonopodDrivers
       ${MONOPOD_DRIVERS_PUBLIC_HDRS}
-          src/encoder.cpp
-          src/planarizer.cpp
+          # src/encoder.cpp
+          # src/planarizer.cpp
     )
+
+  set_target_properties(MonopodDrivers PROPERTIES LINKER_LANGUAGE CXX)
 
   # ===============================
   # Set depends and link libraries

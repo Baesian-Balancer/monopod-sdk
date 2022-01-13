@@ -35,6 +35,8 @@ Monopod::~Monopod()
 bool Monopod::initialize()
 {
 
+    // Either here or in the constructor determine whether the number of provided can port strings (assuming default is can0, can1, can2)
+    // is the same length as the
 
     // leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
     // planarizer_ = std::make_unique<monopod_drivers::Planarizer>(encoder_planarizer_yaw, encoder_planarizer_pitch, encoder_connector);
@@ -80,7 +82,14 @@ std::string Monopod::get_model_name() const {
 
 std::unordered_map<std::string, int> Monopod::get_joint_names() const
 {
-    return joint_names;
+    std::unordered_map<std::string, int> joint_names_;
+
+    for (auto const &pair: joint_names) {
+        if (Contains(read_joint_indexing, pair.second) || Contains(write_joint_indexing, pair.second)){
+            joint_names_[pair.first] = pair.second;
+        }
+    }
+    return joint_names_;
 }
 
 std::optional<Monopod::PID> Monopod::get_pid(const int &joint_index)
@@ -174,9 +183,9 @@ std::optional<double> Monopod::get_position(const int &joint_index)
     if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
-          double position = buffers.read[(JointNameIndexing)joint_index].pos;
+          double pos = buffers.read[(JointNameIndexing)joint_index].pos;
         buffers.read_door.unlock();
-        return position;
+        return pos;
     }
     return std::nullopt;
 }
@@ -186,9 +195,9 @@ std::optional<double> Monopod::get_velocity(const int &joint_index)
     if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
-          double velocity = buffers.read[(JointNameIndexing)joint_index].vel;
+          double vel = buffers.read[(JointNameIndexing)joint_index].vel;
         buffers.read_door.unlock();
-        return velocity;
+        return vel;
     }
     return std::nullopt;
 }
@@ -199,9 +208,9 @@ std::optional<double> Monopod::get_acceleration(const int &joint_index)
     if (is_initialized && Contains(read_joint_indexing, joint_index))
     {
         buffers.read_door.lock();
-          double acceleration = buffers.read[(JointNameIndexing)joint_index].acc;
+          double acc = buffers.read[(JointNameIndexing)joint_index].acc;
         buffers.read_door.unlock();
-        return acceleration;
+        return acc;
     }
     return std::nullopt;
 }

@@ -6,19 +6,6 @@ namespace monopod_drivers
 
     // Planarizer matrices for storing data ==================================
 
-    /**
-     * @brief Defines a dynamic sized Eigen vector type to hold the encoders.
-     * May have two or three encoders for optional fixed/free hip
-     */
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 1> PVector;
-
-    /**
-     * @brief Defines a dynamic sized Eigen matrix type to store all the data
-     * from the encoders. The two columns correspond to pos and vel.
-     */
-    typedef Eigen::Matrix<double, Eigen::Dynamic, 2> PMatrix;
-
-
     // Leg matrices for storing data ==================================
 
     /**
@@ -26,12 +13,6 @@ namespace monopod_drivers
      * Data is one of pos, vel, torque
      */
     typedef Eigen::Matrix<double, 2, 1> LVector;
-
-    /**
-     * @brief Defines a static sized Eigen vector type to store all the data for the leg.
-     * Data columns are pos, vel, torque
-     */
-    typedef Eigen::Matrix<double, 2, 3> LMatrix;
 
 
     /**
@@ -60,6 +41,29 @@ namespace monopod_drivers
       boom_connector_joint,
       planarizer_yaw_joint,
       planarizer_pitch_joint
+    };
+
+    /**
+     * @brief Here is a list of the different measurement available on the
+     * blmc card.
+     */
+    enum MeasurementIndex
+    {
+        position,
+        velocity,
+        acceleration,
+        torque
+    };
+
+    /**
+    * @brief Joint names indexed same as enumerator
+    */
+    const std::unordered_map<JointNameIndexing, int> JointModulesIndexMapping = {
+        {hip_joint, 0},
+        {knee_joint, 1},
+        {boom_connector_joint, 2},
+        {planarizer_yaw_joint, 1},
+        {planarizer_pitch_joint, 0}
     };
 
 } // end namespace monopod_drivers

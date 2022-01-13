@@ -38,18 +38,18 @@ namespace monopod_drivers
             leg_ = leg;
             encoders_.clear();
             velocities_.clear();
-            currents_.clear();
+            torques_.clear();
             control_buffer_.clear();
 
             for (unsigned i = 0; i < leg->num_joints_; i++)
             {
                 encoders_.push_back(std::deque<double>());
-                currents_.push_back(std::deque<double>());
+                torques_.push_back(std::deque<double>());
                 velocities_.push_back(std::deque<double>());
                 control_buffer_.push_back(std::deque<double>());
                 encoders_.back().clear();
                 velocities_.back().clear();
-                currents_.back().clear();
+                torques_.back().clear();
                 control_buffer_.back().clear();
             }
             stop_loop_ = false;
@@ -136,9 +136,9 @@ namespace monopod_drivers
         std::vector<std::deque<double>> velocities_;
 
         /**
-         * @brief current data
+         * @brief torque data
          */
-        std::vector<std::deque<double>> currents_;
+        std::vector<std::deque<double>> torques_;
 
         /**
          * @brief control_buffer_

@@ -14,24 +14,24 @@ namespace monopod_drivers
 
 void SinePositionControl::loop()
 {
-    const int& position_index = monopod_drivers::Leg::MotorMeasurementIndexing::position;
-    const int& velocity_index = monopod_drivers::Leg::MotorMeasurementIndexing::velocity;
-    const int& current_index = monopod_drivers::Leg::MotorMeasurementIndexing::current;
+    int position_index = monopod_drivers::position;
+    int velocity_index = monopod_drivers::velocity;
+    int torque_index = monopod_drivers::torque;
 
     Vector actual_position(0.0, 0.0);
     Vector actual_velocity(0.0, 0.0);
-    Vector actual_current(0.0, 0.0);
+    Vector actual_torque(0.0, 0.0);
     double local_time = 0.0;
     double control_period = 0.001;
-    
+
     // sine torque params
     double amplitude = 0.1 /*3.1415*/;
     double frequence = 0.5;
-    
+
     // here is the control in current (Ampere)
     double desired_position = 0.0;
     double desired_velocity = 0.0;
-    
+
     Vector desired_torque;
     Vector desired_pos;
     Vector desired_vel;
@@ -45,18 +45,19 @@ void SinePositionControl::loop()
         time_logger.tic();
         local_time = count * control_period;
 
+        auto data = leg_->get_measurements();
         // compute the control
-        actual_position = leg_->get_measurements(position_index);
+        actual_position = data[position_index];
 
-        actual_velocity = leg_->get_measurements(velocity_index);
-        
-        actual_current = leg_->get_measurements(current_index);
+        actual_velocity = data[velocity_index];
+
+        actual_torque = data[torque_index];
 
         desired_position =
             amplitude * sin(2 * M_PI * frequence * local_time);
         desired_velocity = 0.0; /* 2 * M_PI * frequence * amplitude *
                             cos(2 * M_PI * frequence * local_time)*/
-        
+
         desired_pos[0] = desired_position;
         desired_pos[1] = desired_position;
         desired_vel[0] = desired_velocity;
@@ -64,37 +65,15 @@ void SinePositionControl::loop()
 
         desired_torque = kp_ * (desired_pos - actual_position) +
                               kd_ * (desired_vel - actual_velocity);
-        
+
         leg_->set_target_torques(desired_torque);
         leg_->send_target_torques();
-        
-        
-        // for (size_t i = 0; i < leg_->motors_.size(); ++i)
-        // {
-        //     actual_position = leg_->get_measurement(i, blmc_position_index)
-        //                           ->newest_element();
-        //     actual_velocity = leg_->get_measurement(i, blmc_velocity_index)
-        //                           ->newest_element();
-        //     actual_current = leg_->get_measurement(i, blmc_current_index)
-        //                          ->newest_element();
-
-        //     desired_position =
-        //         amplitude * sin(2 * M_PI * frequence * local_time);
-
-        //     desired_velocity = 0.0 /* 2 * M_PI * frequence * amplitude *
-        //                         cos(2 * M_PI * frequence * local_time)*/
-        //         ;
-        //     desired_torque = kp_ * (desired_position - actual_position) +
-        //                       kd_ * (desired_velocity - actual_velocity);
-        //     leg_->set_current_target(desired_torque, i);
-        // }
-        // Send the controls and log stuff
 
         for (int i = 0; i < 2; i++)
         {
             encoders_[i].push_back(actual_position[i]);
             velocities_[i].push_back(actual_velocity[i]);
-            currents_[i].push_back(actual_current[i]);
+            torques_[i].push_back(actual_torque[i]);
             control_buffer_[i].push_back(desired_torque[i]);
         }
 
@@ -132,13 +111,13 @@ void SinePositionControl::stop_loop()
 
         assert(encoders_[0].size() == velocities_[0].size() &&
                velocities_[0].size() == control_buffer_[0].size() &&
-               control_buffer_[0].size() == currents_[0].size());
+               control_buffer_[0].size() == torques_[0].size());
         for (size_t j = 0; j < encoders_[0].size(); ++j)
         {
             for (size_t i = 0; i < encoders_.size(); ++i)
             {
                 log_file << encoders_[i][j] << " " << velocities_[i][j] << " "
-                         << control_buffer_[i][j] << " " << currents_[i][j]
+                         << control_buffer_[i][j] << " " << torques_[i][j]
                          << " ";
             }
             log_file << std::endl;

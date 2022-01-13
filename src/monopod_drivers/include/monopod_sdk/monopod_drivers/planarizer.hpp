@@ -1,100 +1,229 @@
+/**
+ * @file Planarizer.hpp
+ * @license License BSD-3-Clause
+ * @copyright Copyright (c) 2019, New York University and Max Planck
+ * Gesellschaft.
+ * @date 2019-07-11
+ */
 
 #pragma once
 
-#include <time_series/time_series.hpp>
-#include "monopod_sdk/monopod_drivers/common_header.hpp"
+#include <map>
+#include <memory>
+#include <string>
+#include <math.h>
 
-#include "monopod_sdk/monopod_drivers/encoder.hpp"
+#include <time_series/time_series.hpp>
+
+
+
+#include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
+#include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
+#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
+#include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
+
+#include "monopod_sdk/monopod_drivers/common_header.hpp"
 
 namespace monopod_drivers
 {
+
 /**
- * @brief This class defines an interface to the planarizer, which consists of
- * the encoders for boom yaw, boom pitch, and boom-connector angle (free angle between
- * the hip piece and boom)
- * 
+ * @brief The Planarizer class is the implementation of the PlanarizerInterface. This is
+ * the decalartion and the definition of the class as it is very simple.
  */
+
 class Planarizer
 {
-    public:
-        /**
-         * @brief Enumerate the joints of the planarizer
-         * 
-         */
-        enum PlanarizerIndexing
+public:
+
+    typedef blmc_drivers::MotorInterface::MeasurementIndex mi;
+
+    /**
+     * @brief Construct the PlanarizerInterface object
+     */
+    Planarizer(const int &num_joints, const std::string &can_bus_id_0, const std::string &can_bus_id_1 = std::string()) :
+      num_joints_(num_joints), joint_zero_positions_(num_joints, 0), polaritys_(num_joints, 1)
+    {
+        can_bus_id_0_ = can_bus_id_0;
+        can_bus_id_1_ = can_bus_id_1;
+
+        encoders_.reserve(num_joints_);
+
+        // If no second can bus id was provided we can only have max of 2 joints.
+        // 2 joints per can...
+        if ((num_joints_ / 2) == (can_bus_id_1_.empty() ? 1 : 2))
+          throw std::runtime_error("Number of canbus's is not compatible with the joints");
+
+        if (!(num_joints_ == 1 || num_joints_ == 2 || num_joints_ == 3))
+          throw std::runtime_error("Only support 1, 2, or 3 joints.");
+
+    }
+
+    /**
+     * @brief Destroy the PlanarizerInterface object
+     */
+    ~Planarizer()
+    {
+    }
+
+    /**
+    * @brief Initialize canbus connecion, esablish connection to the motors, and set
+    * motor constants.
+    */
+    bool initialize()
+    {
+
+        int idx;
+        /*Always create the main canbus.*/
+        can_bus_0_ = std::make_shared<blmc_drivers::CanBus>(can_bus_id_0_);
+        can_encoder_board_0_ = std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus_0_);
+
+        /*Always create at least one encoder on the main canbus.*/
+        idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_pitch_joint);
+        encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+            can_encoder_board_0_,
+            0 /* encoder id 0 */ );
+
+        if (num_joints_ == 2 || num_joints_ == 3)
         {
-            boom_yaw,
-            boom_pitch,
-            boom_connector,
-            PI_end
-        };
+              /*If num_joints_ == 2 we need to make a second encoder joint for meassurements. this is fixed hip mode*/
+              idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_yaw_joint);
+              encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+                  can_encoder_board_0_,
+                  1 /* encoder id 1*/ );
+        }
 
-        /**
-         * @brief Enumerate measurement indices
-         * 
-         */
-        enum MeasurementIndexing
+        if (num_joints_ == 3)
+        {      /*If num_joints_ == 3 we need to create second board. this is free hip mode*/
+              can_bus_1_ = std::make_shared<blmc_drivers::CanBus>(can_bus_id_1_);
+              can_encoder_board_1_ = std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus_1_);
+
+              idx = monopod_drivers::JointModulesIndexMapping.at(boom_connector_joint);
+              encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+                  can_encoder_board_1_,
+                  0 /* encoder id 0 */ );
+
+              // wait until canbus 2 board is ready and connected
+              can_encoder_board_1_->wait_until_ready();
+        }
+
+        // wait until canbus 1 board is ready and connected
+        can_encoder_board_0_->wait_until_ready();
+
+        return true;
+
+    }
+
+    // =========================================================================
+    //  GETTERS
+    // =========================================================================
+
+    /**
+     * @brief Get all meassurements of the Planarizer. This includes Position, Velocity,
+     * and In the future Acceleration.
+     *
+     * @return unordered map of std::vector<double> measurements. Indexed with the meassurement type enum.
+     */
+    std::unordered_map<int, std::vector<double>> get_measurements() const
+    {
+        std::unordered_map<int, std::vector<double>> data = {};
+
+        std::vector<double> poss;
+        std::vector<double> vels;
+
+        poss.reserve(num_joints_);
+        vels.reserve(num_joints_);
+
+        for (size_t encoder_id = 0; encoder_id < encoders_.size(); encoder_id++){
+
+            poss[encoder_id] = get_encoder_measurement(encoder_id, mi::position) - joint_zero_positions_[encoder_id];
+            vels[encoder_id] = get_encoder_measurement(encoder_id, mi::velocity);
+            // data[acceleration] = encoder_->get_measured_accelerations();
+        }
+
+        data[position] = poss;
+        data[velocity] = vels;
+
+        return data;
+    }
+
+    double get_encoder_measurement(const int &encoder_id, const mi& measurement_id) const
+    {
+        auto measurement_history = encoders_[encoder_id]->get_measurement(measurement_id);
+
+        if (measurement_history->length() == 0)
         {
-            position = 1,
-            velocity = 2,
-        };
+            return std::numeric_limits<double>::quiet_NaN();
+        }
 
-        /**
-         * @brief Construct a new Planarizer object with all 3 encoders
-         *
-         * @param encoder_bc  boom connector encoder
-         * @param encoder_by  boom yaw encoder
-         * @param encoder_bp  boom pitch encoder
-         */
-        Planarizer(Ptr<EncoderInterface> encoder_by,
-                    Ptr<EncoderInterface> encoder_bp,
-                    Ptr<EncoderInterface> encoder_bc);
+        return polaritys_[encoder_id] * measurement_history->newest_element();
+    }
 
-        /**
-         * @brief Construct a new Planarizer object with 2 encoders;
-         * use when boom connector is fixed
-         * 
-         * @param encoder_by boom yaw encoder
-         * @param encoder_bp boom pitch encoder
-         */
-        Planarizer(Ptr<EncoderInterface> encoder_by,
-                    Ptr<EncoderInterface> encoder_bp);
+    // =========================================================================
+    //  SETTERS
+    // =========================================================================
 
-        /**
-         * @brief Destroy the Planarizer object
-         */
-        ~Planarizer(){};
+    /**
+     * @brief Calibrate the Planarizer. See blmc_joint_module.hpp for explanation of parameters
+     * and logic.
+     */
+    bool calibrate(const std::vector<double>& home_offset_rad)
+    {
+        return true;
+    }
 
 
-        /// getters ================================================================
+private:
+    /**
+     * @brief number joints active.
+     */
+    int num_joints_;
 
-        /**
-         * @brief Get the specified measurement (pos or vel) for all joints
-         * 
-         * @param measurement_index 
-         * @return PVector 
-         */
-        PVector get_measurements(const int &measurement_index) const;
+    /**
+     * @brief string for can_bus index 0.
+     */
+    std::string can_bus_id_0_;
 
-        /**
-         * @brief Return all data (pos and vel) for all joints
-         * 
-         * @return PMatrix 
-         */
-        PMatrix get_data();
+    /**
+     * @brief string for can_bus index 1.
+     */
+    std::string can_bus_id_1_;
 
-    private:
+    /**
+     * @brief Canbus connection.
+     */
+    std::shared_ptr<blmc_drivers::CanBus> can_bus_0_;
 
-        /**
-         * @brief Vector to hold the encoders of the planarizer
-         */
-        std::vector<Ptr<EncoderInterface>> encoders_;
+    /**
+     * @brief Canbus connection.
+     */
+    std::shared_ptr<blmc_drivers::CanBus> can_bus_1_;
 
-        /**
-         * @brief Flag to indicate if using fixed boom connector
-         */
-        bool fixed_;
+    /**
+    * @brief Canbus motorboard.
+    */
+    std::shared_ptr<blmc_drivers::CanBusMotorBoard> can_encoder_board_0_;
 
+    /**
+    * @brief Canbus motorboard.
+    */
+    std::shared_ptr<blmc_drivers::CanBusMotorBoard> can_encoder_board_1_;
+
+    /**
+    * @brief Hip and knee motor modules for the Planarizer
+    */
+    std::vector<std::shared_ptr<blmc_drivers::MotorInterface>> encoders_;
+
+    /**
+    * @brief Zero poisition for the joint.
+    */
+    std::vector<double> joint_zero_positions_;
+
+    /**
+    * @brief Sets the orientation of the meassurement for each joint
+    */
+    std::vector<double> polaritys_;
 
 };
-} // end monopod_drivers namespace
+
+}  // namespace blmc_drivers
