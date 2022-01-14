@@ -82,17 +82,17 @@ double BlmcJointModule::get_sent_torque() const
 
 double BlmcJointModule::get_measured_torque() const
 {
-    return motor_current_to_joint_torque(get_motor_measurement(mi::current));
+    return motor_current_to_joint_torque(get_motor_measurement(MeasurementIndex::current));
 }
 
 double BlmcJointModule::get_measured_angle() const
 {
-    return get_motor_measurement(mi::position) / gear_ratio_ - zero_angle_;
+    return get_motor_measurement(MeasurementIndex::position) / gear_ratio_ - zero_angle_;
 }
 
 double BlmcJointModule::get_measured_velocity() const
 {
-    return get_motor_measurement(mi::velocity) / gear_ratio_;
+    return get_motor_measurement(MeasurementIndex::velocity) / gear_ratio_;
 }
 
 double BlmcJointModule::joint_torque_to_motor_current(double torque) const
@@ -107,7 +107,7 @@ double BlmcJointModule::motor_current_to_joint_torque(double current) const
 
 double BlmcJointModule::get_measured_index_angle() const
 {
-    return get_motor_measurement(mi::encoder_index) / gear_ratio_;
+    return get_motor_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
 }
 
 double BlmcJointModule::get_zero_angle() const
@@ -115,7 +115,7 @@ double BlmcJointModule::get_zero_angle() const
     return zero_angle_;
 }
 
-double BlmcJointModule::get_motor_measurement(const mi& measurement_id) const
+double BlmcJointModule::get_motor_measurement(const MeasurementIndex& measurement_id) const
 {
     auto measurement_history = motor_->get_measurement(measurement_id);
 
@@ -128,7 +128,7 @@ double BlmcJointModule::get_motor_measurement(const mi& measurement_id) const
 }
 
 long int BlmcJointModule::get_motor_measurement_index(
-    const mi& measurement_id) const
+    const MeasurementIndex& measurement_id) const
 {
     auto measurement_history = motor_->get_measurement(measurement_id);
 
@@ -183,7 +183,7 @@ bool BlmcJointModule::calibrate(double& angle_zero_to_index,
     // we reset the internal zero angle.
     zero_angle_ = 0.0;
 
-    long int last_index_time = get_motor_measurement_index(mi::encoder_index);
+    long int last_index_time = get_motor_measurement_index(MeasurementIndex::encoder_index);
     if (std::isnan(last_index_time))
     {
         last_index_time = -1;
@@ -208,7 +208,7 @@ bool BlmcJointModule::calibrate(double& angle_zero_to_index,
         send_torque();
         // check stop
         long int actual_index_time =
-            get_motor_measurement_index(mi::encoder_index);
+            get_motor_measurement_index(MeasurementIndex::encoder_index);
         double actual_index_angle = get_measured_index_angle();
 
         reached_next_index = (actual_index_time > last_index_time);
@@ -326,7 +326,7 @@ void BlmcJointModule::init_homing(int joint_id,
     homing_state_.home_offset_rad = home_offset_rad;
     homing_state_.profile_step_size_rad = profile_step_size_rad;
     homing_state_.last_encoder_index_time_index =
-        get_motor_measurement_index(mi::encoder_index);
+        get_motor_measurement_index(MeasurementIndex::encoder_index);
     homing_state_.target_position_rad = get_measured_angle();
     homing_state_.step_count = 0;
     homing_state_.start_position = get_measured_angle();
@@ -406,7 +406,7 @@ HomingReturnCode BlmcJointModule::update_homing()
 
             // Check if new encoder index was observed
             const long int actual_index_time =
-                get_motor_measurement_index(mi::encoder_index);
+                get_motor_measurement_index(MeasurementIndex::encoder_index);
             if (actual_index_time > homing_state_.last_encoder_index_time_index)
             {
                 // -- FINISHED

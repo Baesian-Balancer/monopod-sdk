@@ -16,6 +16,8 @@
 
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/monopod_drivers/devices/motor_board.hpp"
+#include "monopod_sdk/monopod_drivers/devices/encoder.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
@@ -24,33 +26,9 @@ namespace monopod_drivers
  * access the sensors data as well as sending controls. The only control
  * supported for now is the current.
  */
-class MotorInterface : public DeviceInterface
+class MotorInterface : public EncoderInterface
 {
 public:
-    /**
-     * @brief This is a useful alias.
-     */
-    typedef time_series::TimeSeries<double> ScalarTimeseries;
-    /**
-     * @brief This a useful alias for the shared Pointer creation.
-     *
-     * @tparam Type is the Class to crate the pointer from.
-     */
-    template <typename Type>
-    using Ptr = std::shared_ptr<Type>;
-
-    /**
-     * @brief Here is a list of the different measurement available on the
-     * blmc card.
-     */
-    enum MeasurementIndex
-    {
-        current,
-        position,
-        velocity,
-        encoder_index,
-        measurement_count
-    };
 
     /**
      * @brief Destroy the MotorInterface object
@@ -67,16 +45,6 @@ public:
     /**
      * Getters
      */
-
-    /**
-     * @brief Get the measurements.
-     *
-     * @param index
-     * @return Ptr<const ScalarTimeseries> the pointer to the desired
-     * measurement history.
-     */
-    virtual Ptr<const ScalarTimeseries> get_measurement(
-        const int& index = 0) const = 0;
 
     /**
      * @brief Get the current target object
@@ -118,7 +86,7 @@ public:
 /**
  * @brief This class implements the MotorInterface.
  */
-class Motor : public MotorInterface
+class Motor : public MotorInterface, public Encoder
 {
 public:
     /**
@@ -127,7 +95,7 @@ public:
      * @param board is the MotorBoard to be used.
      * @param motor_id is the id of the motor on the on-board card
      */
-    Motor(Ptr<MotorBoardInterface> board, bool motor_id);
+    Motor(Ptr<MotorBoardInterface> board, JointNameIndexing motor_id);
 
     /**
      * @brief Destroy the Motor object
@@ -150,15 +118,15 @@ public:
      * Getters
      */
 
-    /**
-     * @brief Get the measurements
-     *
-     * @param index is the kind of measurement we are instersted in.
-     * see MotorInterface::MeasurementIndex.
-     * @return Ptr<const ScalarTimeseries> The history of the measurement
-     */
-    virtual Ptr<const ScalarTimeseries> get_measurement(
-        const int& index = 0) const;
+     /**
+      * @brief Get the measurements.
+      *
+      * @param index
+      * @return Ptr<const ScalarTimeseries> the pointer to the desired
+      * measurement history.
+      */
+     virtual Ptr<const ScalarTimeseries> get_measurement(
+         const MeasurementIndex& index) const;
 
     /**
      * @brief Get the current target to be sent.
@@ -209,7 +177,7 @@ protected:
     /**
      * @brief The id of the motor on the MotorBoard.
      */
-    bool motor_id_;
+    JointNameIndexing motor_id_;
 };
 
 /**
@@ -234,7 +202,7 @@ public:
      */
     SafeMotor(
         Ptr<MotorBoardInterface> board,
-        bool motor_id,
+        JointNameIndexing motor_id,
         const double& max_current_target = 2.0,
         const size_t& history_length = 1000,
         const double& max_velocity = std::numeric_limits<double>::quiet_NaN());

@@ -14,47 +14,15 @@
 
 namespace monopod_drivers
 {
-Motor::Motor(Ptr<MotorBoardInterface> board, bool motor_id)
-    : board_(board), motor_id_(motor_id)
+Motor::Motor(Ptr<MotorBoardInterface> board, JointNameIndexing motor_id)
+    : board_(board), motor_id_(motor_id), Encoder(board, motor_id)
 {
 }
 
-Motor::Ptr<const Motor::ScalarTimeseries> Motor::get_measurement(
-    const int& index) const
-{
-    if (motor_id_ == 0)
-    {
-        switch (index)
-        {
-            case current:
-                return board_->get_measurement(MotorBoardInterface::current_0);
-            case position:
-                return board_->get_measurement(MotorBoardInterface::position_0);
-            case velocity:
-                return board_->get_measurement(MotorBoardInterface::velocity_0);
-            case encoder_index:
-                return board_->get_measurement(
-                    MotorBoardInterface::encoder_index_0);
-        }
-    }
-    else
-    {
-        switch (index)
-        {
-            case current:
-                return board_->get_measurement(MotorBoardInterface::current_1);
-            case position:
-                return board_->get_measurement(MotorBoardInterface::position_1);
-            case velocity:
-                return board_->get_measurement(MotorBoardInterface::velocity_1);
-            case encoder_index:
-                return board_->get_measurement(
-                    MotorBoardInterface::encoder_index_1);
-        }
-    }
-
-    throw std::invalid_argument("index needs to match one of the measurements");
-}
+Ptr<const ScalarTimeseries> Motor::get_measurement(const MeasurementIndex& index) const
+ {
+   return Encoder::get_measurement(index);
+ }
 
 Motor::Ptr<const Motor::ScalarTimeseries> Motor::get_current_target() const
 {
@@ -157,7 +125,7 @@ void Motor::print() const
 }
 
 SafeMotor::SafeMotor(Motor::Ptr<MotorBoardInterface> board,
-                     bool motor_id,
+                     JointNameIndexing motor_id,
                      const double& max_current_target,
                      const size_t& history_length,
                      const double& max_velocity)

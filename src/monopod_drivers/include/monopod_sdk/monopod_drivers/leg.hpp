@@ -80,13 +80,13 @@ public:
         idx = monopod_drivers::JointModulesIndexMapping.at(hip_joint);
         motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
           can_motor_board_,
-          0,
+          JointNameIndexing::hip_joint,
           motor_max_current_[idx] * 0.99); // 0.99 means that safe motor will have a chance to limit current before
 
         idx = monopod_drivers::JointModulesIndexMapping.at(knee_joint);
         motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
           can_motor_board_,
-          1,
+          JointNameIndexing::knee_joint,
           motor_max_current_[idx] * 0.99);
 
         // Create the joint module objects

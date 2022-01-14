@@ -75,6 +75,7 @@
         include/monopod_sdk/monopod_drivers/devices/device_interface.hpp
         include/monopod_sdk/monopod_drivers/devices/motor_board.hpp
         include/monopod_sdk/monopod_drivers/devices/motor.hpp
+        include/monopod_sdk/monopod_drivers/devices/encoder.hpp
         # Changed stuff
         include/monopod_sdk/monopod_drivers/devices/can_bus_monopod.hpp
         )
@@ -83,9 +84,10 @@
       ${MONOPOD_DEVICES_PUBLIC_HDRS}
       src/can_bus.cpp
       src/motor_board.cpp
-      src/motor.cpp
       # Changed stuff
       src/can_bus_monopod.cpp
+      src/motor.cpp
+      src/encoder.cpp
     )
 
     add_library(MonopodDrivers::devices ALIAS devices)

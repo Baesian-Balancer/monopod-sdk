@@ -43,17 +43,21 @@ namespace monopod_drivers
       planarizer_pitch_joint
     };
 
+
     /**
      * @brief Here is a list of the different measurement available on the
      * blmc card.
      */
-    enum MeasurementIndex
-    {
-        position,
-        velocity,
-        acceleration,
-        torque
-    };
+     enum MeasurementIndex
+     {
+         position,
+         velocity,
+         acceleration,
+         current,
+         encoder_index,
+         measurement_count, //Meassurement count is the 'length' of the meassurement vector in motor board.
+         torque,
+     };
 
     /**
     * @brief Joint names indexed same as enumerator

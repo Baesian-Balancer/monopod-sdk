@@ -35,8 +35,6 @@ class Planarizer
 {
 public:
 
-    typedef monopod_drivers::MotorInterface::MeasurementIndex mi;
-
     /**
      * @brief Construct the PlanarizerInterface object
      */
@@ -79,17 +77,17 @@ public:
 
         /*Always create at least one encoder on the main canbus.*/
         idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_pitch_joint);
-        encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
+        encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
             can_encoder_board_0_,
-            0 /* encoder id 0 */ );
+            JointNameIndexing::planarizer_pitch_joint /* encoder id 0 */ );
 
         if (num_joints_ == 2 || num_joints_ == 3)
         {
               /*If num_joints_ == 2 we need to make a second encoder joint for meassurements. this is fixed hip mode*/
               idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_yaw_joint);
-              encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
+              encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
                   can_encoder_board_0_,
-                  1 /* encoder id 1*/ );
+                  JointNameIndexing::planarizer_yaw_joint /* encoder id 1*/ );
         }
 
         if (num_joints_ == 3)
@@ -98,9 +96,9 @@ public:
               can_encoder_board_1_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_1_);
 
               idx = monopod_drivers::JointModulesIndexMapping.at(boom_connector_joint);
-              encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
+              encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
                   can_encoder_board_1_,
-                  0 /* encoder id 0 */ );
+                  JointNameIndexing::boom_connector_joint /* encoder id 0 */ );
 
               // wait until canbus 2 board is ready and connected
               can_encoder_board_1_->wait_until_ready();
@@ -135,18 +133,18 @@ public:
 
         for (size_t encoder_id = 0; encoder_id < encoders_.size(); encoder_id++){
 
-            poss[encoder_id] = get_encoder_measurement(encoder_id, mi::position) - joint_zero_positions_[encoder_id];
-            vels[encoder_id] = get_encoder_measurement(encoder_id, mi::velocity);
+            poss[encoder_id] = get_encoder_measurement(encoder_id, MeasurementIndex::position) - joint_zero_positions_[encoder_id];
+            vels[encoder_id] = get_encoder_measurement(encoder_id, MeasurementIndex::velocity);
             // data[acceleration] = encoder_->get_measured_accelerations();
         }
 
-        data[position] = poss;
-        data[velocity] = vels;
+        data[MeasurementIndex::position] = poss;
+        data[MeasurementIndex::velocity] = vels;
 
         return data;
     }
 
-    double get_encoder_measurement(const int &encoder_id, const mi& measurement_id) const
+    double get_encoder_measurement(const int &encoder_id, const MeasurementIndex& measurement_id) const
     {
         auto measurement_history = encoders_[encoder_id]->get_measurement(measurement_id);
 
@@ -211,7 +209,7 @@ private:
     /**
     * @brief Hip and knee motor modules for the Planarizer
     */
-    std::vector<std::shared_ptr<monopod_drivers::MotorInterface>> encoders_;
+    std::vector<std::shared_ptr<monopod_drivers::EncoderInterface>> encoders_;
 
     /**
     * @brief Zero poisition for the joint.

@@ -18,11 +18,10 @@
 
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 #include "monopod_sdk/monopod_drivers/utils/polynome.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
-
-typedef monopod_drivers::MotorInterface::MeasurementIndex mi;
 
 // TODO what is the best scope for those homing-related types?
 
@@ -322,7 +321,7 @@ private:
      * check: monopod_drivers::MotorInterface::MeasurementIndex
      * @return double the measurement.
      */
-    double get_motor_measurement(const mi& measurement_id) const;
+    double get_motor_measurement(const MeasurementIndex& measurement_id) const;
 
     /**
      * @brief Get the last motor measurement index for a specific data. If there
@@ -332,7 +331,7 @@ private:
      * check: monopod_drivers::MotorInterface::MeasurementIndex
      * @return double the measurement.
      */
-    long int get_motor_measurement_index(const mi& measurement_id) const;
+    long int get_motor_measurement_index(const MeasurementIndex& measurement_id) const;
 
     /**
      * @brief This is the pointer to the motor interface.
