@@ -17,7 +17,7 @@
 
 
 
-#include <monopod_sdk/monopod_drivers/blmc_joint_modules.hpp>
+#include <monopod_sdk/monopod_drivers/motor_joint_modules.hpp>
 #include <monopod_sdk/monopod_drivers/devices/device_interface.hpp>
 #include <monopod_sdk/monopod_drivers/devices/motor.hpp>
 

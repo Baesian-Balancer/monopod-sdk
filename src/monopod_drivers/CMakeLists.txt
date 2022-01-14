@@ -122,12 +122,12 @@
   set(MONOPOD_DRIVERS_PUBLIC_HDRS
       include/monopod_sdk/monopod_drivers/leg.hpp
       include/monopod_sdk/monopod_drivers/planarizer.hpp
-      include/monopod_sdk/monopod_drivers/blmc_joint_module.hpp
-      include/monopod_sdk/monopod_drivers/blmc_joint_modules.hpp
+      include/monopod_sdk/monopod_drivers/motor_joint_module.hpp
+      include/monopod_sdk/monopod_drivers/motor_joint_modules.hpp
   )
   add_library(MonopodDrivers
       ${MONOPOD_DRIVERS_PUBLIC_HDRS}
-      src/blmc_joint_module.cpp
+      src/motor_joint_module.cpp
     )
 
   set_target_properties(MonopodDrivers PROPERTIES LINKER_LANGUAGE CXX)
