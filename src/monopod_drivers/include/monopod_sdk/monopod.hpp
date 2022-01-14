@@ -407,6 +407,16 @@ private:
     */
    real_time_tools::RealTimeThread rt_thread_;
 
+   /**
+    * @brief Canbus connection.
+    */
+   std::shared_ptr<monopod_drivers::CanBus> can_bus_;
+
+   /**
+    * @brief Canbus motorboard.
+    */
+   std::shared_ptr<monopod_drivers::CanBusMotorBoard> board_;
+
     /**
     * @brief robot Planarizer interface object
     */

@@ -16,7 +16,7 @@
 namespace monopod_drivers
 {
 
-BlmcJointModule::BlmcJointModule(
+MotorJointModule::MotorJointModule(
     std::shared_ptr<monopod_drivers::MotorInterface> motor,
     const double& motor_constant,
     const double& gear_ratio,
@@ -35,7 +35,7 @@ BlmcJointModule::BlmcJointModule(
     position_control_gain_d_ = 0;
 }
 
-void BlmcJointModule::set_torque(const double& desired_torque)
+void MotorJointModule::set_torque(const double& desired_torque)
 {
     double desired_current = joint_torque_to_motor_current(desired_torque);
 
@@ -50,26 +50,26 @@ void BlmcJointModule::set_torque(const double& desired_torque)
     motor_->set_current_target(polarity_ * desired_current);
 }
 
-void BlmcJointModule::set_zero_angle(const double& zero_angle)
+void MotorJointModule::set_zero_angle(const double& zero_angle)
 {
     zero_angle_ = zero_angle;
 }
 
-void BlmcJointModule::set_joint_polarity(const bool& reverse_polarity)
+void MotorJointModule::set_joint_polarity(const bool& reverse_polarity)
 {
     polarity_ = reverse_polarity ? -1.0 : 1.0;
 }
-void BlmcJointModule::send_torque()
+void MotorJointModule::send_torque()
 {
     motor_->send_if_input_changed();
 }
 
-double BlmcJointModule::get_max_torque() const
+double MotorJointModule::get_max_torque() const
 {
     return motor_current_to_joint_torque(max_current_);
 }
 
-double BlmcJointModule::get_sent_torque() const
+double MotorJointModule::get_sent_torque() const
 {
     auto measurement_history = motor_->get_sent_current_target();
 
@@ -80,42 +80,42 @@ double BlmcJointModule::get_sent_torque() const
     return motor_current_to_joint_torque(measurement_history->newest_element());
 }
 
-double BlmcJointModule::get_measured_torque() const
+double MotorJointModule::get_measured_torque() const
 {
     return motor_current_to_joint_torque(get_motor_measurement(MeasurementIndex::current));
 }
 
-double BlmcJointModule::get_measured_angle() const
+double MotorJointModule::get_measured_angle() const
 {
     return get_motor_measurement(MeasurementIndex::position) / gear_ratio_ - zero_angle_;
 }
 
-double BlmcJointModule::get_measured_velocity() const
+double MotorJointModule::get_measured_velocity() const
 {
     return get_motor_measurement(MeasurementIndex::velocity) / gear_ratio_;
 }
 
-double BlmcJointModule::joint_torque_to_motor_current(double torque) const
+double MotorJointModule::joint_torque_to_motor_current(double torque) const
 {
     return torque / gear_ratio_ / motor_constant_;
 }
 
-double BlmcJointModule::motor_current_to_joint_torque(double current) const
+double MotorJointModule::motor_current_to_joint_torque(double current) const
 {
     return current * gear_ratio_ * motor_constant_;
 }
 
-double BlmcJointModule::get_measured_index_angle() const
+double MotorJointModule::get_measured_index_angle() const
 {
     return get_motor_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
 }
 
-double BlmcJointModule::get_zero_angle() const
+double MotorJointModule::get_zero_angle() const
 {
     return zero_angle_;
 }
 
-double BlmcJointModule::get_motor_measurement(const MeasurementIndex& measurement_id) const
+double MotorJointModule::get_motor_measurement(const MeasurementIndex& measurement_id) const
 {
     auto measurement_history = motor_->get_measurement(measurement_id);
 
@@ -127,7 +127,7 @@ double BlmcJointModule::get_motor_measurement(const MeasurementIndex& measuremen
     return polarity_ * measurement_history->newest_element();
 }
 
-long int BlmcJointModule::get_motor_measurement_index(
+long int MotorJointModule::get_motor_measurement_index(
     const MeasurementIndex& measurement_id) const
 {
     auto measurement_history = motor_->get_measurement(measurement_id);
@@ -140,13 +140,13 @@ long int BlmcJointModule::get_motor_measurement_index(
     return measurement_history->newest_timeindex();
 }
 
-void BlmcJointModule::set_position_control_gains(double kp, double kd)
+void MotorJointModule::set_position_control_gains(double kp, double kd)
 {
     position_control_gain_p_ = kp;
     position_control_gain_d_ = kd;
 }
 
-double BlmcJointModule::execute_position_controller(
+double MotorJointModule::execute_position_controller(
     double target_position_rad) const
 {
     double diff = target_position_rad - get_measured_angle();
@@ -169,7 +169,7 @@ double BlmcJointModule::execute_position_controller(
     return desired_torque;
 }
 
-bool BlmcJointModule::calibrate(double& angle_zero_to_index,
+bool MotorJointModule::calibrate(double& angle_zero_to_index,
                                 double& index_angle,
                                 bool mechanical_calibration)
 {
@@ -299,7 +299,7 @@ bool BlmcJointModule::calibrate(double& angle_zero_to_index,
     return true;
 }
 
-void BlmcJointModule::homing_at_current_position(double home_offset_rad)
+void MotorJointModule::homing_at_current_position(double home_offset_rad)
 {
     // reset the internal zero angle.
     set_zero_angle(0.0);
@@ -310,7 +310,7 @@ void BlmcJointModule::homing_at_current_position(double home_offset_rad)
     homing_state_.status = HomingReturnCode::SUCCEEDED;
 }
 
-void BlmcJointModule::init_homing(int joint_id,
+void MotorJointModule::init_homing(int joint_id,
                                   double search_distance_limit_rad,
                                   double home_offset_rad,
                                   double profile_step_size_rad)
@@ -334,7 +334,7 @@ void BlmcJointModule::init_homing(int joint_id,
     homing_state_.status = HomingReturnCode::RUNNING;
 }
 
-HomingReturnCode BlmcJointModule::update_homing()
+HomingReturnCode MotorJointModule::update_homing()
 {
     switch (homing_state_.status)
     {
@@ -374,7 +374,7 @@ HomingReturnCode BlmcJointModule::update_homing()
                 homing_state_.status = HomingReturnCode::FAILED;
 
                 rt_printf(
-                    "BlmcJointModule::update_homing(): "
+                    "MotorJointModule::update_homing(): "
                     "ERROR: Failed to find index with joint [%d].\n",
                     homing_state_.joint_id);
                 break;
@@ -441,7 +441,7 @@ HomingReturnCode BlmcJointModule::update_homing()
     return homing_state_.status;
 }
 
-double BlmcJointModule::get_distance_travelled_during_homing() const
+double MotorJointModule::get_distance_travelled_during_homing() const
 {
     if (homing_state_.status != HomingReturnCode::SUCCEEDED)
     {

@@ -47,7 +47,10 @@ int main(int, char **)
     sigaction(SIGINT, &sigIntHandler, NULL);
     StopDemos = false;
 
-    std::shared_ptr<monopod_drivers::Leg> leg = std::make_shared<monopod_drivers::Leg>("can0");
+    auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
+    auto board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
+    
+    std::shared_ptr<monopod_drivers::Leg> leg = std::make_shared<monopod_drivers::Leg>(board_);
     leg->initialize();
 
     rt_printf("leg is set up \n");

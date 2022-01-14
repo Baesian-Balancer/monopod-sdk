@@ -88,15 +88,15 @@ struct HomingState
 };
 
 /**
- * @brief The BlmcJointModule class is containing the joint information. It is
+ * @brief The MotorJointModule class is containing the joint information. It is
  * here to help converting the data from the motor side to the joint side. It
  * also allows the calibration of the joint position during initialization.
  */
-class BlmcJointModule
+class MotorJointModule
 {
 public:
     /**
-     * @brief Construct a new BlmcJointModule object
+     * @brief Construct a new MotorJointModule object
      *
      * @param motor is the C++ object allowing us to send commands and receive
      * sensor data.
@@ -108,7 +108,7 @@ public:
      * @param reverse_polarity
      * @param max_current
      */
-    BlmcJointModule(std::shared_ptr<monopod_drivers::MotorInterface> motor,
+    MotorJointModule(std::shared_ptr<monopod_drivers::MotorInterface> motor,
                     const double& motor_constant,
                     const double& gear_ratio,
                     const double& zero_angle,

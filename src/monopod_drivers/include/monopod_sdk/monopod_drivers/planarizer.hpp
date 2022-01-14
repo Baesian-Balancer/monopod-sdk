@@ -35,22 +35,12 @@ public:
     /**
      * @brief Construct the PlanarizerInterface object
      */
-    Planarizer(const int &num_joints, const std::string &can_bus_id_0, const std::string &can_bus_id_1 = std::string()) :
-      num_joints_(num_joints), joint_zero_positions_(num_joints, 0), polaritys_(num_joints, 1)
+    Planarizer(std::shared_ptr<MotorBoardInterface> board, const int &num_joints) :
+      board_(board), num_joints_(num_joints)
     {
-        can_bus_id_0_ = can_bus_id_0;
-        can_bus_id_1_ = can_bus_id_1;
-
-        encoders_.reserve(num_joints_);
-
-        // If no second can bus id was provided we can only have max of 2 joints.
-        // 2 joints per can...
-        if ((num_joints_ / 2) == (can_bus_id_1_.empty() ? 1 : 2))
-          throw std::runtime_error("Number of canbus's is not compatible with the joints");
 
         if (!(num_joints_ == 1 || num_joints_ == 2 || num_joints_ == 3))
-          throw std::runtime_error("Only support 1, 2, or 3 joints.");
-
+            throw std::runtime_error("Only support 1 (fixed), 2 (fixed_hip), or 3 joints (free_hip).");
     }
 
     /**
@@ -66,16 +56,11 @@ public:
     */
     bool initialize()
     {
-
         int idx;
-        /*Always create the main canbus.*/
-        can_bus_0_ = std::make_shared<monopod_drivers::CanBus>(can_bus_id_0_);
-        can_encoder_board_0_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_0_);
-
         /*Always create at least one encoder on the main canbus.*/
         idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_pitch_joint);
         encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
-            can_encoder_board_0_,
+            board_,
             JointNameIndexing::planarizer_pitch_joint /* encoder id 0 */ );
 
         if (num_joints_ == 2 || num_joints_ == 3)
@@ -83,26 +68,24 @@ public:
               /*If num_joints_ == 2 we need to make a second encoder joint for meassurements. this is fixed hip mode*/
               idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_yaw_joint);
               encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
-                  can_encoder_board_0_,
+                  board_,
                   JointNameIndexing::planarizer_yaw_joint /* encoder id 1*/ );
         }
 
         if (num_joints_ == 3)
         {      /*If num_joints_ == 3 we need to create second board. this is free hip mode*/
-              can_bus_1_ = std::make_shared<monopod_drivers::CanBus>(can_bus_id_1_);
-              can_encoder_board_1_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_1_);
 
               idx = monopod_drivers::JointModulesIndexMapping.at(boom_connector_joint);
               encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
-                  can_encoder_board_1_,
+                  board_,
                   JointNameIndexing::boom_connector_joint /* encoder id 0 */ );
 
               // wait until canbus 2 board is ready and connected
-              can_encoder_board_1_->wait_until_ready();
+              board_->wait_until_ready();
         }
 
         // wait until canbus 1 board is ready and connected
-        can_encoder_board_0_->wait_until_ready();
+        board_->wait_until_ready();
 
         return true;
 
@@ -168,40 +151,16 @@ public:
 
 
 private:
+
+    /**
+    * @brief Canbus board for encoders.
+    */
+    std::shared_ptr<monopod_drivers::MotorBoardInterface> board_;
+
     /**
      * @brief number joints active.
      */
     int num_joints_;
-
-    /**
-     * @brief string for can_bus index 0.
-     */
-    std::string can_bus_id_0_;
-
-    /**
-     * @brief string for can_bus index 1.
-     */
-    std::string can_bus_id_1_;
-
-    /**
-     * @brief Canbus connection.
-     */
-    std::shared_ptr<monopod_drivers::CanBus> can_bus_0_;
-
-    /**
-     * @brief Canbus connection.
-     */
-    std::shared_ptr<monopod_drivers::CanBus> can_bus_1_;
-
-    /**
-    * @brief Canbus motorboard.
-    */
-    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_encoder_board_0_;
-
-    /**
-    * @brief Canbus motorboard.
-    */
-    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_encoder_board_1_;
 
     /**
     * @brief Hip and knee motor modules for the Planarizer

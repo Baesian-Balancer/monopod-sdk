@@ -385,6 +385,11 @@ public:
      * @brief Actually send the commands and the controls
      */
     virtual void send_if_input_changed() = 0;
+
+    /**
+     * @brief returns only once board and motors are ready.
+     */
+    virtual void wait_until_ready() = 0;
 };
 
 /**
@@ -535,7 +540,7 @@ public:
     /**
      * @brief returns only once board and motors are ready.
      */
-    void wait_until_ready();
+    virtual void wait_until_ready();
 
     bool is_ready();
 

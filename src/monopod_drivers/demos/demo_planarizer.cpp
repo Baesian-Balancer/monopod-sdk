@@ -43,8 +43,10 @@ static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* planarizer_ptr)
 
 int main(int, char**)
 {
+    auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
+    auto board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
 
-    auto planarizer = std::make_shared<monopod_drivers::Planarizer>(3, "can1", "can2");
+    auto planarizer = std::make_shared<monopod_drivers::Planarizer>(board_, 2);
 
     // // start real-time leg loop --------------------------------------------
     real_time_tools::RealTimeThread printing_thread;

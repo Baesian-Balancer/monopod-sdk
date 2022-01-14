@@ -43,7 +43,8 @@ public:
     /**
      * @brief Construct the LegInterface object
      */
-    Leg(std::string can_bus_string, double motor_max_current = 5.0)
+    Leg(std::shared_ptr<MotorBoardInterface> board, double motor_max_current = 5.0)
+      : board_(board)
     {
 
         motor_torque_constants_.setZero();
@@ -55,7 +56,6 @@ public:
         joint_gear_ratios_.fill(9.0);
         motor_max_current_.fill(motor_max_current);
 
-        can_bus_string_ = can_bus_string;
     }
 
     /**
@@ -72,22 +72,15 @@ public:
     bool initialize()
     {
 
-        int idx;
+        motors_[hip_joint] = std::make_shared<monopod_drivers::SafeMotor>(
+          board_,
+          hip_joint,
+          motor_max_current_[hip_joint] * 0.99); // 0.99 means that safe motor will have a chance to limit current before
 
-        can_bus_ = std::make_shared<monopod_drivers::CanBus>(can_bus_string_);
-        can_motor_board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
-
-        idx = monopod_drivers::JointModulesIndexMapping.at(hip_joint);
-        motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
-          can_motor_board_,
-          JointNameIndexing::hip_joint,
-          motor_max_current_[idx] * 0.99); // 0.99 means that safe motor will have a chance to limit current before
-
-        idx = monopod_drivers::JointModulesIndexMapping.at(knee_joint);
-        motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
-          can_motor_board_,
-          JointNameIndexing::knee_joint,
-          motor_max_current_[idx] * 0.99);
+        motors_[knee_joint] = std::make_shared<monopod_drivers::SafeMotor>(
+          board_,
+          knee_joint,
+          motor_max_current_[knee_joint] * 0.99);
 
         // Create the joint module objects
         joints_.set_motor_array(motors_,
@@ -103,7 +96,7 @@ public:
         joints_.set_position_control_gains(kp, kd);
 
         // wait until all board are ready and connected
-        can_motor_board_->wait_until_ready();
+        board_->wait_until_ready();
 
         return true;
 
@@ -127,19 +120,6 @@ public:
         // data[acceleration] = joints_.get_measured_accelerations();
         data[torque] = joints_.get_measured_torques();
         return data;
-    }
-
-    /**
-     * @brief Get the last sent target torque
-     *
-     * @param[in] joint_index designate the joint/motor from which we want the data
-     * from.
-     * @return LVector is the list of the lasts time
-     * stamped acquiered.
-     */
-    LVector get_sent_torque_targets() const
-    {
-        return joints_.get_sent_torques();
     }
 
     // =========================================================================
@@ -182,25 +162,16 @@ public:
 
 private:
 
-    /**
-     * @brief string for can_bus.
-     */
-    std::string can_bus_string_;
-
-    /**
-     * @brief Canbus connection.
-     */
-    std::shared_ptr<monopod_drivers::CanBus> can_bus_;
 
     /**
      * @brief Canbus motorboard.
      */
-    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_motor_board_;
+    std::shared_ptr<monopod_drivers::MotorBoardInterface> board_;
 
     /**
      * @brief Hip and knee joint modules for the leg
      */
-    monopod_drivers::BlmcJointModules<num_joints_> joints_;
+    monopod_drivers::MotorJointModules<num_joints_> joints_;
 
     /**
     * @brief Hip and knee motor modules for the leg

@@ -24,19 +24,19 @@ namespace monopod_drivers
 {
 
 /**
- * @brief BlmcJointModule_ptr shortcut for the shared pointer BlmcJointModule
+ * @brief BlmcJointModule_ptr shortcut for the shared pointer MotorJointModule
  * type
  */
-typedef std::shared_ptr<BlmcJointModule> BlmcJointModule_ptr;
+typedef std::shared_ptr<MotorJointModule> BlmcJointModule_ptr;
 
 /**
  * @brief This class defines an interface to a collection of BLMC joints. It
- * creates a BLMCJointModule for every blmc_driver::MotorInterface provided.
+ * creates a MotorJointModule for every blmc_driver::MotorInterface provided.
  *
  * @tparam COUNT
  */
 template <int COUNT>
-class BlmcJointModules
+class MotorJointModules
 {
 public:
     /**
@@ -46,14 +46,14 @@ public:
     typedef Eigen::Matrix<double, COUNT, 1> Vector;
 
     /**
-     * @brief Construct a new BlmcJointModules object.
+     * @brief Construct a new MotorJointModules object.
      *
      * @param motors
      * @param motor_constants
      * @param gear_ratios
      * @param zero_angles
      */
-    BlmcJointModules(
+    MotorJointModules(
         const std::array<std::shared_ptr<monopod_drivers::MotorInterface>, COUNT>&
             motors,
         const Vector& motor_constants,
@@ -65,9 +65,9 @@ public:
             motors, motor_constants, gear_ratios, zero_angles, max_currents);
     }
     /**
-     * @brief Construct a new BlmcJointModules object.
+     * @brief Construct a new MotorJointModules object.
      */
-    BlmcJointModules()
+    MotorJointModules()
     {
     }
     /**
@@ -88,7 +88,7 @@ public:
     {
         for (size_t i = 0; i < COUNT; i++)
         {
-            modules_[i] = std::make_shared<BlmcJointModule>(motors[i],
+            modules_[i] = std::make_shared<MotorJointModule>(motors[i],
                                                             motor_constants[i],
                                                             gear_ratios[i],
                                                             zero_angles[i],
@@ -109,7 +109,7 @@ public:
 
     /**
      * @brief Set the polarities of the joints
-     * (see BlmcJointModule::set_joint_polarity)
+     * (see MotorJointModule::set_joint_polarity)
      *
      * @param reverse_polarity
      */
@@ -287,7 +287,7 @@ public:
     /**
      * @brief Perform homing for all joints at endstops.
      *
-     * See BlmcJointModule::homing_at_current_position for description of the
+     * See MotorJointModule::homing_at_current_position for description of the
      * arguments.
      *
      * @return Final status of the homing procedure (since homing happens at
@@ -312,9 +312,9 @@ public:
      * If a joint is finished while others are still running, it is held at the
      * home position.
      *
-     * See BlmcJointModule::update_homing for details on the homing procedure.
+     * See MotorJointModule::update_homing for details on the homing procedure.
      *
-     * See BlmcJointModule::init_homing for description of the arguments.
+     * See MotorJointModule::init_homing for description of the arguments.
      *
      * @return Final status of the homing procedure (either SUCCESS if all
      *     joints succeeded or the return code of the first joint that failed).
@@ -375,7 +375,7 @@ public:
         return homing_status;
     }
 
-    //! @see BlmcJointModule::get_distance_travelled_during_homing
+    //! @see MotorJointModule::get_distance_travelled_during_homing
     Vector get_distance_travelled_during_homing() const
     {
         Vector dist;
@@ -465,9 +465,9 @@ public:
 
 private:
     /**
-     * @brief These are the BLMCJointModule objects corresponding to a robot.
+     * @brief These are the MotorJointModule objects corresponding to a robot.
      */
-    std::array<std::shared_ptr<BlmcJointModule>, COUNT> modules_;
+    std::array<std::shared_ptr<MotorJointModule>, COUNT> modules_;
 };
 
 }  // namespace monopod_drivers
