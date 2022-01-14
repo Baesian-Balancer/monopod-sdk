@@ -6,9 +6,9 @@
 
 #include <tuple>
 
-#include <monopod_sdk/blmc_drivers/devices/can_bus.hpp>
-#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
-#include <monopod_sdk/blmc_drivers/devices/motor_board.hpp>
+#include <monopod_sdk/monopod_drivers/devices/can_bus.hpp>
+#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
+#include <monopod_sdk/monopod_drivers/devices/motor_board.hpp>
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
 
 const int NUMBER_JOINTS = 3;

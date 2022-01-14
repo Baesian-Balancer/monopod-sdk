@@ -4,19 +4,19 @@
  * Gesellschaft, License BSD-3-Clause
  */
 
-#include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
-#include "monopod_sdk/blmc_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/devices/analog_sensor.hpp"
+#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
     /**
  * @brief This is a simple shortcut
  */
-    typedef std::shared_ptr<blmc_drivers::SafeMotor> SafeMotor_ptr;
+    typedef std::shared_ptr<monopod_drivers::SafeMotor> SafeMotor_ptr;
     /**
  * @brief This is a simple shortcut
  */
-    typedef std::shared_ptr<blmc_drivers::AnalogSensor> Slider_ptr;
+    typedef std::shared_ptr<monopod_drivers::AnalogSensor> Slider_ptr;
     /**
  * @brief This is a simple shortcut
  */
@@ -93,4 +93,4 @@ namespace blmc_drivers
 
     }; // end class PDController definition
 
-} // namespace blmc_drivers
+} // namespace monopod_drivers

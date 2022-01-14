@@ -17,12 +17,11 @@
 
 
 
-#include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
-#include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
-#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
-#include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
+#include <monopod_sdk/monopod_drivers/blmc_joint_modules.hpp>
+#include <monopod_sdk/monopod_drivers/devices/device_interface.hpp>
+#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
 
-#include "monopod_sdk/monopod_drivers/common_header.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
@@ -44,7 +43,7 @@ public:
     /**
      * @brief Construct the LegInterface object
      */
-    Leg(std::string can_bus_string, double motor_max_current = 16.0)
+    Leg(std::string can_bus_string, double motor_max_current = 5.0)
     {
 
         motor_torque_constants_.setZero();
@@ -75,20 +74,20 @@ public:
 
         int idx;
 
-        can_bus_ = std::make_shared<blmc_drivers::CanBus>(can_bus_string_);
-        can_motor_board_ = std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus_);
+        can_bus_ = std::make_shared<monopod_drivers::CanBus>(can_bus_string_);
+        can_motor_board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
 
         idx = monopod_drivers::JointModulesIndexMapping.at(hip_joint);
-        motors_[idx] = std::make_shared<blmc_drivers::SafeMotor>(
+        motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
           can_motor_board_,
           0,
-          motor_max_current_[idx]);
+          motor_max_current_[idx] * 0.99); // 0.99 means that safe motor will have a chance to limit current before
 
         idx = monopod_drivers::JointModulesIndexMapping.at(knee_joint);
-        motors_[idx] = std::make_shared<blmc_drivers::SafeMotor>(
+        motors_[idx] = std::make_shared<monopod_drivers::SafeMotor>(
           can_motor_board_,
           1,
-          motor_max_current_[idx]);
+          motor_max_current_[idx] * 0.99);
 
         // Create the joint module objects
         joints_.set_motor_array(motors_,
@@ -191,22 +190,22 @@ private:
     /**
      * @brief Canbus connection.
      */
-    std::shared_ptr<blmc_drivers::CanBus> can_bus_;
+    std::shared_ptr<monopod_drivers::CanBus> can_bus_;
 
     /**
      * @brief Canbus motorboard.
      */
-    std::shared_ptr<blmc_drivers::CanBusMotorBoard> can_motor_board_;
+    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_motor_board_;
 
     /**
      * @brief Hip and knee joint modules for the leg
      */
-    blmc_drivers::BlmcJointModules<num_joints_> joints_;
+    monopod_drivers::BlmcJointModules<num_joints_> joints_;
 
     /**
     * @brief Hip and knee motor modules for the leg
     */
-    std::array<std::shared_ptr<blmc_drivers::MotorInterface>, num_joints_> motors_;
+    std::array<std::shared_ptr<monopod_drivers::MotorInterface>, num_joints_> motors_;
 
     /**
      * @brief This is the torque constant of the motor:
@@ -231,4 +230,4 @@ private:
     LVector motor_max_current_;
 };
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

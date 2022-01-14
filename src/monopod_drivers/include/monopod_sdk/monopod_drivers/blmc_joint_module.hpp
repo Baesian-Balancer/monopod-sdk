@@ -16,13 +16,13 @@
 
 #include <Eigen/Eigen>
 
-#include "monopod_sdk/blmc_drivers/devices/motor.hpp"
-#include "monopod_sdk/blmc_drivers/utils/polynome.hpp"
+#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/utils/polynome.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
 
-typedef blmc_drivers::MotorInterface::MeasurementIndex mi;
+typedef monopod_drivers::MotorInterface::MeasurementIndex mi;
 
 // TODO what is the best scope for those homing-related types?
 
@@ -109,7 +109,7 @@ public:
      * @param reverse_polarity
      * @param max_current
      */
-    BlmcJointModule(std::shared_ptr<blmc_drivers::MotorInterface> motor,
+    BlmcJointModule(std::shared_ptr<monopod_drivers::MotorInterface> motor,
                     const double& motor_constant,
                     const double& gear_ratio,
                     const double& zero_angle,
@@ -319,7 +319,7 @@ private:
      * @brief Get motor measurements and check if there are data or not.
      *
      * @param measurement_id is the id of the measurement you want to get.
-     * check: blmc_drivers::MotorInterface::MeasurementIndex
+     * check: monopod_drivers::MotorInterface::MeasurementIndex
      * @return double the measurement.
      */
     double get_motor_measurement(const mi& measurement_id) const;
@@ -329,7 +329,7 @@ private:
      * was no data yet, return NaN
      *
      * @param measurement_id is the id of the measurement you want to get.
-     * check: blmc_drivers::MotorInterface::MeasurementIndex
+     * check: monopod_drivers::MotorInterface::MeasurementIndex
      * @return double the measurement.
      */
     long int get_motor_measurement_index(const mi& measurement_id) const;
@@ -337,7 +337,7 @@ private:
     /**
      * @brief This is the pointer to the motor interface.
      */
-    std::shared_ptr<blmc_drivers::MotorInterface> motor_;
+    std::shared_ptr<monopod_drivers::MotorInterface> motor_;
 
     /**
      * @brief This is the torque constant of the motor:
@@ -372,4 +372,4 @@ private:
     struct HomingState homing_state_;
 };
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

@@ -13,18 +13,15 @@
 #include <tuple>
 #include <algorithm>
 
-#include "monopod_sdk/blmc_drivers/devices/can_bus.hpp"
-#include "monopod_sdk/blmc_drivers/devices/motor.hpp"
-#include "monopod_sdk/blmc_drivers/devices/motor_board.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
-#include "monopod_sdk/monopod_drivers/common_header.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
 /**
  * @brief Drivers for open sim2real monopod. Interfaces with the monopod TI motors
- * using blmc_drivers::BlmcJointModule. This class creates a real time control thread
+ * using monopod_drivers::BlmcJointModule. This class creates a real time control thread
  * which reads and writes from a buffer exposed to the public api.
  */
 class Monopod

@@ -48,12 +48,13 @@ set_target_properties(utils PROPERTIES
 set(BLMC_DRIVERS_PUBLIC_HDRS
     include/monopod_sdk/blmc_drivers/serial_reader.hpp
     include/monopod_sdk/blmc_drivers/blmc_joint_module.hpp
+    include/monopod_sdk/blmc_drivers/blmc_joint_modules.hpp
 )
 
 add_library(BlmcDrivers
     ${BLMC_DRIVERS_PUBLIC_HDRS}
-     src/blmc_joint_module.cpp
-     src/serial_reader.cpp
+    src/blmc_joint_module.cpp
+    src/serial_reader.cpp
   )
 
 if(Xenomai_FOUND)

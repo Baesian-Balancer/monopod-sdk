@@ -17,12 +17,11 @@
 
 
 
-#include <monopod_sdk/blmc_drivers/blmc_joint_module.hpp>
-#include <monopod_sdk/blmc_drivers/devices/device_interface.hpp>
-#include <monopod_sdk/blmc_drivers/devices/motor.hpp>
-#include "monopod_sdk/blmc_drivers/devices/analog_sensor.hpp"
+#include <monopod_sdk/monopod_drivers/blmc_joint_module.hpp>
+#include <monopod_sdk/monopod_drivers/devices/device_interface.hpp>
+#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
 
-#include "monopod_sdk/monopod_drivers/common_header.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
@@ -36,7 +35,7 @@ class Planarizer
 {
 public:
 
-    typedef blmc_drivers::MotorInterface::MeasurementIndex mi;
+    typedef monopod_drivers::MotorInterface::MeasurementIndex mi;
 
     /**
      * @brief Construct the PlanarizerInterface object
@@ -75,12 +74,12 @@ public:
 
         int idx;
         /*Always create the main canbus.*/
-        can_bus_0_ = std::make_shared<blmc_drivers::CanBus>(can_bus_id_0_);
-        can_encoder_board_0_ = std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus_0_);
+        can_bus_0_ = std::make_shared<monopod_drivers::CanBus>(can_bus_id_0_);
+        can_encoder_board_0_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_0_);
 
         /*Always create at least one encoder on the main canbus.*/
         idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_pitch_joint);
-        encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+        encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
             can_encoder_board_0_,
             0 /* encoder id 0 */ );
 
@@ -88,18 +87,18 @@ public:
         {
               /*If num_joints_ == 2 we need to make a second encoder joint for meassurements. this is fixed hip mode*/
               idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_yaw_joint);
-              encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+              encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
                   can_encoder_board_0_,
                   1 /* encoder id 1*/ );
         }
 
         if (num_joints_ == 3)
         {      /*If num_joints_ == 3 we need to create second board. this is free hip mode*/
-              can_bus_1_ = std::make_shared<blmc_drivers::CanBus>(can_bus_id_1_);
-              can_encoder_board_1_ = std::make_shared<blmc_drivers::CanBusMotorBoard>(can_bus_1_);
+              can_bus_1_ = std::make_shared<monopod_drivers::CanBus>(can_bus_id_1_);
+              can_encoder_board_1_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_1_);
 
               idx = monopod_drivers::JointModulesIndexMapping.at(boom_connector_joint);
-              encoders_[idx] = std::make_shared<blmc_drivers::Motor>(
+              encoders_[idx] = std::make_shared<monopod_drivers::Motor>(
                   can_encoder_board_1_,
                   0 /* encoder id 0 */ );
 
@@ -192,27 +191,27 @@ private:
     /**
      * @brief Canbus connection.
      */
-    std::shared_ptr<blmc_drivers::CanBus> can_bus_0_;
+    std::shared_ptr<monopod_drivers::CanBus> can_bus_0_;
 
     /**
      * @brief Canbus connection.
      */
-    std::shared_ptr<blmc_drivers::CanBus> can_bus_1_;
+    std::shared_ptr<monopod_drivers::CanBus> can_bus_1_;
 
     /**
     * @brief Canbus motorboard.
     */
-    std::shared_ptr<blmc_drivers::CanBusMotorBoard> can_encoder_board_0_;
+    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_encoder_board_0_;
 
     /**
     * @brief Canbus motorboard.
     */
-    std::shared_ptr<blmc_drivers::CanBusMotorBoard> can_encoder_board_1_;
+    std::shared_ptr<monopod_drivers::CanBusMotorBoard> can_encoder_board_1_;
 
     /**
     * @brief Hip and knee motor modules for the Planarizer
     */
-    std::vector<std::shared_ptr<blmc_drivers::MotorInterface>> encoders_;
+    std::vector<std::shared_ptr<monopod_drivers::MotorInterface>> encoders_;
 
     /**
     * @brief Zero poisition for the joint.
@@ -226,4 +225,4 @@ private:
 
 };
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers

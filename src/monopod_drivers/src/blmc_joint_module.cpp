@@ -8,16 +8,16 @@
  * @date 2019-07-11
  */
 
-#include "monopod_sdk/blmc_drivers/blmc_joint_module.hpp"
+#include "monopod_sdk/monopod_drivers/blmc_joint_module.hpp"
 #include <cmath>
 #include "real_time_tools/iostream.hpp"
 #include "real_time_tools/spinner.hpp"
 
-namespace blmc_drivers
+namespace monopod_drivers
 {
-  
+
 BlmcJointModule::BlmcJointModule(
-    std::shared_ptr<blmc_drivers::MotorInterface> motor,
+    std::shared_ptr<monopod_drivers::MotorInterface> motor,
     const double& motor_constant,
     const double& gear_ratio,
     const double& zero_angle,
@@ -453,4 +453,4 @@ double BlmcJointModule::get_distance_travelled_during_homing() const
     return homing_state_.end_position - homing_state_.start_position;
 }
 
-}  // namespace blmc_drivers
+}  // namespace monopod_drivers
