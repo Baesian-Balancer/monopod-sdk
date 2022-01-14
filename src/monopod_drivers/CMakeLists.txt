@@ -71,21 +71,19 @@
 # ================
 
     set(MONOPOD_DEVICES_PUBLIC_HDRS
-        include/monopod_sdk/monopod_drivers/devices/can_bus.hpp
         include/monopod_sdk/monopod_drivers/devices/device_interface.hpp
-        include/monopod_sdk/monopod_drivers/devices/motor_board.hpp
+        include/monopod_sdk/monopod_drivers/devices/boards.hpp
+        # Changed stuff
+        include/monopod_sdk/monopod_drivers/devices/can_bus.hpp
         include/monopod_sdk/monopod_drivers/devices/motor.hpp
         include/monopod_sdk/monopod_drivers/devices/encoder.hpp
-        # Changed stuff
-        include/monopod_sdk/monopod_drivers/devices/can_bus_monopod.hpp
         )
 
     add_library(devices
       ${MONOPOD_DEVICES_PUBLIC_HDRS}
-      src/can_bus.cpp
-      src/motor_board.cpp
+      src/boards.cpp
       # Changed stuff
-      src/can_bus_monopod.cpp
+      src/can_bus.cpp
       src/motor.cpp
       src/encoder.cpp
     )

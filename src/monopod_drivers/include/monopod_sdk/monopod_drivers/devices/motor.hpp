@@ -15,7 +15,7 @@
 #include <time_series/time_series.hpp>
 
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
-#include "monopod_sdk/monopod_drivers/devices/motor_board.hpp"
+#include "monopod_sdk/monopod_drivers/devices/boards.hpp"
 #include "monopod_sdk/monopod_drivers/devices/encoder.hpp"
 #include "monopod_sdk/common_header.hpp"
 

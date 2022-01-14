@@ -15,7 +15,7 @@
 namespace monopod_drivers
 {
 Motor::Motor(Ptr<MotorBoardInterface> board, JointNameIndexing motor_id)
-    : board_(board), motor_id_(motor_id), Encoder(board, motor_id)
+    : Encoder(board, motor_id), board_(board), motor_id_(motor_id)
 {
 }
 

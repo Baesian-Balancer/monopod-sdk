@@ -32,6 +32,8 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
                   return board_->get_measurement(MotorBoardInterface::position_0);
               case velocity:
                   return board_->get_measurement(MotorBoardInterface::velocity_0);
+              case acceleration:
+                  throw std::invalid_argument("acceleration not supported yet.");
               case encoder_index:
                   return board_->get_measurement(
                       MotorBoardInterface::encoder_index_0);
@@ -46,6 +48,8 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
                   return board_->get_measurement(MotorBoardInterface::position_1);
               case velocity:
                   return board_->get_measurement(MotorBoardInterface::velocity_1);
+              case acceleration:
+                  throw std::invalid_argument("acceleration not supported yet.");
               case encoder_index:
                   return board_->get_measurement(
                       MotorBoardInterface::encoder_index_1);
@@ -57,7 +61,6 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
         break;
     }
 
-
     throw std::invalid_argument("index needs to match one of the measurements");
 }
 
@@ -68,7 +71,6 @@ void Encoder::print() const
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");
     double motor_encoder_index = std::nan("");
-    double motor_sent_current_target = std::nan("");
 
     if (board_->get_status()->length() != 0)
     {

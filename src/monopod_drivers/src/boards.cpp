@@ -12,11 +12,11 @@
  *
  */
 
-#include <monopod_sdk/monopod_drivers/devices/can_bus_monopod.hpp>
+#include <monopod_sdk/monopod_drivers/devices/boards.hpp>
 
 namespace monopod_drivers
 {
-CanBusMonopod::CanBusMonopod(std::shared_ptr<monopod_drivers::CanBusInterface> can_bus,
+CanBusMotorBoard::CanBusMotorBoard(std::shared_ptr<CanBusInterface> can_bus,
                                    const size_t& history_length,
                                    const int& control_timeout_ms)
     : can_bus_(can_bus),
@@ -35,19 +35,19 @@ CanBusMonopod::CanBusMonopod(std::shared_ptr<monopod_drivers::CanBusInterface> c
         std::make_shared<CommandTimeseries>(history_length, 0, false);
 
     is_loop_active_ = true;
-    rt_thread_.create_realtime_thread(&CanBusMonopod::loop, this);
+    rt_thread_.create_realtime_thread(&CanBusMotorBoard::loop, this);
 }
 
-CanBusMonopod::~CanBusMonopod()
+CanBusMotorBoard::~CanBusMotorBoard()
 {
     is_loop_active_ = false;
     rt_thread_.join();
-    set_command(MonopodCommand(MonopodCommand::IDs::ENABLE_SYS,
-                                  MonopodCommand::Contents::DISABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::ENABLE_SYS,
+                                  MotorBoardCommand::Contents::DISABLE));
     send_newest_command();
 }
 
-void CanBusMonopod::send_if_input_changed()
+void CanBusMotorBoard::send_if_input_changed()
 {
     // send command if a new one has been set ----------------------------------
     if (command_->has_changed_since_tag())
@@ -68,14 +68,14 @@ void CanBusMonopod::send_if_input_changed()
     }
 }
 
-void CanBusMonopod::wait_until_ready()
+void CanBusMotorBoard::wait_until_ready()
 {
     rt_printf("waiting for board and motors to be ready \n");
     time_series::Index time_index = status_->newest_timeindex();
     bool is_ready = false;
     while (!is_ready)
     {
-        MonopodStatus status = (*status_)[time_index];
+        MotorBoardStatus status = (*status_)[time_index];
         time_index++;
 
         is_ready = status.is_ready();
@@ -83,7 +83,7 @@ void CanBusMonopod::wait_until_ready()
     rt_printf("board and motors are ready \n");
 }
 
-bool CanBusMonopod::is_ready()
+bool CanBusMotorBoard::is_ready()
 {
     if (status_->length() == 0)
     {
@@ -95,32 +95,32 @@ bool CanBusMonopod::is_ready()
     }
 }
 
-void CanBusMonopod::pause_motors()
+void CanBusMotorBoard::pause_motors()
 {
     set_control(0, current_target_0);
     set_control(0, current_target_1);
     send_newest_controls();
 
-    set_command(MonopodCommand(MonopodCommand::IDs::SET_CAN_RECV_TIMEOUT,
-                                  MonopodCommand::Contents::DISABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::SET_CAN_RECV_TIMEOUT,
+                                  MotorBoardCommand::Contents::DISABLE));
     send_newest_command();
 
     motors_are_paused_ = true;
 }
 
-void CanBusMonopod::disable_can_recv_timeout()
+void CanBusMotorBoard::disable_can_recv_timeout()
 {
-    set_command(MonopodCommand(MonopodCommand::IDs::SET_CAN_RECV_TIMEOUT,
-                                  MonopodCommand::Contents::DISABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::SET_CAN_RECV_TIMEOUT,
+                                  MotorBoardCommand::Contents::DISABLE));
     send_newest_command();
 }
 
-void CanBusMonopod::send_newest_controls()
+void CanBusMotorBoard::send_newest_controls()
 {
     if (motors_are_paused_)
     {
-        set_command(MonopodCommand(
-            MonopodCommand::IDs::SET_CAN_RECV_TIMEOUT, control_timeout_ms_));
+        set_command(MotorBoardCommand(
+            MotorBoardCommand::IDs::SET_CAN_RECV_TIMEOUT, control_timeout_ms_));
         send_newest_command();
         motors_are_paused_ = false;
     }
@@ -164,7 +164,7 @@ void CanBusMonopod::send_newest_controls()
     data[6] = (q_current2 >> 8) & 0xFF;
     data[7] = q_current2 & 0xFF;
 
-    monopod_drivers::CanBusFrame can_frame;
+    CanBusFrame can_frame;
     can_frame.id = CanframeIDs::IqRef;
     for (size_t i = 0; i < 7; i++)
     {
@@ -176,7 +176,7 @@ void CanBusMonopod::send_newest_controls()
     can_bus_->send_if_input_changed();
 }
 
-void CanBusMonopod::send_newest_command()
+void CanBusMotorBoard::send_newest_command()
 {
     if (command_->length() == 0)
     {
@@ -185,7 +185,7 @@ void CanBusMonopod::send_newest_command()
     }
 
     Index timeindex = command_->newest_timeindex();
-    MonopodCommand command = (*command_)[timeindex];
+    MotorBoardCommand command = (*command_)[timeindex];
     command_->tag(timeindex);
     sent_command_->append(command);
 
@@ -206,7 +206,7 @@ void CanBusMonopod::send_newest_command()
     data[6] = (id >> 8) & 0xFF;
     data[7] = id & 0xFF;
 
-    monopod_drivers::CanBusFrame can_frame;
+    CanBusFrame can_frame;
     can_frame.id = CanframeIDs::COMMAND_ID;
     for (size_t i = 0; i < 8; i++)
     {
@@ -218,32 +218,32 @@ void CanBusMonopod::send_newest_command()
     can_bus_->send_if_input_changed();
 }
 
-void CanBusMonopod::loop()
+void CanBusMotorBoard::loop()
 {
     pause_motors();
 
     // initialize board --------------------------------------------------------
-    set_command(MonopodCommand(MonopodCommand::IDs::ENABLE_SYS,
-                                  MonopodCommand::Contents::ENABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::ENABLE_SYS,
+                                  MotorBoardCommand::Contents::ENABLE));
     send_newest_command();
 
-    set_command(MonopodCommand(MonopodCommand::IDs::SEND_ALL,
-                                  MonopodCommand::Contents::ENABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::SEND_ALL,
+                                  MotorBoardCommand::Contents::ENABLE));
     send_newest_command();
 
-    set_command(MonopodCommand(MonopodCommand::IDs::ENABLE_MTR1,
-                                  MonopodCommand::Contents::ENABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::ENABLE_MTR1,
+                                  MotorBoardCommand::Contents::ENABLE));
     send_newest_command();
 
-    set_command(MonopodCommand(MonopodCommand::IDs::ENABLE_MTR2,
-                                  MonopodCommand::Contents::ENABLE));
+    set_command(MotorBoardCommand(MotorBoardCommand::IDs::ENABLE_MTR2,
+                                  MotorBoardCommand::Contents::ENABLE));
     send_newest_command();
 
     // receive data from board in a loop ---------------------------------------
     long int timeindex = can_bus_->get_output_frame()->newest_timeindex();
     while (is_loop_active_)
     {
-        monopod_drivers::CanBusFrame can_frame;
+        CanBusFrame can_frame;
         Index received_timeindex = timeindex;
         can_frame = (*can_bus_->get_output_frame())[received_timeindex];
 
@@ -315,7 +315,7 @@ void CanBusMonopod::loop()
             }
             case CanframeIDs::STATUSMSG:
             {
-                MonopodStatus status;
+                MotorBoardStatus status;
                 uint8_t data = can_frame.data[0];
                 status.system_enabled = data >> 0;
                 status.motor1_enabled = data >> 1;
@@ -338,7 +338,7 @@ void CanBusMonopod::loop()
     }
 }
 
-void CanBusMonopod::print_status()
+void CanBusMotorBoard::print_status()
 {
     rt_printf("ouptus ======================================\n");
     rt_printf("measurements: -------------------------------\n");

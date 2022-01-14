@@ -56,7 +56,7 @@ namespace monopod_drivers
          current,
          encoder_index,
          measurement_count, //Meassurement count is the 'length' of the meassurement vector in motor board.
-         torque,
+         torque  // this is only used for monopodsdk
      };
 
     /**
@@ -69,5 +69,9 @@ namespace monopod_drivers
         {planarizer_yaw_joint, 1},
         {planarizer_pitch_joint, 0}
     };
+
+
+    typedef std::unordered_map<MeasurementIndex, double> map_inner;
+    typedef std::unordered_map<JointNameIndexing, map_inner> ObservationMap;
 
 } // end namespace monopod_drivers
