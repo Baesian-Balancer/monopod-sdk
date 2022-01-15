@@ -14,13 +14,17 @@ namespace monopod_drivers
 
 void SinePositionControl::loop()
 {
-    int position_index = monopod_drivers::position;
-    int velocity_index = monopod_drivers::velocity;
-    int torque_index = monopod_drivers::torque;
+    // here is the control in torque (NM)
+    double actual_torque_hip = 0.0;
+    double actual_torque_knee = 0.0;
 
-    LVector actual_position(0.0, 0.0);
-    LVector actual_velocity(0.0, 0.0);
-    LVector actual_torque(0.0, 0.0);
+    double actual_position_hip = 0.0;
+    double actual_position_knee = 0.0;
+
+    double actual_velocity_hip = 0.0;
+    double actual_velocity_knee = 0.0;
+
+
     double local_time = 0.0;
     double control_period = 0.001;
 
@@ -28,13 +32,15 @@ void SinePositionControl::loop()
     double amplitude = 0.1 /*3.1415*/;
     double frequence = 0.5;
 
-    // here is the control in current (Ampere)
-    double desired_position = 0.0;
-    double desired_velocity = 0.0;
+    // here is the control in torque (NM)
+    double desired_torque_hip = 0.0;
+    double desired_torque_knee = 0.0;
 
-    LVector desired_torque;
-    LVector desired_pos;
-    LVector desired_vel;
+    double desired_position_hip = 0.0;
+    double desired_position_knee = 0.0;
+
+    double desired_velocity_hip = 0.0;
+    double desired_velocity_knee = 0.0;
 
     real_time_tools::Spinner spinner;
     spinner.set_period(control_period);  // here we spin every 1ms
@@ -47,35 +53,40 @@ void SinePositionControl::loop()
 
         auto data = leg_->get_measurements();
         // compute the control
-        actual_position = {data[hip_joint][position_index], data[knee_joint][position_index]};
+        actual_position_hip = data[hip_joint][monopod_drivers::position];
+        actual_position_knee = data[knee_joint][monopod_drivers::position];
 
-        actual_velocity = {data[hip_joint][velocity_index], data[knee_joint][velocity_index]};
+        actual_velocity_hip = data[hip_joint][monopod_drivers::velocity];
+        actual_velocity_knee = data[knee_joint][monopod_drivers::velocity];
 
-        actual_torque =  = {data[hip_joint][torque_index], data[knee_joint][torque_index]};;
+        actual_torque_hip =  data[hip_joint][monopod_drivers::torque];
+        actual_torque_knee =  data[knee_joint][monopod_drivers::torque];
 
-        desired_position =
-            amplitude * sin(2 * M_PI * frequence * local_time);
-        desired_velocity = 0.0; /* 2 * M_PI * frequence * amplitude *
-                            cos(2 * M_PI * frequence * local_time)*/
+        double desired_position = amplitude * sin(2 * M_PI * frequence * local_time);
+        desired_position_hip = desired_position;
+        desired_position_knee = desired_position;
 
-        desired_pos[0] = desired_position;
-        desired_pos[1] = desired_position;
-        desired_vel[0] = desired_velocity;
-        desired_vel[1] = desired_velocity;
+        desired_torque_hip = kp_ * (desired_position_hip - actual_position_hip) +
+                              kd_ * (desired_velocity_hip - actual_velocity_hip);
 
-        desired_torque = kp_ * (desired_pos - actual_position) +
-                              kd_ * (desired_vel - actual_velocity);
+        desired_torque_knee = kp_ * (desired_position_knee - actual_position_knee) +
+                              kd_ * (desired_velocity_knee - actual_velocity_knee);
 
-        leg_->set_target_torques(desired_torque);
+        leg_->set_target_torques({desired_torque_hip, desired_torque_knee});
         leg_->send_target_torques();
 
-        for (int i = 0; i < 2; i++)
-        {
-            encoders_[i].push_back(actual_position[i]);
-            velocities_[i].push_back(actual_velocity[i]);
-            torques_[i].push_back(actual_torque[i]);
-            control_buffer_[i].push_back(desired_torque[i]);
-        }
+
+        encoders_[0].push_back(actual_position_hip);
+        velocities_[0].push_back(actual_velocity_hip);
+        torques_[0].push_back(actual_torque_hip);
+        control_buffer_[0].push_back(desired_torque_hip);
+
+
+        encoders_[1].push_back(actual_position_knee);
+        velocities_[1].push_back(actual_velocity_knee);
+        torques_[1].push_back(actual_torque_knee);
+        control_buffer_[1].push_back(desired_torque_knee);
+
 
         // we sleep here 1ms.
         spinner.spin();

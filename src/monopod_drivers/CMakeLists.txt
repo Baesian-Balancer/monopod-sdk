@@ -123,11 +123,12 @@
       include/monopod_sdk/monopod_drivers/leg.hpp
       include/monopod_sdk/monopod_drivers/planarizer.hpp
       include/monopod_sdk/monopod_drivers/motor_joint_module.hpp
-      include/monopod_sdk/monopod_drivers/motor_joint_modules.hpp
+      include/monopod_sdk/monopod_drivers/encoder_joint_module.hpp
   )
   add_library(MonopodDrivers
       ${MONOPOD_DRIVERS_PUBLIC_HDRS}
       src/motor_joint_module.cpp
+      src/encoder_joint_module.cpp
     )
 
   set_target_properties(MonopodDrivers PROPERTIES LINKER_LANGUAGE CXX)
