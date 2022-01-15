@@ -436,19 +436,17 @@ void Monopod::loop()
 
       for (const auto &joint_index : read_joint_indexing)
       {
-          int data_index = monopod_drivers::JointModulesIndexMapping.at((JointNameIndexing)joint_index);
-
           if (Contains(write_joint_indexing, joint_index))
           {
             /* handle Leg data here */
-            cur_pos.push_back(data_leg[monopod_drivers::position][data_index]);
-            cur_vel.push_back(data_leg[monopod_drivers::velocity][data_index]);
+            cur_pos.push_back(data_leg[(JointNameIndexing)joint_index][monopod_drivers::position]);
+            cur_vel.push_back(data_leg[(JointNameIndexing)joint_index][monopod_drivers::velocity]);
           }
           else
           {
             /* handle Planarizer data here */
-            cur_pos.push_back(data_planarizer[monopod_drivers::position][data_index]);
-            cur_vel.push_back(data_planarizer[monopod_drivers::velocity][data_index]);
+            cur_pos.push_back(data_planarizer[(JointNameIndexing)joint_index][monopod_drivers::position]);
+            cur_vel.push_back(data_planarizer[(JointNameIndexing)joint_index][monopod_drivers::velocity]);
           }
       }
 
@@ -485,17 +483,15 @@ void Monopod::loop()
       */
 
       if (valid) {
-          auto torques = get_torque_targets();
+          auto torques = get_torque_targets({hip_joint, knee_joint});
           //TODO: This assumes torques has a value. This might not be the case those? In which case it must be handled
-          monopod_drivers::LVector torques_eigen(torques.value().data());
 
-          leg_->set_target_torques(torques_eigen);
+          leg_->set_target_torques(torques.value());
           leg_->send_target_torques();
       }
       else {
           // TODO: This sets torques to 0 as the safe mode right now? We might want to handle this in a mor creative way...
-          monopod_drivers::LVector torques;
-          torques.setZero();
+          std::vector<double> torques(0, 2);
 
           leg_->set_target_torques(torques);
           leg_->send_target_torques();

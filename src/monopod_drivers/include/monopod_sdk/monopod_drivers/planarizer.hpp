@@ -58,16 +58,14 @@ public:
     {
         int idx;
         /*Always create at least one encoder on the main canbus.*/
-        idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_pitch_joint);
-        encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
+        encoders_[planarizer_pitch_joint] = std::make_shared<monopod_drivers::Encoder>(
             board_,
             JointNameIndexing::planarizer_pitch_joint /* encoder id 0 */ );
 
         if (num_joints_ == 2 || num_joints_ == 3)
         {
               /*If num_joints_ == 2 we need to make a second encoder joint for meassurements. this is fixed hip mode*/
-              idx = monopod_drivers::JointModulesIndexMapping.at(planarizer_yaw_joint);
-              encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
+              encoders_[planarizer_yaw_joint] = std::make_shared<monopod_drivers::Encoder>(
                   board_,
                   JointNameIndexing::planarizer_yaw_joint /* encoder id 1*/ );
         }
@@ -75,8 +73,7 @@ public:
         if (num_joints_ == 3)
         {      /*If num_joints_ == 3 we need to create second board. this is free hip mode*/
 
-              idx = monopod_drivers::JointModulesIndexMapping.at(boom_connector_joint);
-              encoders_[idx] = std::make_shared<monopod_drivers::Encoder>(
+              encoders_[boom_connector_joint] = std::make_shared<monopod_drivers::Encoder>(
                   board_,
                   JointNameIndexing::boom_connector_joint /* encoder id 0 */ );
 
@@ -101,25 +98,16 @@ public:
      *
      * @return unordered map of std::vector<double> measurements. Indexed with the meassurement type enum.
      */
-    std::unordered_map<int, std::vector<double>> get_measurements() const
+    ObservationMap get_measurements() const
     {
-        std::unordered_map<int, std::vector<double>> data = {};
 
-        std::vector<double> poss;
-        std::vector<double> vels;
+        ObservationMap data = {};
 
-        poss.reserve(num_joints_);
-        vels.reserve(num_joints_);
-
-        for (size_t encoder_id = 0; encoder_id < encoders_.size(); encoder_id++){
-
-            poss[encoder_id] = get_encoder_measurement(encoder_id, MeasurementIndex::position) - joint_zero_positions_[encoder_id];
-            vels[encoder_id] = get_encoder_measurement(encoder_id, MeasurementIndex::velocity);
-            // data[acceleration] = encoder_->get_measured_accelerations();
+        for (const auto &pair : encoders_)
+        {
+            data[pair.first][position] = get_encoder_measurement(encoder_id, position) - joint_zero_positions_[encoder_id];
+            data[pair.first][velocity] = get_encoder_measurement(encoder_id, velocity);
         }
-
-        data[MeasurementIndex::position] = poss;
-        data[MeasurementIndex::velocity] = vels;
 
         return data;
     }
@@ -165,7 +153,7 @@ private:
     /**
     * @brief Hip and knee motor modules for the Planarizer
     */
-    std::vector<std::shared_ptr<monopod_drivers::EncoderInterface>> encoders_;
+    std::unordered_map<JointNameIndexing, std::shared_ptr<monopod_drivers::EncoderInterface>> encoders_;
 
     /**
     * @brief Zero poisition for the joint.

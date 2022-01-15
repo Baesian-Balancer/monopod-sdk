@@ -74,4 +74,6 @@ namespace monopod_drivers
     typedef std::unordered_map<MeasurementIndex, double> map_inner;
     typedef std::unordered_map<JointNameIndexing, map_inner> ObservationMap;
 
+    typedef std::unordered_map<JointNameIndexing, double> ActionMap;
+
 } // end namespace monopod_drivers

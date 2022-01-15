@@ -18,9 +18,9 @@ void SinePositionControl::loop()
     int velocity_index = monopod_drivers::velocity;
     int torque_index = monopod_drivers::torque;
 
-    Vector actual_position(0.0, 0.0);
-    Vector actual_velocity(0.0, 0.0);
-    Vector actual_torque(0.0, 0.0);
+    LVector actual_position(0.0, 0.0);
+    LVector actual_velocity(0.0, 0.0);
+    LVector actual_torque(0.0, 0.0);
     double local_time = 0.0;
     double control_period = 0.001;
 
@@ -32,9 +32,9 @@ void SinePositionControl::loop()
     double desired_position = 0.0;
     double desired_velocity = 0.0;
 
-    Vector desired_torque;
-    Vector desired_pos;
-    Vector desired_vel;
+    LVector desired_torque;
+    LVector desired_pos;
+    LVector desired_vel;
 
     real_time_tools::Spinner spinner;
     spinner.set_period(control_period);  // here we spin every 1ms
@@ -47,11 +47,11 @@ void SinePositionControl::loop()
 
         auto data = leg_->get_measurements();
         // compute the control
-        actual_position = data[position_index];
+        actual_position = {data[hip_joint][position_index], data[knee_joint][position_index]};
 
-        actual_velocity = data[velocity_index];
+        actual_velocity = {data[hip_joint][velocity_index], data[knee_joint][velocity_index]};
 
-        actual_torque = data[torque_index];
+        actual_torque =  = {data[hip_joint][torque_index], data[knee_joint][torque_index]};;
 
         desired_position =
             amplitude * sin(2 * M_PI * frequence * local_time);

@@ -7,8 +7,9 @@
 #include <tuple>
 
 #include <monopod_sdk/monopod_drivers/devices/can_bus.hpp>
-#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
+#include <monopod_sdk/monopod_drivers/devices/boards.hpp>
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 const int NUMBER_JOINTS = 3;
 
@@ -22,15 +23,15 @@ static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* planarizer_ptr)
     {
         auto data = planarizer.get_measurements();
         std::cout << "Current Position for: "
-         << "(boom_connector_joint: "   << data[monopod_drivers::position][2] << ")"
-         << "(planarizer_yaw_joint: "   << data[monopod_drivers::position][1] << ")"
-         << "(planarizer_pitch_joint: " << data[monopod_drivers::position][0] << ")"
+         << "(boom_connector_joint: "   << data[boom_connector_joint][monopod_drivers::position] << ")"
+         << "(planarizer_yaw_joint: "   << data[planarizer_yaw_joint][monopod_drivers::position] << ")"
+         << "(planarizer_pitch_joint: " << data[planarizer_pitch_joint][monopod_drivers::position] << ")"
          << std::endl;
 
          std::cout << "Current Velocity for: "
-          << "(boom_connector_joint: "   << data[monopod_drivers::velocity][2] << ")"
-          << "(planarizer_yaw_joint: "   << data[monopod_drivers::velocity][1] << ")"
-          << "(planarizer_pitch_joint: " << data[monopod_drivers::velocity][0] << ")"
+          << "(boom_connector_joint: "   << data[boom_connector_joint][monopod_drivers::velocity] << ")"
+          << "(planarizer_yaw_joint: "   << data[planarizer_yaw_joint][monopod_drivers::velocity] << ")"
+          << "(planarizer_pitch_joint: " << data[planarizer_pitch_joint][monopod_drivers::velocity] << ")"
           << std::endl;
 
           /*

@@ -6,6 +6,7 @@
 
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
+#include "monopod_sdk/common_header.hpp"
 
 namespace monopod_drivers
 {
