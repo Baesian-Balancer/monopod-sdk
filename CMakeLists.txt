@@ -122,7 +122,8 @@ include(InstallBasicPackageFiles)
 # =========
 # Monopod SDK
 # =========
-add_subdirectory(src)
+
+include(build_and_install.cmake)
 
 # # ========
 # # DOCS
