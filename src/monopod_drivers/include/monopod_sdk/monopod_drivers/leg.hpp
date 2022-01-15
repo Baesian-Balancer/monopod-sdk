@@ -37,7 +37,7 @@ public:
      * @brief Enumerate the num_joints For readability
      *
      */
-    static constexpr int num_joints_ = 2;
+    static constexpr long unsigned int num_joints_ = 2;
 
     /**
      * @brief Construct the LegInterface object
@@ -126,6 +126,25 @@ public:
         return data;
     }
 
+    /**
+     * @brief Get the zero_angles. These are the joint angles between the
+     * starting pose and the zero theoretical pose of the urdf.
+     *
+     * @return std::vector<double> (rad)
+     */
+    std::vector<double> get_zero_angles() const
+    {
+
+        std::vector<double> positions;
+        positions.reserve(num_joints_);
+
+        for (const auto &pair : joints_)
+        {
+            positions.push_back(pair.second->get_zero_angle());
+        }
+        return positions;
+    }
+
     // =========================================================================
     //  SETTERS
     // =========================================================================
@@ -138,6 +157,9 @@ public:
      */
     void set_target_torques(const std::vector<double>& torque_targets)
     {
+        if(torque_targets.size() != num_joints_)
+            throw std::runtime_error("need same number of elements as number joints.");
+
         joints_[hip_joint]->set_torque(torque_targets[0]);
         joints_[knee_joint]->set_torque(torque_targets[1]);
     }
@@ -149,6 +171,46 @@ public:
     {
         joints_[hip_joint]->send_torque();
         joints_[knee_joint]->send_torque();
+    }
+
+    /**
+     * @brief Set the zero_angles. These are the joint angles between the
+     * starting pose and the zero theoretical pose of the urdf.
+     *
+     * @param zero_angles (rad)
+     */
+    void set_zero_angles(const std::vector<double>& zero_angles)
+    {
+        if(zero_angles.size() != num_joints_)
+            throw std::runtime_error("need same number of elements as number joints.");
+
+        size_t i = 0;
+        for (const auto &pair : joints_)
+        {
+
+            pair.second->set_zero_angle(zero_angles[i]);
+            i++;
+        }
+    }
+
+    /**
+     * @brief Set the polarities of the joints
+     * (see BlmcJointModule::set_joint_polarity)
+     *
+     * @param reverse_polarity
+     */
+    void set_joint_polarities(std::vector<bool> reverse_polarities)
+    {
+        if(reverse_polarities.size() != num_joints_)
+            throw std::runtime_error("need same number of elements as number joints.");
+
+        size_t i = 0;
+        for (const auto &pair : joints_)
+        {
+
+            pair.second->set_joint_polarity(reverse_polarities[i]);
+            i++;
+        }
     }
 
     /**

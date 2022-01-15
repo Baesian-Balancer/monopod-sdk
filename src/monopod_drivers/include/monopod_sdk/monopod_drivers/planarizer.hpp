@@ -122,69 +122,78 @@ public:
         return data;
     }
 
+    /**
+     * @brief Get the zero_angles. These are the joint angles between the
+     * starting pose and the zero theoretical pose of the urdf.
+     *
+     * @return std::vector<double> (rad)
+     */
+    std::vector<double> get_zero_angles() const
+    {
 
-    //Todo: Finish these methods.
+        std::vector<double> positions;
+        positions.reserve(num_joints_);
 
-    // // =========================================================================
-    // //  SETTERS
-    // // =========================================================================
-    //
-    // /**
-    //  * @brief Calibrate the Planarizer. See blmc_joint_module.hpp for explanation of parameters
-    //  * and logic.
-    //  */
-    // bool calibrate(const std::vector<double>& home_offset_rad)
-    // {
-    //     return true;
-    // }
-    //
-    // /**
-    //  * @brief Set the zero_angles. These are the joint angles between the
-    //  * starting pose and the zero theoretical pose of the urdf.
-    //  *
-    //  * @param zero_angles (rad)
-    //  */
-    // void set_zero_angles(const std::vector<double>& zero_angles)
-    // {
-    //     if(zero_angles.size() != num_joints_)
-    //         throw std::runtime_error("need same number of elements as number joints.");
-    //
-    //     for (size_t i = 0; i < COUNT; i++)
-    //     {
-    //         modules_[i]->set_zero_angle(zero_angles(i));
-    //     }
-    // }
-    //
-    // /**
-    //  * @brief Get the zero_angles. These are the joint angles between the
-    //  * starting pose and the zero theoretical pose of the urdf.
-    //  *
-    //  * @return std::vector<double> (rad)
-    //  */
-    // std::vector<double> get_zero_angles() const
-    // {
-    //     std::vector<double> positions;
-    //
-    //     for (size_t i = 0; i < COUNT; i++)
-    //     {
-    //         positions(i) = modules_[i]->get_zero_angle();
-    //     }
-    //     return positions;
-    // }
-    //
-    // /**
-    //  * @brief Set the polarities of the joints
-    //  * (see BlmcJointModule::set_joint_polarity)
-    //  *
-    //  * @param reverse_polarity
-    //  */
-    // void set_joint_polarities(std::vector<bool> reverse_polarities)
-    // {
-    //     for (size_t i = 0; i < COUNT; i++)
-    //     {
-    //         modules_[i]->set_joint_polarity(reverse_polarities[i]);
-    //     }
-    // }
+        for (const auto &pair : joints_)
+        {
+            positions.push_back(pair.second->get_zero_angle());
+        }
+        return positions;
+
+    }
+
+    // =========================================================================
+    //  SETTERS
+    // =========================================================================
+
+    /**
+     * @brief Calibrate the Planarizer. See blmc_joint_module.hpp for explanation of parameters
+     * and logic.
+     */
+    bool calibrate(const std::vector<double>& home_offset_rad)
+    {
+        return true;
+    }
+
+    /**
+     * @brief Set the zero_angles. These are the joint angles between the
+     * starting pose and the zero theoretical pose of the urdf.
+     *
+     * @param zero_angles (rad)
+     */
+    void set_zero_angles(const std::vector<double>& zero_angles)
+    {
+        if(zero_angles.size() != num_joints_)
+            throw std::runtime_error("need same number of elements as number joints.");
+
+        size_t i = 0;
+        for (const auto &pair : joints_)
+        {
+
+            pair.second->set_zero_angle(zero_angles[i]);
+            i++;
+        }
+    }
+
+    /**
+     * @brief Set the polarities of the joints
+     * (see BlmcJointModule::set_joint_polarity)
+     *
+     * @param reverse_polarity
+     */
+    void set_joint_polarities(std::vector<bool> reverse_polarities)
+    {
+        if(reverse_polarities.size() != num_joints_)
+            throw std::runtime_error("need same number of elements as number joints.");
+
+        size_t i = 0;
+        for (const auto &pair : joints_)
+        {
+
+            pair.second->set_joint_polarity(reverse_polarities[i]);
+            i++;
+        }
+    }
 
 private:
 
@@ -196,7 +205,7 @@ private:
     /**
      * @brief number joints active.
      */
-    int num_joints_;
+    long unsigned int num_joints_;
 
     /**
     * @brief Hip and knee motor modules for the Planarizer
