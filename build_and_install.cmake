@@ -1,6 +1,6 @@
 
 # ================
-# Monopod Drivers::Utils
+# MonopodSdk::Utils
 # ================
 
     # set(MONOPOD_UTILS_PUBLIC_HDRS
@@ -8,7 +8,7 @@
     #
     # add_library(utils INTERFACE)
     #
-    # add_library(MonopodDrivers::utils ALIAS utils)
+    # add_library(MonopodSdk::utils ALIAS utils)
     #
     # target_include_directories(utils INTERFACE
     #     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -46,7 +46,7 @@
                 ${MONOPOD_UTILS_PUBLIC_HDRS}
                  src/utils/polynome.cpp)
 
-    add_library(MonopodDrivers::utils ALIAS utils)
+    add_library(MonopodSdk::utils ALIAS utils)
 
     target_include_directories(utils PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -67,7 +67,7 @@
     set_target_properties(utils PROPERTIES PUBLIC_HEADER "${MONOPOD_UTILS_PUBLIC_HDRS}")
 
 # ================
-# Monopod Drivers::Devices
+# MonopodSdk::Devices
 # ================
 
     set(MONOPOD_DEVICES_PUBLIC_HDRS
@@ -88,7 +88,7 @@
       src/encoder.cpp
     )
 
-    add_library(MonopodDrivers::devices ALIAS devices)
+    add_library(MonopodSdk::devices ALIAS devices)
 
     target_include_directories(devices PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -113,7 +113,7 @@
     set_target_properties(devices PROPERTIES PUBLIC_HEADER "${MONOPOD_DEVICES_PUBLIC_HDRS}")
 
 # ==============================================================================
-# MonopodDrivers::Monopod Drivers
+# MonopodSdk::MonopodDrivers
 # ==============================================================================
 
   # ===============================
@@ -160,7 +160,7 @@
   # ===============================
   # Build Library
   # ===============================
-  add_library(MonopodDrivers::MonopodDrivers ALIAS MonopodDrivers)
+  add_library(MonopodSdk::MonopodDrivers ALIAS MonopodDrivers)
 
   target_include_directories(MonopodDrivers PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
@@ -172,26 +172,26 @@
   )
 
 # ==============================================================================
-# MonopodDrivers::Monopodsdkcore
+# MonopodSdk::Monopodsdk
 # ==============================================================================
 
   set(MONOPOD_SDK_CORE_PUBLIC_HDRS
     include/monopod_sdk/monopod.hpp
   )
 
-  add_library(MonopodSdkCore
+  add_library(MonopodSdk
     ${MONOPOD_SDK_CORE_PUBLIC_HDRS}
     src/monopod.cpp
   )
 
-  add_library(MonopodDrivers::MonopodSdkCore ALIAS MonopodSdkCore)
+  add_library(MonopodSdk::MonopodSdk ALIAS MonopodSdk)
 
-  target_include_directories(MonopodSdkCore PUBLIC
+  target_include_directories(MonopodSdk PUBLIC
     $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
     $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>
   )
 
-  set_target_properties(MonopodSdkCore PROPERTIES
+  set_target_properties(MonopodSdk PROPERTIES
     PUBLIC_HEADER "${MONOPOD_SDK_CORE_PUBLIC_HDRS}"
   )
 
@@ -200,7 +200,7 @@
   # Link Libraries
   # ===============================
 
-  target_link_libraries(MonopodSdkCore
+  target_link_libraries(MonopodSdk
     PUBLIC
     devices
     MonopodDrivers
@@ -230,7 +230,7 @@ macro(add_demo demo_name)
   )
   target_link_libraries(${demo_name}
     MonopodDrivers
-    MonopodSdkCore
+    MonopodSdk
     utils
     devices
   )
@@ -247,9 +247,19 @@ add_demo(demo_print_position_sdk)
 # ===============================
 
 install(
+  TARGETS
+  MonopodSdk ${misc_targets}
+  EXPORT MonopodSdkExport
+  LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+  ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+  RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
+  PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk
+)
+
+install(
     TARGETS
-    MonopodDrivers ${misc_targets}
-    EXPORT MonopodDriversExport
+    MonopodDrivers
+    EXPORT MonopodSdkExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
@@ -258,18 +268,8 @@ install(
 
 install(
     TARGETS
-    MonopodSdkCore
-    EXPORT MonopodDriversExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk
-  )
-
-install(
-    TARGETS
     utils
-    EXPORT MonopodDriversExport
+    EXPORT MonopodSdkExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
@@ -279,21 +279,21 @@ install(
 install(
     TARGETS
     devices
-    EXPORT MonopodDriversExport
+    EXPORT MonopodSdkExport
     LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
     RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
     PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers/devices
   )
 
-install_basic_package_files(MonopodDrivers
-    COMPONENT MonopodDrivers
+install_basic_package_files(MonopodSdk
+    COMPONENT MonopodSdk
     VERSION ${PROJECT_VERSION}
     COMPATIBILITY AnyNewerVersion
-    EXPORT MonopodDriversExport
+    EXPORT MonopodSdkExport
     DEPENDENCIES real_time_tools time_series
-    NAMESPACE MonopodDrivers::
+    NAMESPACE MonopodSdk::
     NO_CHECK_REQUIRED_COMPONENTS_MACRO
     INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodDrivers
+    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSdk
   )
