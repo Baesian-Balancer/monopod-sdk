@@ -14,7 +14,7 @@
 
 namespace monopod_drivers
 {
-Encoder::Encoder(Ptr<MotorBoardInterface> board, JointNameIndexing encoder_id)
+Encoder::Encoder(Ptr<ControlBoardsInterface> board, JointNameIndexing encoder_id)
     : board_(board), encoder_id_(encoder_id)
 {
 }
@@ -27,32 +27,32 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
           switch (index)
           {
               case current:
-                  return board_->get_measurement(MotorBoardInterface::current_0);
+                  return board_->get_measurement(ControlBoardsInterface::current_0);
               case position:
-                  return board_->get_measurement(MotorBoardInterface::position_0);
+                  return board_->get_measurement(ControlBoardsInterface::position_0);
               case velocity:
-                  return board_->get_measurement(MotorBoardInterface::velocity_0);
+                  return board_->get_measurement(ControlBoardsInterface::velocity_0);
               case acceleration:
                   throw std::invalid_argument("acceleration not supported yet.");
               case encoder_index:
                   return board_->get_measurement(
-                      MotorBoardInterface::encoder_index_0);
+                      ControlBoardsInterface::encoder_index_0);
           }
           break;
       case knee_joint:
           switch (index)
           {
               case current:
-                  return board_->get_measurement(MotorBoardInterface::current_1);
+                  return board_->get_measurement(ControlBoardsInterface::current_1);
               case position:
-                  return board_->get_measurement(MotorBoardInterface::position_1);
+                  return board_->get_measurement(ControlBoardsInterface::position_1);
               case velocity:
-                  return board_->get_measurement(MotorBoardInterface::velocity_1);
+                  return board_->get_measurement(ControlBoardsInterface::velocity_1);
               case acceleration:
                   throw std::invalid_argument("acceleration not supported yet.");
               case encoder_index:
                   return board_->get_measurement(
-                      MotorBoardInterface::encoder_index_1);
+                      ControlBoardsInterface::encoder_index_1);
           }
           break;
       case boom_connector_joint:
@@ -66,7 +66,7 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
 
 void Encoder::print() const
 {
-    MotorBoardStatus motor_board_status;
+    ControlBoardsStatus motor_board_status;
     double motor_current = std::nan("");
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");

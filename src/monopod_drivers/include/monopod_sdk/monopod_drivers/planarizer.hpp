@@ -36,7 +36,7 @@ public:
     /**
      * @brief Construct the PlanarizerInterface object
      */
-    Planarizer(std::shared_ptr<MotorBoardInterface> board, const int &num_joints) :
+    Planarizer(std::shared_ptr<ControlBoardsInterface> board, const int &num_joints) :
       board_(board), num_joints_(num_joints)
     {
 
@@ -200,7 +200,7 @@ private:
     /**
     * @brief Canbus board for encoders.
     */
-    std::shared_ptr<monopod_drivers::MotorBoardInterface> board_;
+    std::shared_ptr<monopod_drivers::ControlBoardsInterface> board_;
 
     /**
      * @brief number joints active.

@@ -413,9 +413,9 @@ private:
    std::shared_ptr<monopod_drivers::CanBus> can_bus_;
 
    /**
-    * @brief Canbus motorboard.
+    * @brief Canbus ControlBoards.
     */
-   std::shared_ptr<monopod_drivers::CanBusMotorBoard> board_;
+   std::shared_ptr<monopod_drivers::CanBusControlBoards> board_;
 
     /**
     * @brief robot Planarizer interface object

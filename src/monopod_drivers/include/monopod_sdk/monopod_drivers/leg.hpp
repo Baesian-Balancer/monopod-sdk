@@ -42,7 +42,7 @@ public:
     /**
      * @brief Construct the LegInterface object
      */
-    Leg(std::shared_ptr<MotorBoardInterface> board, double motor_max_current = 5.0)
+    Leg(std::shared_ptr<ControlBoardsInterface> board, double motor_max_current = 5.0)
       : board_(board), motor_max_current_(motor_max_current)
     {
     }
@@ -231,9 +231,9 @@ public:
 private:
 
     /**
-     * @brief Canbus motorboard.
+     * @brief Canbus ControlBoards.
      */
-    std::shared_ptr<monopod_drivers::MotorBoardInterface> board_;
+    std::shared_ptr<monopod_drivers::ControlBoardsInterface> board_;
 
     /**
      * @brief Hip and knee joint modules for the leg

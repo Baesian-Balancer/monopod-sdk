@@ -46,7 +46,7 @@
                 ${MONOPOD_UTILS_PUBLIC_HDRS}
                  src/utils/polynome.cpp)
 
-    add_library(BlmcDrivers::utils ALIAS utils)
+    add_library(MonopodDrivers::utils ALIAS utils)
 
     target_include_directories(utils PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>

@@ -23,26 +23,26 @@ namespace monopod_drivers
 {
 //==============================================================================
 /**
- * @brief This MotorBoardCommand class is a data structurs that defines a
+ * @brief This ControlBoardsCommand class is a data structurs that defines a
  * command.
  */
-class MotorBoardCommand
+class ControlBoardsCommand
 {
 public:
     /**
-     * @brief Construct a new MotorBoardCommand object
+     * @brief Construct a new ControlBoardsCommand object
      */
-    MotorBoardCommand()
+    ControlBoardsCommand()
     {
     }
 
     /**
-     * @brief Construct a new MotorBoardCommand object
+     * @brief Construct a new ControlBoardsCommand object
      *
      * @param id defines the command to apply.
      * @param content defines of the command is enabled or disabled.
      */
-    MotorBoardCommand(uint32_t id, int32_t content)
+    ControlBoardsCommand(uint32_t id, int32_t content)
     {
         id_ = id;
         content_ = content;
@@ -58,7 +58,7 @@ public:
 
     /**
      * @brief IDs are the different implemented commands that one can send to
-     * the MotorBoard.
+     * the ControlBoards.
      */
     enum IDs
     {
@@ -102,7 +102,7 @@ public:
  * @brief This class represent a 8 bits message that describe the state
  * (enable/disabled) of the card and the two motors.
  */
-class MotorBoardStatus
+class ControlBoardsStatus
 {
 public:
     /**
@@ -228,15 +228,15 @@ public:
 
 //==============================================================================
 /**
- * @brief MotorBoardInterface declares an API to inacte with a MotorBoard.
+ * @brief ControlBoardsInterface declares an API to inacte with a ControlBoards.
  */
-class MotorBoardInterface : public DeviceInterface
+class ControlBoardsInterface : public DeviceInterface
 {
 public:
     /**
-     * @brief Destroy the MotorBoardInterface object
+     * @brief Destroy the ControlBoardsInterface object
      */
-    virtual ~MotorBoardInterface()
+    virtual ~ControlBoardsInterface()
     {
     }
 
@@ -255,11 +255,11 @@ public:
     /**
      * @brief A useful shortcut
      */
-    typedef time_series::TimeSeries<MotorBoardStatus> StatusTimeseries;
+    typedef time_series::TimeSeries<ControlBoardsStatus> StatusTimeseries;
     /**
      * @brief A useful shortcut
      */
-    typedef time_series::TimeSeries<MotorBoardCommand> CommandTimeseries;
+    typedef time_series::TimeSeries<ControlBoardsCommand> CommandTimeseries;
     /**
      * @brief A useful shortcut
      */
@@ -379,7 +379,7 @@ public:
      *
      * @param command is the command to be sent.
      */
-    virtual void set_command(const MotorBoardCommand& command) = 0;
+    virtual void set_command(const ControlBoardsCommand& command) = 0;
 
     /**
      * @brief Actually send the commands and the controls
@@ -416,26 +416,26 @@ std::vector<std::shared_ptr<Type>> create_vector_of_pointers(
 
 //==============================================================================
 /**
- * @brief This class CanBusMotorBoard implements a MotorBoardInterface specific
+ * @brief This class CanBusControlBoards implements a ControlBoardsInterface specific
  * to CAN networks.
  */
-class CanBusMotorBoard : public MotorBoardInterface
+class CanBusControlBoards : public ControlBoardsInterface
 {
 public:
     /**
-     * @brief Construct a new CanBusMotorBoard object
+     * @brief Construct a new CanBusControlBoards object
      *
      * @param can_bus
      * @param history_length
      */
-    CanBusMotorBoard(std::shared_ptr<CanBusInterface> can_bus,
+    CanBusControlBoards(std::shared_ptr<CanBusInterface> can_bus,
                      const size_t& history_length = 1000,
                      const int& control_timeout_ms = 100);
 
     /**
-     * @brief Destroy the CanBusMotorBoard object
+     * @brief Destroy the CanBusControlBoards object
      */
-    ~CanBusMotorBoard();
+    ~CanBusControlBoards();
 
     /**
      * Getters
@@ -512,7 +512,7 @@ public:
      */
 
     /**
-     * @brief Set the controls, see MotorBoardInterface::set_control
+     * @brief Set the controls, see ControlBoardsInterface::set_control
      *
      * @param control
      * @param index
@@ -523,11 +523,11 @@ public:
     }
 
     /**
-     * @brief Set the commands, see MotorBoardInterface::set_command
+     * @brief Set the commands, see ControlBoardsInterface::set_command
      *
      * @param command
      */
-    virtual void set_command(const MotorBoardCommand& command)
+    virtual void set_command(const ControlBoardsCommand& command)
     {
         command_->append(command);
     }
@@ -630,7 +630,7 @@ private:
      */
     static THREAD_FUNCTION_RETURN_TYPE loop(void* instance_pointer)
     {
-        ((CanBusMotorBoard*)(instance_pointer))->loop();
+        ((CanBusControlBoards*)(instance_pointer))->loop();
         return THREAD_FUNCTION_RETURN_VALUE;
     }
 

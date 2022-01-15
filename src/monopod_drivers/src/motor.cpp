@@ -14,7 +14,7 @@
 
 namespace monopod_drivers
 {
-Motor::Motor(Ptr<MotorBoardInterface> board, JointNameIndexing motor_id)
+Motor::Motor(Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id)
     : Encoder(board, motor_id), board_(board), motor_id_(motor_id)
 {
 }
@@ -28,11 +28,11 @@ Motor::Ptr<const Motor::ScalarTimeseries> Motor::get_current_target() const
 {
     if (motor_id_ == 0)
     {
-        return board_->get_control(MotorBoardInterface::current_target_0);
+        return board_->get_control(ControlBoardsInterface::current_target_0);
     }
     else
     {
-        return board_->get_control(MotorBoardInterface::current_target_1);
+        return board_->get_control(ControlBoardsInterface::current_target_1);
     }
 }
 
@@ -40,11 +40,11 @@ Motor::Ptr<const Motor::ScalarTimeseries> Motor::get_sent_current_target() const
 {
     if (motor_id_ == 0)
     {
-        return board_->get_sent_control(MotorBoardInterface::current_target_0);
+        return board_->get_sent_control(ControlBoardsInterface::current_target_0);
     }
     else
     {
-        return board_->get_sent_control(MotorBoardInterface::current_target_1);
+        return board_->get_sent_control(ControlBoardsInterface::current_target_1);
     }
 }
 
@@ -53,18 +53,18 @@ void Motor::set_current_target(const double& current_target)
     if (motor_id_ == 0)
     {
         board_->set_control(current_target,
-                            MotorBoardInterface::current_target_0);
+                            ControlBoardsInterface::current_target_0);
     }
     else
     {
         board_->set_control(current_target,
-                            MotorBoardInterface::current_target_1);
+                            ControlBoardsInterface::current_target_1);
     }
 }
 
 void Motor::print() const
 {
-    MotorBoardStatus motor_board_status;
+    ControlBoardsStatus motor_board_status;
     double motor_current = std::nan("");
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");
@@ -124,7 +124,7 @@ void Motor::print() const
     rt_printf("\n");
 }
 
-SafeMotor::SafeMotor(Motor::Ptr<MotorBoardInterface> board,
+SafeMotor::SafeMotor(Motor::Ptr<ControlBoardsInterface> board,
                      JointNameIndexing motor_id,
                      const double& max_current_target,
                      const size_t& history_length,

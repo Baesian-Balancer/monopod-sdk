@@ -75,7 +75,7 @@ public:
      * @param board is the EncoderBoard to be used.
      * @param encoder_id is the id of the motor on the on-board card
      */
-    Encoder(Ptr<MotorBoardInterface> board, JointNameIndexing encoder_id);
+    Encoder(Ptr<ControlBoardsInterface> board, JointNameIndexing encoder_id);
 
     /**
      * @brief Destroy the Encoder object
@@ -107,7 +107,7 @@ protected:
     /**
      * @brief The EncoderBoard to be used for the communication.
      */
-    Ptr<MotorBoardInterface> board_;
+    Ptr<ControlBoardsInterface> board_;
 
     /**
      * @brief The id of the motor on the EncoderBoard.

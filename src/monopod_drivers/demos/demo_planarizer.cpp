@@ -45,7 +45,7 @@ static THREAD_FUNCTION_RETURN_TYPE printing_loop(void* planarizer_ptr)
 int main(int, char**)
 {
     auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-    auto board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
+    auto board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 
     auto planarizer = std::make_shared<monopod_drivers::Planarizer>(board_, 2);
 

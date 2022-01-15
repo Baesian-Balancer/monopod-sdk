@@ -25,7 +25,7 @@ Monopod::Monopod()
        knee_joint
      };
      can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-     board_ = std::make_shared<monopod_drivers::CanBusMotorBoard>(can_bus_);
+     board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 
      leg_ = std::make_unique<monopod_drivers::Leg>(board_);
      planarizer_ = std::make_unique<monopod_drivers::Planarizer>(board_, 2);

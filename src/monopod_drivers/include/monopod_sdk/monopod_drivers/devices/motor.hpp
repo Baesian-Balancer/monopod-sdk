@@ -80,7 +80,7 @@ public:
      *
      * @param command
      */
-    virtual void set_command(const MotorBoardCommand& command) = 0;
+    virtual void set_command(const ControlBoardsCommand& command) = 0;
 };
 
 /**
@@ -92,10 +92,10 @@ public:
     /**
      * @brief Construct a new Motor object
      *
-     * @param board is the MotorBoard to be used.
+     * @param board is the ControlBoards to be used.
      * @param motor_id is the id of the motor on the on-board card
      */
-    Motor(Ptr<MotorBoardInterface> board, JointNameIndexing motor_id);
+    Motor(Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id);
 
     /**
      * @brief Destroy the Motor object
@@ -160,7 +160,7 @@ public:
      *
      * @param command
      */
-    virtual void set_command(const MotorBoardCommand& command)
+    virtual void set_command(const ControlBoardsCommand& command)
     {
         board_->set_command(command);
     }
@@ -170,12 +170,12 @@ public:
 
 protected:
     /**
-     * @brief The MotorBoard to be used for the communication.
+     * @brief The ControlBoards to be used for the communication.
      */
-    Ptr<MotorBoardInterface> board_;
+    Ptr<ControlBoardsInterface> board_;
 
     /**
-     * @brief The id of the motor on the MotorBoard.
+     * @brief The id of the motor on the ControlBoards.
      */
     JointNameIndexing motor_id_;
 };
@@ -201,7 +201,7 @@ public:
      * @param history_length
      */
     SafeMotor(
-        Ptr<MotorBoardInterface> board,
+        Ptr<ControlBoardsInterface> board,
         JointNameIndexing motor_id,
         const double& max_current_target = 2.0,
         const size_t& history_length = 1000,
