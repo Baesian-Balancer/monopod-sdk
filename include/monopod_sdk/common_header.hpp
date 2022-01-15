@@ -59,17 +59,6 @@ namespace monopod_drivers
          torque  // this is only used for monopodsdk
      };
 
-    /**
-    * @brief Joint names indexed same as enumerator
-    */
-    const std::unordered_map<JointNameIndexing, int> JointModulesIndexMapping = {
-        {hip_joint, 0},
-        {knee_joint, 1},
-        {boom_connector_joint, 2},
-        {planarizer_yaw_joint, 1},
-        {planarizer_pitch_joint, 0}
-    };
-
 
     typedef std::unordered_map<MeasurementIndex, double> map_inner;
     typedef std::unordered_map<JointNameIndexing, map_inner> ObservationMap;
