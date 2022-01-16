@@ -301,51 +301,45 @@ void CanBusControlBoards::loop()
 		case CanframeIDs::BOARD1_VEL:
 			// Convert the speed unit from the blmc card
 			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[velocity_0]->append(measurement_0 * 2 * M_PI *
-			                                 (1000. / 60.));
-			measurement_[velocity_1]->append(measurement_1 * 2 * M_PI *
-			                                 (1000. / 60.));
+			measurement_[velocity_0]->append(measurement_0 * 2 * M_PI * (1000. / 60.));
+			measurement_[velocity_1]->append(measurement_1 * 2 * M_PI * (1000. / 60.));
 			break;
 
 		case CanframeIDs::BOARD2_VEL:
 			// Convert the speed unit from the blmc card
 			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[velocity_2]->append(measurement_0 * 2 * M_PI *
-			                                 (1000. / 60.));
-			measurement_[velocity_3]->append(measurement_1 * 2 * M_PI *
-			                                 (1000. / 60.));
+			measurement_[velocity_2]->append(measurement_0 * 2 * M_PI * (1000. / 60.));
+			measurement_[velocity_3]->append(measurement_1 * 2 * M_PI * (1000. / 60.));
 			break;
 
 		case CanframeIDs::BOARD3_VEL:
 			// Convert the speed unit from the blmc card
 			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[velocity_4]->append(measurement_0 * 2 * M_PI *
-			                                 (1000. / 60.));
+			measurement_[velocity_4]->append(measurement_0 * 2 * M_PI * (1000. / 60.));
 			break;
 
 		case CanframeIDs::BOARD1_ACC:
-			// Convert the speed unit from the blmc card
-			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[acceleration_0]->append(measurement_0 * 2 * M_PI *
-			                                     (1000. / 60.));
-			measurement_[acceleration_1]->append(measurement_1 * 2 * M_PI *
-			                                     (1000. / 60.));
+			// TODO: check that the conversion here is proper for acceleration.
+
+			// Convert the acceleration unit from the blmc card
+			// (kilo-rotations-per-minutes squared) into rad/s^2.
+			measurement_[acceleration_0]->append(measurement_0 * 2 * M_PI * (1000. / 60. /60.));
+			measurement_[acceleration_1]->append(measurement_1 * 2 * M_PI * (1000. / 60. /60.));
 			break;
 
 		case CanframeIDs::BOARD2_ACC:
-			// Convert the speed unit from the blmc card
-			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[acceleration_2]->append(measurement_0 * 2 * M_PI *
-			                                     (1000. / 60.));
-			measurement_[acceleration_3]->append(measurement_1 * 2 * M_PI *
-			                                     (1000. / 60.));
+			// TODO: put proper units for acceleration here
+			// Convert the acceleration unit from the blmc card
+			// (kilo-rotations-per-minutessquared) into rad/s^2.
+			measurement_[acceleration_2]->append(measurement_0 * 2 * M_PI * (1000. / 60. /60.));
+			measurement_[acceleration_3]->append(measurement_1 * 2 * M_PI * (1000. / 60. /60.));
 			break;
 
 		case CanframeIDs::BOARD3_ACC:
-			// Convert the speed unit from the blmc card
-			// (kilo-rotations-per-minutes) into rad/s.
-			measurement_[acceleration_4]->append(measurement_0 * 2 * M_PI *
-			                                     (1000. / 60.));
+			// TODO: put proper units for acceleration here
+			// Convert the acceleration unit from the blmc card
+			// (kilo-rotations-per-minutes squared) into rad/s^2.
+			measurement_[acceleration_4]->append(measurement_0 * 2 * M_PI * (1000. / 60. /60.));
 			break;
 
 		case CanframeIDs::ADC6:

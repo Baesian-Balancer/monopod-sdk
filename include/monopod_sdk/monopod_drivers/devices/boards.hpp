@@ -196,7 +196,6 @@ public:
 	/**
 	 * These are the list of bits of the message.
 	 */
-
 	/**
 	 * @brief Bits 0 enables/disable of the system (motor board).
 	 */
