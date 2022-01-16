@@ -13,7 +13,7 @@
 
 #include <sstream>
 
-#include <monopod_sdk/monopod_drivers/devices/can_bus.hpp>
+#include "monopod_sdk/monopod_drivers/devices/can_bus.hpp"
 
 namespace monopod_drivers
 {

@@ -10,7 +10,7 @@
  *
  */
 
-#include <monopod_sdk/monopod_drivers/devices/encoder.hpp>
+#include "monopod_sdk/monopod_drivers/devices/encoder.hpp"
 
 namespace monopod_drivers
 {

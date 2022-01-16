@@ -15,9 +15,9 @@
 
 #include <time_series/time_series.hpp>
 
-#include <monopod_sdk/monopod_drivers/motor_joint_module.hpp>
-#include <monopod_sdk/monopod_drivers/devices/device_interface.hpp>
-#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
+#include "monopod_sdk/monopod_drivers/motor_joint_module.hpp"
+#include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
+#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 #include "monopod_sdk/monopod_drivers/utils/polynome.hpp"
 
 #include "monopod_sdk/common_header.hpp"

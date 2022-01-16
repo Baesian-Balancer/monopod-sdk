@@ -10,7 +10,7 @@
  *
  */
 
-#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
+#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 
 namespace monopod_drivers
 {

@@ -114,7 +114,7 @@ public:
 	 */
 	virtual void print() const
 	{
-		rt_printf("You can not use the base class of the status messages.");
+		rt_printf("Status Message Base Class is Not Implemented.");
 		exit(-1);
 	};
 
@@ -123,7 +123,7 @@ public:
 	 */
 	virtual bool is_ready() const
 	{
-		rt_printf("You can not use the base class of the status messages.");
+		rt_printf("Status Message Base Class is Not Implemented.");
 		exit(-1);
 	};
 
@@ -131,7 +131,7 @@ public:
 	 * @brief Check if the all status are green.
 	 */
 	virtual uint8_t get_error_code() const {
-		rt_printf("You can not use the base class of the status messages.");
+		rt_printf("Status Message Base Class is Not Implemented.");
 		exit(-1);
 	};
 
@@ -139,7 +139,7 @@ public:
 	 * @brief Get a human-readable description of the error code.
 	 */
 	virtual std::string get_error_description() const {
-		rt_printf("You can not use the base class of the status messages.");
+		rt_printf("Status Message Base Class is Not Implemented.");
 		exit(-1);
 	};
 };

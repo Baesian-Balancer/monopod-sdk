@@ -15,9 +15,9 @@
 
 #include <time_series/time_series.hpp>
 
-#include <monopod_sdk/monopod_drivers/devices/device_interface.hpp>
-#include <monopod_sdk/monopod_drivers/devices/motor.hpp>
-#include <monopod_sdk/monopod_drivers/encoder_joint_module.hpp>
+#include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
+#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/encoder_joint_module.hpp"
 
 #include "monopod_sdk/common_header.hpp"
 
@@ -177,7 +177,7 @@ public:
 
 	/**
 	 * @brief Set the polarities of the joints
-	 * (see BlmcJointModule::set_joint_polarity)
+	 * (see MotorJointModule::set_joint_polarity)
 	 *
 	 * @param reverse_polarity
 	 */
