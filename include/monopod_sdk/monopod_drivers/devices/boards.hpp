@@ -108,29 +108,40 @@ public:
   /**
    * @brief This encodes the error codes. deault is 0 which is no code
    */
-  uint8_t error_code : 0;
+  uint8_t error_code : 3;
   /**
    * @brief Simply print the status of the motor board.
    */
-  virtual void print() const = 0;
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  virtual bool is_ready() const = 0;
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  virtual uint8_t get_error_code() const
+  virtual void print() const
   {
-      return error_code;
+    rt_printf("You can not use the base class of the status messages.");
+    exit(-1);
+  };
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  virtual bool is_ready() const
+  {
+    rt_printf("You can not use the base class of the status messages.");
+    exit(-1);
+  };
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  virtual uint8_t get_error_code() const {
+    rt_printf("You can not use the base class of the status messages.");
+    exit(-1);
   };
 
   /**
    * @brief Get a human-readable description of the error code.
    */
-  virtual std::string get_error_description() const = 0;
+  virtual std::string get_error_description() const {
+    rt_printf("You can not use the base class of the status messages.");
+    exit(-1);
+  };
 };
 
 
@@ -146,7 +157,7 @@ public:
    */
   void print() const
   {
-    rt_print("printing encoder status for encoder board.");
+      rt_printf("printing encoder status for encoder board.");
   }
 
   /**
@@ -154,7 +165,7 @@ public:
    */
   bool is_ready() const
   {
-    return true;
+      return true;
   }
 
   /**
@@ -162,7 +173,15 @@ public:
    */
   std::string get_error_description() const
   {
-    rt_print("printing human readable message of the encoder status for encoder board.");
+      return "printing human readable message of the encoder status for encoder board.";
+  }
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  uint8_t get_error_code() const
+  {
+      return error_code;
   }
 
 };
@@ -202,11 +221,6 @@ public:
      * @brief Bits 4 checks if the motor 2 is ready or not.
      */
     uint8_t motor2_ready : 1;  // 4
-
-    /**
-     * @brief This encodes the error codes. See "ErrorCodes" for more details.
-     */
-    uint8_t error_code : 3;  // 5-7
 
     /**
      * @brief This is the list of the error codes
@@ -258,6 +272,14 @@ public:
         {
             return false;
         }
+    }
+
+    /**
+     * @brief Check if the all status are green.
+     */
+    uint8_t get_error_code() const
+    {
+        return error_code;
     }
 
     //! @brief Get a human-readable description of the error code.
@@ -359,6 +381,12 @@ public:
         velocity_2,
         velocity_3,
         velocity_4,
+        // accelerations
+        acceleration_0,
+        acceleration_1,
+        acceleration_2,
+        acceleration_3,
+        acceleration_4,
         //encoder index
         encoder_index_0,
         encoder_index_1,

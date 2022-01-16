@@ -24,7 +24,7 @@ Motor::Ptr<const ScalarTimeseries> Motor::get_measurement(const MeasurementIndex
    return Encoder::get_measurement(index);
  }
 
-Motor::Ptr<const StatusTimeseries> get_status() const
+Motor::Ptr<const Motor::StatusTimeseries> Motor::get_status() const
 {
   return Encoder::get_status();
 }
@@ -69,7 +69,6 @@ void Motor::set_current_target(const double& current_target)
 
 void Motor::print() const
 {
-    MotorBoardStatus motor_board_status;
     double motor_current = std::nan("");
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");
@@ -78,7 +77,22 @@ void Motor::print() const
 
     if (get_status()->length() != 0)
     {
-        motor_board_status = dynamic_cast<MotorBoardStatus>(get_status()->newest_element());
+        MotorBoardStatus& motor_board_status = dynamic_cast<MotorBoardStatus&>(get_status()->newest_element());
+
+        rt_printf("motor board status: ");
+        rt_printf("enabled: %d ", motor_board_status.system_enabled);
+        rt_printf("error_code: %d ", motor_board_status.error_code);
+        rt_printf("motor status: ");
+        if (motor_id_ == hip_joint)
+        {
+            rt_printf("enabled: %d ", motor_board_status.motor1_enabled);
+            rt_printf("ready: %d ", motor_board_status.motor1_ready);
+        }
+        else if (motor_id_ == knee_joint)
+        {
+            rt_printf("enabled: %d ", motor_board_status.motor2_enabled);
+            rt_printf("ready: %d ", motor_board_status.motor2_ready);
+        }
     }
 
     if (get_measurement(current)->length() != 0)
@@ -106,20 +120,6 @@ void Motor::print() const
         motor_sent_current_target = get_sent_current_target()->newest_element();
     }
 
-    rt_printf("motor board status: ");
-    rt_printf("enabled: %d ", motor_board_status.system_enabled);
-    rt_printf("error_code: %d ", motor_board_status.error_code);
-    rt_printf("motor status: ");
-    if (motor_id_ == hip_joint)
-    {
-        rt_printf("enabled: %d ", motor_board_status.motor1_enabled);
-        rt_printf("ready: %d ", motor_board_status.motor1_ready);
-    }
-    else if (motor_id_ == knee_joint)
-    {
-        rt_printf("enabled: %d ", motor_board_status.motor2_enabled);
-        rt_printf("ready: %d ", motor_board_status.motor2_ready);
-    }
     rt_printf("motor measurements: ");
     rt_printf("current: %8f ", motor_current);
     rt_printf("position: %8f ", motor_position);

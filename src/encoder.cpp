@@ -68,12 +68,12 @@ Encoder::Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const
     switch (encoder_id_) {
       case hip_joint:
       case knee_joint:
-          return board_->get_measurement(ControlBoardsInterface::motor_board);
+          return board_->get_status(ControlBoardsInterface::motor_board);
       case planarizer_pitch_joint:
       case planarizer_yaw_joint:
-          return board_->get_measurement(ControlBoardsInterface::encoder_board1);
+          return board_->get_status(ControlBoardsInterface::encoder_board1);
       case boom_connector_joint:
-          return board_->get_measurement(ControlBoardsInterface::encoder_board2);
+          return board_->get_status(ControlBoardsInterface::encoder_board2);
         break;
     }
     throw std::invalid_argument("index needs to match one of the boards in control board interface");
