@@ -136,34 +136,34 @@ namespace xenomai
 class mutex
 {
 public:
-    /**
-     * @brief Create a xenomai mutex object.
-     */
-    RT_MUTEX rt_mutex_;
+	/**
+	 * @brief Create a xenomai mutex object.
+	 */
+	RT_MUTEX rt_mutex_;
 
-    /**
-     * @brief Construct a new mutex object
-     */
-    mutex()
-    {
-        rt_mutex_create(&rt_mutex_, NULL);
-    }
+	/**
+	 * @brief Construct a new mutex object
+	 */
+	mutex()
+	{
+		rt_mutex_create(&rt_mutex_, NULL);
+	}
 
-    /**
-     * @brief lock the mutex.
-     */
-    void lock()
-    {
-        rt_mutex_acquire(&rt_mutex_, TM_INFINITE);
-    }
+	/**
+	 * @brief lock the mutex.
+	 */
+	void lock()
+	{
+		rt_mutex_acquire(&rt_mutex_, TM_INFINITE);
+	}
 
-    /**
-     * @brief Unlock the mutex.
-     */
-    void unlock()
-    {
-        rt_mutex_release(&rt_mutex_);
-    }
+	/**
+	 * @brief Unlock the mutex.
+	 */
+	void unlock()
+	{
+		rt_mutex_release(&rt_mutex_);
+	}
 };
 
 /**
@@ -172,37 +172,37 @@ public:
 class condition_variable
 {
 public:
-    /**
-     * @brief Create the xenomai condition variable object
-     */
-    RT_COND rt_condition_variable_;
+	/**
+	 * @brief Create the xenomai condition variable object
+	 */
+	RT_COND rt_condition_variable_;
 
-    /**
-     * @brief Construct a new condition_variable object
-     */
-    condition_variable()
-    {
-        rt_cond_create(&rt_condition_variable_, NULL);
-    }
+	/**
+	 * @brief Construct a new condition_variable object
+	 */
+	condition_variable()
+	{
+		rt_cond_create(&rt_condition_variable_, NULL);
+	}
 
-    /**
-     * @brief Put the condition variable to wait mode.
-     *
-     * @param lock is the mutex to be used for locking the scope.
-     */
-    void wait(std::unique_lock<mutex> &lock)
-    {
-        rt_cond_wait(
-            &rt_condition_variable_, &lock.mutex()->rt_mutex_, TM_INFINITE);
-    }
+	/**
+	 * @brief Put the condition variable to wait mode.
+	 *
+	 * @param lock is the mutex to be used for locking the scope.
+	 */
+	void wait(std::unique_lock<mutex> &lock)
+	{
+		rt_cond_wait(
+			&rt_condition_variable_, &lock.mutex()->rt_mutex_, TM_INFINITE);
+	}
 
-    /**
-     * @brief Notify all condition variable owning the same mutex.
-     */
-    void notify_all()
-    {
-        rt_cond_broadcast(&rt_condition_variable_);
-    }
+	/**
+	 * @brief Notify all condition variable owning the same mutex.
+	 */
+	void notify_all()
+	{
+		rt_cond_broadcast(&rt_condition_variable_);
+	}
 };
 }  // namespace xenomai
 /**
@@ -246,41 +246,41 @@ inline void send_to_can_device(int fd,
                                const struct sockaddr *to,
                                socklen_t tolen)
 {
-    // int ret = rt_dev_sendto(fd, buf, len, flags, to, tolen);
+	// int ret = rt_dev_sendto(fd, buf, len, flags, to, tolen);
 
-    // if (ret < 0)
-    // {
-    //     std::ostringstream oss;
-    //     oss << "something went wrong with sending "
-    //         << "CAN frame, error code: "
-    //         << ret << ", errno=" << errno << std::endl;
-    //     throw std::runtime_error(oss.str());
-    // }
+	// if (ret < 0)
+	// {
+	//     std::ostringstream oss;
+	//     oss << "something went wrong with sending "
+	//         << "CAN frame, error code: "
+	//         << ret << ", errno=" << errno << std::endl;
+	//     throw std::runtime_error(oss.str());
+	// }
 
-    for (size_t i = 0; true; i++)
-    {
-        int ret = rt_dev_sendto(fd, buf, len, flags, to, tolen);
-        if (ret >= 0)
-        {
-            if (i > 0)
-            {
-                std::cout << " Managed to send after " << i << " attempts."
-                          << std::endl;
-            }
-            return;
-        }
+	for (size_t i = 0; true; i++)
+	{
+		int ret = rt_dev_sendto(fd, buf, len, flags, to, tolen);
+		if (ret >= 0)
+		{
+			if (i > 0)
+			{
+				std::cout << " Managed to send after " << i << " attempts."
+				          << std::endl;
+			}
+			return;
+		}
 
-        if (i == 0)
-        {
-            std::cout << "WARNING: Something went wrong with sending "
-                      << "CAN frame, error code: " << ret
-                      << ", errno: " << errno << ". Possibly you have "
-                      << "been attempting to send at a rate which is too "
-                      << "high. We keep trying" << std::flush;
-        }
+		if (i == 0)
+		{
+			std::cout << "WARNING: Something went wrong with sending "
+			          << "CAN frame, error code: " << ret
+			          << ", errno: " << errno << ". Possibly you have "
+			          << "been attempting to send at a rate which is too "
+			          << "high. We keep trying" << std::flush;
+		}
 
-        real_time_tools::Timer::sleep_ms(0.1);
-    }
+		real_time_tools::Timer::sleep_ms(0.1);
+	}
 }
 
 /**
@@ -291,12 +291,12 @@ inline void send_to_can_device(int fd,
  */
 inline void close_can_device(int socket)
 {
-    int ret = rt_dev_close(socket);
-    if (ret)
-    {
-        rt_fprintf(stderr, "rt_dev_close: %s\n", strerror(-ret));
-        exit(-1);
-    }
+	int ret = rt_dev_close(socket);
+	if (ret)
+	{
+		rt_fprintf(stderr, "rt_dev_close: %s\n", strerror(-ret));
+		exit(-1);
+	}
 }
 
 /**
@@ -311,15 +311,15 @@ inline void receive_message_from_can_device(int fd,
                                             struct msghdr *msg,
                                             int flags)
 {
-    int ret = rt_dev_recvmsg(fd, msg, flags);
-    if (ret < 0)
-    {
-        std::ostringstream oss;
-        oss << "something went wrong with receiving "
-            << "CAN frame, error code: " << ret << ", errno=" << errno
-            << std::endl;
-        throw std::runtime_error(oss.str());
-    }
+	int ret = rt_dev_recvmsg(fd, msg, flags);
+	if (ret < 0)
+	{
+		std::ostringstream oss;
+		oss << "something went wrong with receiving "
+		    << "CAN frame, error code: " << ret << ", errno=" << errno
+		    << std::endl;
+		throw std::runtime_error(oss.str());
+	}
 }
 
 /**
@@ -329,7 +329,7 @@ inline void receive_message_from_can_device(int fd,
 inline void initialize_realtime_printing()
 {
 #ifdef __XENO__
-    rt_print_auto_init(1);
+	rt_print_auto_init(1);
 #endif
 }
 
@@ -341,9 +341,9 @@ inline void initialize_realtime_printing()
 inline void sleep_ms(const double &sleep_time_ms)
 {
 #ifdef __XENO__
-    rt_task_sleep(int(sleep_time_ms * 1000000.));
+	rt_task_sleep(int(sleep_time_ms * 1000000.));
 #else
-    usleep(sleep_time_ms * 1000.);  // nano_sleep
+	usleep(sleep_time_ms * 1000.);  // nano_sleep
 #endif
 }
 
@@ -356,13 +356,13 @@ inline void sleep_ms(const double &sleep_time_ms)
 inline double get_current_time_ms()
 {
 #ifdef __XENO__
-    return double(rt_timer_read()) / 1000000.;
+	return double(rt_timer_read()) / 1000000.;
 #else
-    struct timespec now;
-    clock_gettime(CLOCK_REALTIME, &now);
-    double current_time_ms = (double)(now.tv_sec * 1e3) + (now.tv_nsec / 1e6);
+	struct timespec now;
+	clock_gettime(CLOCK_REALTIME, &now);
+	double current_time_ms = (double)(now.tv_sec * 1e3) + (now.tv_nsec / 1e6);
 
-    return current_time_ms;
+	return current_time_ms;
 #endif
 }
 
@@ -373,7 +373,7 @@ inline void make_this_thread_realtime()
 {
 #ifdef __XENO__
 
-    rt_task_shadow(NULL, NULL, 0, 0);
+	rt_task_shadow(NULL, NULL, 0, 0);
 #endif
 }
 
