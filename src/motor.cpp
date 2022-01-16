@@ -78,7 +78,7 @@ void Motor::print() const
 	if (get_status()->length() != 0)
 	{
 
-		//FIX ME :)
+		//TODO: Maybe fix this for the first iteration? right now it wont print on that iteration.
 		MotorBoardStatus& motor_board_status = dynamic_cast<MotorBoardStatus&>(get_status()->newest_element());
 
 		rt_printf("motor board status: ");

@@ -136,8 +136,7 @@ void CanBusControlBoards::send_newest_controls()
 	{
 		if (control_[i]->length() == 0)
 		{
-			rt_printf(
-				"you tried to send control but no control has been set\n");
+			rt_printf("you tried to send control but no control has been set\n");
 			exit(-1);
 		}
 
@@ -354,13 +353,11 @@ void CanBusControlBoards::loop()
 			uint8_t motor_index = can_frame.data[4];
 			if (motor_index == 0)
 			{
-				measurement_[encoder_index_0]->append(measurement_0 * 2 *
-				                                      M_PI);
+				measurement_[encoder_index_0]->append(measurement_0 * 2 * M_PI);
 			}
 			else if (motor_index == 1)
 			{
-				measurement_[encoder_index_1]->append(measurement_0 * 2 *
-				                                      M_PI);
+				measurement_[encoder_index_1]->append(measurement_0 * 2 * M_PI);
 			}
 			else
 			{
