@@ -32,6 +32,17 @@ public:
      * @brief This is a useful alias.
      */
     typedef time_series::TimeSeries<double> ScalarTimeseries;
+
+    /**
+     * @brief A useful shortcut
+     */
+    typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
+
+    /**
+     * @brief A useful shortcut
+     */
+    typedef ControlBoardsInterface::BoardIndex BoardIndex;
+
     /**
      * @brief This a useful alias for the shared Pointer creation.
      *
@@ -60,6 +71,15 @@ public:
      */
     virtual Ptr<const ScalarTimeseries> get_measurement(
         const MeasurementIndex& index) const = 0;
+
+    /**
+     * @brief Get the status.
+     *
+     * @param index
+     * @return Ptr<const StatusTimeseries> the pointer to the desired
+     * status history.
+     */
+      virtual Ptr<const StatusTimeseries> get_status() const = 0;
 
 };
 
@@ -99,6 +119,15 @@ public:
     virtual Ptr<const ScalarTimeseries> get_measurement(
         const MeasurementIndex& index) const;
 
+
+    /**
+     * @brief Get the status.
+     *
+     * @param index
+     * @return Ptr<const StatusTimeseries> the pointer to the desired
+     * status history.
+     */
+      virtual Ptr<const StatusTimeseries> get_status() const;
 
     /** @brief Print the motor status and state. */
     virtual void print() const;

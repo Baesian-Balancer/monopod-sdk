@@ -19,10 +19,15 @@ Motor::Motor(Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id)
 {
 }
 
-Ptr<const ScalarTimeseries> Motor::get_measurement(const MeasurementIndex& index) const
+Motor::Ptr<const ScalarTimeseries> Motor::get_measurement(const MeasurementIndex& index) const
  {
    return Encoder::get_measurement(index);
  }
+
+Motor::Ptr<const StatusTimeseries> get_status() const
+{
+  return Encoder::get_status();
+}
 
 Motor::Ptr<const Motor::ScalarTimeseries> Motor::get_current_target() const
 {
@@ -64,16 +69,16 @@ void Motor::set_current_target(const double& current_target)
 
 void Motor::print() const
 {
-    ControlBoardsStatus motor_board_status;
+    MotorBoardStatus motor_board_status;
     double motor_current = std::nan("");
     double motor_position = std::nan("");
     double motor_velocity = std::nan("");
     double motor_encoder_index = std::nan("");
     double motor_sent_current_target = std::nan("");
 
-    if (board_->get_status()->length() != 0)
+    if (get_status()->length() != 0)
     {
-        motor_board_status = board_->get_status()->newest_element();
+        motor_board_status = dynamic_cast<MotorBoardStatus>(get_status()->newest_element());
     }
 
     if (get_measurement(current)->length() != 0)
@@ -105,12 +110,12 @@ void Motor::print() const
     rt_printf("enabled: %d ", motor_board_status.system_enabled);
     rt_printf("error_code: %d ", motor_board_status.error_code);
     rt_printf("motor status: ");
-    if (motor_id_ == 0)
+    if (motor_id_ == hip_joint)
     {
         rt_printf("enabled: %d ", motor_board_status.motor1_enabled);
         rt_printf("ready: %d ", motor_board_status.motor1_ready);
     }
-    else
+    else if (motor_id_ == knee_joint)
     {
         rt_printf("enabled: %d ", motor_board_status.motor2_enabled);
         rt_printf("ready: %d ", motor_board_status.motor2_ready);

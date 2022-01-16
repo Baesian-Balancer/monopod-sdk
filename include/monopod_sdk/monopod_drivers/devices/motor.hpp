@@ -118,15 +118,24 @@ public:
      * Getters
      */
 
-     /**
-      * @brief Get the measurements.
-      *
-      * @param index
-      * @return Ptr<const ScalarTimeseries> the pointer to the desired
-      * measurement history.
-      */
-     virtual Ptr<const ScalarTimeseries> get_measurement(
-         const MeasurementIndex& index) const;
+    /**
+     * @brief Get the measurements.
+     *
+     * @param index
+     * @return Ptr<const ScalarTimeseries> the pointer to the desired
+     * measurement history.
+     */
+    virtual Ptr<const ScalarTimeseries> get_measurement(
+        const MeasurementIndex& index) const;
+
+    /**
+     * @brief Get the status.
+     *
+     * @param index
+     * @return Ptr<const StatusTimeseries> the pointer to the desired
+     * status history.
+     */
+      virtual Ptr<const StatusTimeseries> get_status() const;
 
     /**
      * @brief Get the current target to be sent.

@@ -98,11 +98,80 @@ public:
 };
 
 //==============================================================================
+
+/**
+ * @brief This class represent a message that describe the state of a board.
+ */
+class BoardStatusInterface
+{
+public:
+  /**
+   * @brief This encodes the error codes. deault is 0 which is no code
+   */
+  uint8_t error_code : 0;
+  /**
+   * @brief Simply print the status of the motor board.
+   */
+  virtual void print() const = 0;
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  virtual bool is_ready() const = 0;
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  virtual uint8_t get_error_code() const
+  {
+      return error_code;
+  };
+
+  /**
+   * @brief Get a human-readable description of the error code.
+   */
+  virtual std::string get_error_description() const = 0;
+};
+
+
+/**
+ * @brief This class represent a message that describe the state of the board with only encoders.
+ * Currently this class is a dummy class.
+ */
+class EncoderBoardStatus : public BoardStatusInterface
+{
+public:
+  /**
+   * @brief Simply print the status of the motor board.
+   */
+  void print() const
+  {
+    rt_print("printing encoder status for encoder board.");
+  }
+
+  /**
+   * @brief Check if the all status are green.
+   */
+  bool is_ready() const
+  {
+    return true;
+  }
+
+  /**
+   * @brief Get a human-readable description of the error code.
+   */
+  std::string get_error_description() const
+  {
+    rt_print("printing human readable message of the encoder status for encoder board.");
+  }
+
+};
+
 /**
  * @brief This class represent a 8 bits message that describe the state
  * (enable/disabled) of the card and the two motors.
  */
-class ControlBoardsStatus
+class MotorBoardStatus : public BoardStatusInterface
 {
 public:
     /**
@@ -255,7 +324,7 @@ public:
     /**
      * @brief A useful shortcut
      */
-    typedef time_series::TimeSeries<ControlBoardsStatus> StatusTimeseries;
+    typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
     /**
      * @brief A useful shortcut
      */
@@ -278,15 +347,39 @@ public:
     {
         current_0,
         current_1,
+        // positions
         position_0,
         position_1,
+        position_2,
+        position_3,
+        position_4,
+        // velocities
         velocity_0,
         velocity_1,
-        analog_0,
-        analog_1,
+        velocity_2,
+        velocity_3,
+        velocity_4,
+        //encoder index
         encoder_index_0,
         encoder_index_1,
+        encoder_index_2,
+        encoder_index_3,
+        encoder_index_4,
+        // Misc
+        analog_0,
+        analog_1,
         measurement_count
+    };
+
+    /**
+     * @brief This is the list of the measurement we can access.
+     */
+    enum BoardIndex
+    {
+        motor_board,
+        encoder_board1,
+        encoder_board2,
+        board_count
     };
 
     /**
@@ -314,12 +407,13 @@ public:
         const int& index) const = 0;
 
     /**
-     * @brief Get the status of the motor board.
+     * @brief Get the status of one of the boards.
      *
+     * @param index the kind of status we are interested in.
      * @return Ptr<const StatusTimeseries> is the list of the last status of
      * the card.
      */
-    virtual Ptr<const StatusTimeseries> get_status() const = 0;
+    virtual Ptr<const StatusTimeseries> get_status(const int& index) const = 0;
 
     /**
      * input logs
@@ -456,11 +550,12 @@ public:
     /**
      * @brief Get the status of the CAN card.
      *
+     * @param index the kind of status we are interested in.
      * @return Ptr<const StatusTimeseries> is the list of last acquiered status.
      */
-    virtual Ptr<const StatusTimeseries> get_status() const
+    virtual Ptr<const StatusTimeseries> get_status(const int& index) const
     {
-        return status_;
+        return status_[index];
     }
 
     /**
@@ -658,12 +753,29 @@ private:
     {
         COMMAND_ID = 0x00,
         IqRef = 0x05,
-        STATUSMSG = 0x10,
+        // Status messages
+        BOARD1_STATUSMSG = 0x10,
+        BOARD2_STATUSMSG = 0x11,
+        BOARD3_STATUSMSG = 0x12,
         Iq = 0x20,
-        POS = 0x30,
-        SPEED = 0x40,
+        // positions
+        BOARD1_POS = 0x30,
+        BOARD2_POS = 0x31,
+        BOARD3_POS = 0x32,
+        //velocities
+        BOARD1_VEL = 0x40,
+        BOARD2_VEL = 0x41,
+        BOARD3_VEL = 0x42,
+        // misc
         ADC6 = 0x50,
-        ENC_INDEX = 0x60
+        // encoder indexes
+        BOARD1_ENC_INDEX = 0x60,
+        BOARD2_ENC_INDEX = 0x61,
+        BOARD3_ENC_INDEX = 0x62,
+        // accelerations
+        BOARD1_ACC = 0x70,
+        BOARD2_ACC = 0x71,
+        BOARD3_ACC = 0x72,
     };
 
     /**
@@ -679,7 +791,7 @@ private:
     /**
      * @brief This is the status history of the CAN board.
      */
-    Ptr<StatusTimeseries> status_;
+    Vector<Ptr<StatusTimeseries>> status_;
 
     /**
      * Inputs

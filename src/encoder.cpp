@@ -63,50 +63,58 @@ Encoder::Ptr<const Encoder::ScalarTimeseries> Encoder::get_measurement(
 
     throw std::invalid_argument("index needs to match one of the measurements");
 }
+Encoder::Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const
+{
+    switch (encoder_id_) {
+      case hip_joint:
+      case knee_joint:
+          return board_->get_measurement(ControlBoardsInterface::motor_board);
+      case planarizer_pitch_joint:
+      case planarizer_yaw_joint:
+          return board_->get_measurement(ControlBoardsInterface::encoder_board1);
+      case boom_connector_joint:
+          return board_->get_measurement(ControlBoardsInterface::encoder_board2);
+        break;
+    }
+    throw std::invalid_argument("index needs to match one of the boards in control board interface");
+}
 
 void Encoder::print() const
 {
-    ControlBoardsStatus motor_board_status;
-    double motor_current = std::nan("");
-    double motor_position = std::nan("");
-    double motor_velocity = std::nan("");
-    double motor_encoder_index = std::nan("");
+    BoardStatusInterface encoder_board_status;
+    double encoder_current = std::nan("");
+    double encoder_position = std::nan("");
+    double encoder_velocity = std::nan("");
+    double encoder_encoder_index = std::nan("");
 
-    if (board_->get_status()->length() != 0)
+    if (get_status()->length() != 0)
     {
-        motor_board_status = board_->get_status()->newest_element();
-    }
-
-    if (get_measurement(current)->length() != 0)
-    {
-        motor_current = get_measurement(current)->newest_element();
+        encoder_board_status = get_status()->newest_element();
     }
 
     if (get_measurement(position)->length() != 0)
     {
-        motor_position = get_measurement(position)->newest_element();
+        encoder_position = get_measurement(position)->newest_element();
     }
 
     if (get_measurement(velocity)->length() != 0)
     {
-        motor_velocity = get_measurement(velocity)->newest_element();
+        encoder_velocity = get_measurement(velocity)->newest_element();
     }
 
     if (get_measurement(encoder_index)->length() != 0)
     {
-        motor_encoder_index = get_measurement(encoder_index)->newest_element();
+        encoder_encoder_index = get_measurement(encoder_index)->newest_element();
     }
 
     rt_printf("Encoder board status: ");
-    rt_printf("enabled: %d ", motor_board_status.system_enabled);
-    rt_printf("error_code: %d ", motor_board_status.error_code);
+    rt_printf("error_code: %d ", encoder_board_status.get_error_code());
 
     rt_printf("Encoder status: ");
     rt_printf("Encoder measurements: ");
-    rt_printf("current: %8f ", motor_current);
-    rt_printf("position: %8f ", motor_position);
-    rt_printf("velocity: %8f ", motor_velocity);
-    rt_printf("encoder index: %8f ", motor_encoder_index);
+    rt_printf("position: %8f ", encoder_position);
+    rt_printf("velocity: %8f ", encoder_velocity);
+    rt_printf("encoder index: %8f ", encoder_encoder_index);
     rt_printf("\n");
 }
 

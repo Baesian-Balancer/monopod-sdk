@@ -25,14 +25,19 @@ CanBusControlBoards::CanBusControlBoards(std::shared_ptr<CanBusInterface> can_bu
 {
     measurement_ = create_vector_of_pointers<ScalarTimeseries>(
         measurement_count, history_length);
-    status_ = std::make_shared<StatusTimeseries>(history_length, 0, false);
+
+    status_ = create_vector_of_pointers<StatusTimeseries>(board_count,
+                                                           history_length);
+
     control_ = create_vector_of_pointers<ScalarTimeseries>(control_count,
                                                            history_length);
+
     command_ = std::make_shared<CommandTimeseries>(history_length, 0, false);
+
     sent_control_ = create_vector_of_pointers<ScalarTimeseries>(control_count,
                                                                 history_length);
-    sent_command_ =
-        std::make_shared<CommandTimeseries>(history_length, 0, false);
+
+    sent_command_ = std::make_shared<CommandTimeseries>(history_length, 0, false);
 
     is_loop_active_ = true;
     rt_thread_.create_realtime_thread(&CanBusControlBoards::loop, this);
@@ -70,29 +75,30 @@ void CanBusControlBoards::send_if_input_changed()
 
 void CanBusControlBoards::wait_until_ready()
 {
-    rt_printf("waiting for board and motors to be ready \n");
-    time_series::Index time_index = status_->newest_timeindex();
+    rt_printf("waiting for boards and motors to be ready \n");
     bool is_ready = false;
     while (!is_ready)
     {
-        ControlBoardsStatus status = (*status_)[time_index];
-        time_index++;
-
-        is_ready = status.is_ready();
+        is_ready = CanBusControlBoards::is_ready();
     }
     rt_printf("board and motors are ready \n");
 }
 
 bool CanBusControlBoards::is_ready()
 {
-    if (status_->length() == 0)
+    if (status_[motor_board]->length() == 0 ||
+        status_[encoder_board1]->length() == 0 ||
+        status_[encoder_board2]->length() == 0)
     {
         return false;
     }
     else
     {
-        return status_->newest_element().is_ready();
+        return status_[motor_board]->newest_element().is_ready() &&
+               status_[encoder_board1]->newest_element().is_ready() &&
+               status_[encoder_board2]->newest_element().is_ready();
     }
+
 }
 
 void CanBusControlBoards::pause_motors()
@@ -260,6 +266,7 @@ void CanBusControlBoards::loop()
 
         timeindex++;
 
+
         // convert to measurement ------------------------------------------
         double measurement_0 = qbytes_to_float(can_frame.data.begin());
         double measurement_1 = qbytes_to_float((can_frame.data.begin() + 4));
@@ -270,13 +277,29 @@ void CanBusControlBoards::loop()
                 measurement_[current_0]->append(measurement_0);
                 measurement_[current_1]->append(measurement_1);
                 break;
-            case CanframeIDs::POS:
+
+            case CanframeIDs::BOARD1_POS:
                 // Convert the position unit from the blmc card (kilo-rotations)
                 // into rad.
                 measurement_[position_0]->append(measurement_0 * 2 * M_PI);
                 measurement_[position_1]->append(measurement_1 * 2 * M_PI);
                 break;
-            case CanframeIDs::SPEED:
+
+            case CanframeIDs::BOARD2_POS:
+                // Convert the position unit from the blmc card (kilo-rotations)
+                // into rad.
+                measurement_[position_2]->append(measurement_0 * 2 * M_PI);
+                measurement_[position_3]->append(measurement_1 * 2 * M_PI);
+                break;
+
+            case CanframeIDs::BOARD3_POS:
+                // Convert the position unit from the blmc card (kilo-rotations)
+                // into rad.
+                measurement_[position_4]->append(measurement_0 * 2 * M_PI);
+                measurement_[position_5]->append(measurement_1 * 2 * M_PI);
+                break;
+
+            case CanframeIDs::BOARD1_VEL:
                 // Convert the speed unit from the blmc card
                 // (kilo-rotations-per-minutes) into rad/s.
                 measurement_[velocity_0]->append(measurement_0 * 2 * M_PI *
@@ -284,11 +307,31 @@ void CanBusControlBoards::loop()
                 measurement_[velocity_1]->append(measurement_1 * 2 * M_PI *
                                                  (1000. / 60.));
                 break;
+
+            case CanframeIDs::BOARD2_VEL:
+                // Convert the speed unit from the blmc card
+                // (kilo-rotations-per-minutes) into rad/s.
+                measurement_[velocity_2]->append(measurement_0 * 2 * M_PI *
+                                                 (1000. / 60.));
+                measurement_[velocity_3]->append(measurement_1 * 2 * M_PI *
+                                                 (1000. / 60.));
+                break;
+
+            case CanframeIDs::BOARD3_VEL:
+                // Convert the speed unit from the blmc card
+                // (kilo-rotations-per-minutes) into rad/s.
+                measurement_[velocity_4]->append(measurement_0 * 2 * M_PI *
+                                                 (1000. / 60.));
+                measurement_[velocity_5]->append(measurement_1 * 2 * M_PI *
+                                                 (1000. / 60.));
+                break;
+
             case CanframeIDs::ADC6:
                 measurement_[analog_0]->append(measurement_0);
                 measurement_[analog_1]->append(measurement_1);
                 break;
-            case CanframeIDs::ENC_INDEX:
+
+            case CanframeIDs::BOARD1_ENC_INDEX:
             {
                 // here the interpretation of the message is different,
                 // we get a motor index and a measurement
@@ -313,9 +356,10 @@ void CanBusControlBoards::loop()
                 }
                 break;
             }
-            case CanframeIDs::STATUSMSG:
+
+            case CanframeIDs::BOARD1_STATUSMSG:
             {
-                ControlBoardsStatus status;
+                MotorBoardStatus status;
                 uint8_t data = can_frame.data[0];
                 status.system_enabled = data >> 0;
                 status.motor1_enabled = data >> 1;
@@ -324,7 +368,21 @@ void CanBusControlBoards::loop()
                 status.motor2_ready = data >> 4;
                 status.error_code = data >> 5;
 
-                status_->append(status);
+                status_[motor_board]->append(status);
+                break;
+            }
+
+            case CanframeIDs::BOARD2_STATUSMSG:
+            {
+                EncoderBoardStatus status;
+                status_[encoder_board1]->append(status);
+                break;
+            }
+
+            case CanframeIDs::BOARD3_STATUSMSG:
+            {
+                EncoderBoardStatus status;
+                status_[encoder_board2]->append(status);
                 break;
             }
         }
@@ -353,7 +411,9 @@ void CanBusControlBoards::print_status()
     }
 
     rt_printf("status: ---------------------------------\n");
-    if (status_->length() > 0) status_->newest_element().print();
+    if (status_[motor_board]->length() > 0) status_->newest_element().print();
+    if (status_[encoder_board1]->length() > 0) status_->newest_element().print();
+    if (status_[encoder_board2]->length() > 0) status_->newest_element().print();
 
     //        rt_printf("inputs ======================================\n");
 
