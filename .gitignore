@@ -16,3 +16,5 @@ build
 .cache
 .tags
 .tags1
+
+compile_commands.json
