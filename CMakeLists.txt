@@ -125,7 +125,13 @@ include(InstallBasicPackageFiles)
 # Monopod SDK
 # =========
 
-include(build_and_install.cmake)
+include(build_and_install_monopodsdk)
+
+execute_process(
+    COMMAND ln -s "${PROJECT_BINARY_DIR}/compile_commands.json" "${PROJECT_SOURCE_DIR}/compile_commands.json"
+    ERROR_QUIET
+)
+message(STATUS "Create compile commands.")
 
 # # ========
 # # DOCS
