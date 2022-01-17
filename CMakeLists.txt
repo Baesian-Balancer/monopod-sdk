@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(monopod_sdk VERSION 0.0.1)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 # Add custom functions / macros
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 

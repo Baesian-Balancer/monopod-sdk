@@ -12,5 +12,6 @@ _deps
 build
 .vscode
 
+.ccls-cache
 .tags
 .tags1
