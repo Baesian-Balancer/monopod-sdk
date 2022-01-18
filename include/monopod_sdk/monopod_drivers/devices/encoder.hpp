@@ -26,56 +26,55 @@ namespace monopod_drivers {
  */
 class EncoderInterface : public DeviceInterface {
 public:
-	/**
-	 * @brief This is a useful alias.
-	 */
-	typedef time_series::TimeSeries<double> ScalarTimeseries;
+  /**
+   * @brief This is a useful alias.
+   */
+  typedef time_series::TimeSeries<double> ScalarTimeseries;
 
-	/**
-	 * @brief A useful shortcut
-	 */
-	typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
+  /**
+   * @brief A useful shortcut
+   */
+  typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
 
-	/**
-	 * @brief A useful shortcut
-	 */
-	typedef ControlBoardsInterface::BoardIndex BoardIndex;
+  /**
+   * @brief A useful shortcut
+   */
+  typedef ControlBoardsInterface::BoardIndex BoardIndex;
 
-	/**
-	 * @brief This a useful alias for the shared Pointer creation.
-	 *
-	 * @tparam Type is the Class to crate the pointer from.
-	 */
-	template <typename Type> using Ptr = std::shared_ptr<Type>;
+  /**
+   * @brief This a useful alias for the shared Pointer creation.
+   *
+   * @tparam Type is the Class to crate the pointer from.
+   */
+  template <typename Type> using Ptr = std::shared_ptr<Type>;
 
-	/**
-	 * @brief Destroy the EncoderInterface object
-	 */
-	virtual ~EncoderInterface() {
-	}
+  /**
+   * @brief Destroy the EncoderInterface object
+   */
+  virtual ~EncoderInterface() {}
 
-	/**
-	 * Getters
-	 */
+  /**
+   * Getters
+   */
 
-	/**
-	 * @brief Get the measurements.
-	 *
-	 * @param index
-	 * @return Ptr<const ScalarTimeseries> the pointer to the desired
-	 * measurement history.
-	 */
-	virtual Ptr<const ScalarTimeseries>
-	get_measurement(const MeasurementIndex &index) const = 0;
+  /**
+   * @brief Get the measurements.
+   *
+   * @param index
+   * @return Ptr<const ScalarTimeseries> the pointer to the desired
+   * measurement history.
+   */
+  virtual Ptr<const ScalarTimeseries>
+  get_measurement(const MeasurementIndex &index) const = 0;
 
-	/**
-	 * @brief Get the status.
-	 *
-	 * @param index
-	 * @return Ptr<const StatusTimeseries> the pointer to the desired
-	 * status history.
-	 */
-	virtual Ptr<const StatusTimeseries> get_status() const = 0;
+  /**
+   * @brief Get the status.
+   *
+   * @param index
+   * @return Ptr<const StatusTimeseries> the pointer to the desired
+   * status history.
+   */
+  virtual Ptr<const StatusTimeseries> get_status() const = 0;
 };
 
 /**
@@ -83,57 +82,56 @@ public:
  */
 class Encoder : public EncoderInterface {
 public:
-	/**
-	 * @brief Construct a new Encoder object
-	 *
-	 * @param board is the EncoderBoard to be used.
-	 * @param encoder_id is the id of the motor on the on-board card
-	 */
-	Encoder(Ptr<ControlBoardsInterface> board, JointNameIndexing encoder_id);
+  /**
+   * @brief Construct a new Encoder object
+   *
+   * @param board is the EncoderBoard to be used.
+   * @param encoder_id is the id of the motor on the on-board card
+   */
+  Encoder(Ptr<ControlBoardsInterface> board, JointNameIndexing encoder_id);
 
-	/**
-	 * @brief Destroy the Encoder object
-	 *
-	 */
-	virtual ~Encoder() {
-	}
+  /**
+   * @brief Destroy the Encoder object
+   *
+   */
+  virtual ~Encoder() {}
 
-	/**
-	 * Getters
-	 */
+  /**
+   * Getters
+   */
 
-	/**
-	 * @brief Get the measurements
-	 *
-	 * @param index is the kind of measurement we are instersted in.
-	 * see MeasurementIndex.
-	 * @return Ptr<const ScalarTimeseries> The history of the measurement
-	 */
-	virtual Ptr<const ScalarTimeseries>
-	get_measurement(const MeasurementIndex &index) const;
+  /**
+   * @brief Get the measurements
+   *
+   * @param index is the kind of measurement we are instersted in.
+   * see MeasurementIndex.
+   * @return Ptr<const ScalarTimeseries> The history of the measurement
+   */
+  virtual Ptr<const ScalarTimeseries>
+  get_measurement(const MeasurementIndex &index) const;
 
-	/**
-	 * @brief Get the status.
-	 *
-	 * @param index
-	 * @return Ptr<const StatusTimeseries> the pointer to the desired
-	 * status history.
-	 */
-	virtual Ptr<const StatusTimeseries> get_status() const;
+  /**
+   * @brief Get the status.
+   *
+   * @param index
+   * @return Ptr<const StatusTimeseries> the pointer to the desired
+   * status history.
+   */
+  virtual Ptr<const StatusTimeseries> get_status() const;
 
-	/** @brief Print the motor status and state. */
-	virtual void print() const;
+  /** @brief Print the motor status and state. */
+  virtual void print() const;
 
 protected:
-	/**
-	 * @brief The EncoderBoard to be used for the communication.
-	 */
-	Ptr<ControlBoardsInterface> board_;
+  /**
+   * @brief The EncoderBoard to be used for the communication.
+   */
+  Ptr<ControlBoardsInterface> board_;
 
-	/**
-	 * @brief The id of the motor on the EncoderBoard.
-	 */
-	JointNameIndexing encoder_id_;
+  /**
+   * @brief The id of the motor on the EncoderBoard.
+   */
+  JointNameIndexing encoder_id_;
 };
 
 } // namespace monopod_drivers
