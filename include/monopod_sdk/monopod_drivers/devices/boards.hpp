@@ -1,11 +1,3 @@
-/**
- * @file motor_board.hpp
- * @license License BSD-3-Clause
- * @copyright Copyright (c) 2019, New York University and Max Planck
- * Gesellschaft.
- * @date 2019-07-11
- */
-
 #pragma once
 
 #include <memory>
@@ -23,7 +15,8 @@ namespace monopod_drivers {
 //==============================================================================
 /**
  * @brief This ControlBoardsCommand class is a data structurs that defines a
- * command.
+ * command to the
+ * monopod_drivers::ControlBoardsInterface::BoardIndex::motor_board
  */
 class ControlBoardsCommand {
 public:

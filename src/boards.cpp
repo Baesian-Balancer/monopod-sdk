@@ -1,17 +1,3 @@
-/**
- * @file motor_board.cpp
- * @author Felix Widmaier (felix.widmaier@tuebingen.mpg.de)
- * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
- * @author Maximilien Naveau (maximilien.naveau@gmail.com)
- * @brief This file implements the classes from
- * "monopod_sdk/monopod_drivers/devices/motor_board.hpp"
- * @version 0.1
- * @date 2018-11-26
- *
- * @copyright Copyright (c) 2018
- *
- */
-
 #include "monopod_sdk/monopod_drivers/devices/boards.hpp"
 
 namespace monopod_drivers {

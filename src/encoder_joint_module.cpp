@@ -1,13 +1,3 @@
-/**
- * @file blmc_joint_module.cpp
- * @author Maximilien Naveau (maximilien.naveau@gmail.com)
- * @author Manuel Wuthrich
- * @license License BSD-3-Clause
- * @copyright Copyright (c) 2019, New York University and Max Planck
- * Gesellschaft.
- * @date 2019-07-11
- */
-
 #include "monopod_sdk/monopod_drivers/encoder_joint_module.hpp"
 #include "real_time_tools/iostream.hpp"
 #include "real_time_tools/spinner.hpp"

@@ -1,15 +1,3 @@
-/**
- * @file motor.cpp
- * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
- * @author Maximilien Naveau (maximilien.naveau@gmail.com)
- * @brief
- * @version 0.1
- * @date 2018-11-27
- *
- * @copyright Copyright (c) 2018
- *
- */
-
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 
 namespace monopod_drivers {

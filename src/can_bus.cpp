@@ -1,15 +1,3 @@
-/**
- * @file can_bus.cpp
- * @author Felix Widmaier (felix.widmaier@tuebingen.mpg.de)
- * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
- * @author Maximilien Naveau (maximilien.naveau@gmail.com)
- * @brief This file defines classes that allow communication with a Can network.
- * @version 0.1
- * @date 2018-11-23
- *
- * @copyright Copyright (c) 2018
- *
- */
 
 #include <sstream>
 
