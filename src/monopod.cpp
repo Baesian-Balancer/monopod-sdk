@@ -9,14 +9,13 @@ namespace monopod_drivers {
 
 Monopod::Monopod() {
   stop_loop = false;
-  read_joint_indexing = {hip_joint, knee_joint, boom_connector_joint,
-                         planarizer_yaw_joint, planarizer_pitch_joint};
+  read_joint_indexing = {hip_joint, knee_joint};
   write_joint_indexing = {hip_joint, knee_joint};
   can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
   board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 
   leg_ = std::make_unique<monopod_drivers::Leg>(board_);
-  planarizer_ = std::make_unique<monopod_drivers::Planarizer>(board_, 2);
+  planarizer_ = std::make_unique<monopod_drivers::Planarizer>(board_);
 }
 
 Monopod::~Monopod() {
@@ -24,11 +23,48 @@ Monopod::~Monopod() {
   rt_thread_.join();
 }
 
-bool Monopod::initialize() {
-
-  leg_->initialize();
-  planarizer_->initialize();
-
+bool Monopod::initialize(int num_joints, const double &hip_home_offset_rad,
+                         const double &knee_home_offset_rad) {
+  switch (num_joints) {
+  // Todo: make this more simplified...
+  case 5:
+    read_joint_indexing = {hip_joint, knee_joint, boom_connector_joint,
+                           planarizer_yaw_joint, planarizer_pitch_joint};
+    leg_->initialize();
+    planarizer_->initialize(num_joints -
+                            leg_->num_joints_ /* Remove the leg joints*/);
+    rt_printf("Controlling the leg and %lu joints.\n",
+              num_joints - leg_->num_joints_);
+    break;
+  case 4:
+    read_joint_indexing = {hip_joint, knee_joint, planarizer_yaw_joint,
+                           planarizer_pitch_joint};
+    leg_->initialize();
+    planarizer_->initialize(num_joints -
+                            leg_->num_joints_ /* Remove the leg joints*/);
+    rt_printf("Controlling the leg and %lu joints.\n",
+              num_joints - leg_->num_joints_);
+    break;
+  case 3:
+    read_joint_indexing = {hip_joint, knee_joint, planarizer_pitch_joint};
+    leg_->initialize();
+    planarizer_->initialize(num_joints -
+                            leg_->num_joints_ /* Remove the leg joints*/);
+    rt_printf("Controlling the leg and %lu joints.\n",
+              num_joints - leg_->num_joints_);
+    break;
+  case 2:
+    leg_->initialize();
+    rt_printf("Controlling only the leg\n");
+    break;
+  default:
+    throw std::runtime_error(
+        "only Supports 2 (only leg), 3 (fixed hip_joint and "
+        "planarizer_yaw_joint),4 (fixed hip_joint), 5 (free) joints.\n");
+  }
+  // todo: Make calibration more robust??
+  leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+  num_joints_ = num_joints;
   is_initialized = true;
   return initialized();
 }
@@ -40,7 +76,7 @@ void Monopod::start_loop() {
     rt_thread_.create_realtime_thread(&Monopod::loop, this);
   } else {
     throw std::runtime_error(
-        "Need to initialize monopod_sdk before starting the realtime loop.");
+        "Need to initialize monopod_sdk before starting the realtime loop.\n");
   }
 }
 
@@ -373,8 +409,11 @@ void Monopod::loop() {
     /*
      * Collect data
      */
-    auto data_leg = leg_->get_measurements();
-    auto data_planarizer = planarizer_->get_measurements();
+    // todo: Fix the way different joint numbers is handled....
+    monopod_drivers::ObservationMap data_leg = leg_->get_measurements();
+    monopod_drivers::ObservationMap data_planarizer;
+    if (num_joints_ != 2)
+      data_planarizer = planarizer_->get_measurements();
     /*
      * This section gets data from encoder joints then
      */
@@ -438,7 +477,8 @@ void Monopod::loop() {
     /*
      * Set the new torque values if observation was valid
      */
-
+    // Note: Do I need to check limits here? or should we handle this in safe
+    // motor/encoder?
     if (valid) {
       auto torques = get_torque_targets({hip_joint, knee_joint});
       // TODO: This assumes torques has a value. This might not be the case
@@ -449,7 +489,7 @@ void Monopod::loop() {
     } else {
       // TODO: This sets torques to 0 as the safe mode right now? We might want
       // to handle this in a mor creative way...
-      std::vector<double> torques(0, 2);
+      std::vector<double> torques(2, 0);
 
       leg_->set_target_torques(torques);
       leg_->send_target_torques();

@@ -25,14 +25,7 @@ public:
   /**
    * @brief Construct the PlanarizerInterface object
    */
-  Planarizer(std::shared_ptr<ControlBoardsInterface> board,
-             const int &num_joints)
-      : board_(board), num_joints_(num_joints) {
-
-    if (!(num_joints_ == 1 || num_joints_ == 2 || num_joints_ == 3))
-      throw std::runtime_error(
-          "Only support 1 (fixed), 2 (fixed_hip), or 3 joints (free_hip).");
-  }
+  Planarizer(std::shared_ptr<ControlBoardsInterface> board) : board_(board) {}
 
   /**
    * @brief Destroy the PlanarizerInterface object
@@ -43,7 +36,12 @@ public:
    * @brief Initialize canbus connecion, esablish connection to the motors, and
    * set motor constants.
    */
-  bool initialize() {
+  bool initialize(const int &num_joints) {
+    num_joints_ = num_joints;
+    if (!(num_joints_ == 1 || num_joints_ == 2 || num_joints_ == 3))
+      throw std::runtime_error(
+          "Only support 1 (fixed), 2 (fixed_hip), or 3 joints (free_hip).");
+
     /*Always create at least one encoder on the main canbus.*/
     auto encoder_ppj = std::make_shared<monopod_drivers::Encoder>(
         board_, JointNameIndexing::planarizer_pitch_joint /* encoder id 0 */);
@@ -81,7 +79,7 @@ public:
 
     // wait until canbus 1 board is ready and connected
     board_->wait_until_ready();
-
+    initialized = true;
     return true;
   }
 
@@ -97,6 +95,7 @@ public:
    * meassurement type enum.
    */
   ObservationMap get_measurements() const {
+    throw_if_not_init();
 
     ObservationMap data = {};
 
@@ -115,6 +114,7 @@ public:
    * @return std::vector<double> (rad)
    */
   std::vector<double> get_zero_angles() const {
+    throw_if_not_init();
 
     std::vector<double> positions;
     positions.reserve(num_joints_);
@@ -133,7 +133,10 @@ public:
    * @brief Calibrate the Planarizer. See blmc_joint_module.hpp for explanation
    * of parameters and logic.
    */
-  bool calibrate(const std::vector<double> &home_offset_rad) { return true; }
+  bool calibrate(const std::vector<double> &home_offset_rad) {
+    throw_if_not_init();
+    return true;
+  }
 
   /**
    * @brief Set the zero_angles. These are the joint angles between the
@@ -142,9 +145,10 @@ public:
    * @param zero_angles (rad)
    */
   void set_zero_angles(const std::vector<double> &zero_angles) {
+    throw_if_not_init();
     if (zero_angles.size() != num_joints_)
-      throw std::runtime_error(
-          "need same number of elements as number joints.");
+      throw std::runtime_error("need same number of elements as number joints. "
+                               "(monopod_drivers::Planarizer)");
 
     size_t i = 0;
     for (const auto &pair : joints_) {
@@ -161,9 +165,10 @@ public:
    * @param reverse_polarity
    */
   void set_joint_polarities(std::vector<bool> reverse_polarities) {
+    throw_if_not_init();
     if (reverse_polarities.size() != num_joints_)
-      throw std::runtime_error(
-          "need same number of elements as number joints.");
+      throw std::runtime_error("need same number of elements as number joints. "
+                               "(monopod_drivers::Planarizer)");
 
     size_t i = 0;
     for (const auto &pair : joints_) {
@@ -174,6 +179,10 @@ public:
   }
 
 private:
+  void throw_if_not_init() const {
+    if (!initialized)
+      throw std::runtime_error("Need to initialize the planarizer before use.");
+  }
   /**
    * @brief Canbus board for encoders.
    */
@@ -183,6 +192,11 @@ private:
    * @brief number joints active.
    */
   long unsigned int num_joints_;
+
+  /**
+   * @brief is Initialized.
+   */
+  bool initialized = false;
 
   /**
    * @brief Hip and knee motor modules for the Planarizer

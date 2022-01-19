@@ -6,6 +6,7 @@ CanBusControlBoards::CanBusControlBoards(
     const int &control_timeout_ms)
     : can_bus_(can_bus), motors_are_paused_(false),
       control_timeout_ms_(control_timeout_ms) {
+
   measurement_ = create_vector_of_pointers<ScalarTimeseries>(measurement_count,
                                                              history_length);
 
@@ -61,6 +62,8 @@ void CanBusControlBoards::wait_until_ready() {
   rt_printf("board and motors are ready \n");
 }
 
+// Fixme: Make it so you can select the board options here. add additional
+// function to enable / disable boards
 bool CanBusControlBoards::is_ready() {
   if (status_[motor_board]->length() == 0 ||
       status_[encoder_board1]->length() == 0 ||
@@ -331,7 +334,7 @@ void CanBusControlBoards::loop() {
     }
 
     case CanframeIDs::BOARD1_STATUSMSG: {
-      MotorBoardStatus status;
+      BoardStatus status;
       uint8_t data = can_frame.data[0];
       status.system_enabled = data >> 0;
       status.motor1_enabled = data >> 1;
@@ -341,11 +344,16 @@ void CanBusControlBoards::loop() {
       status.error_code = data >> 5;
 
       status_[motor_board]->append(status);
+
+      // Todo: Remove this when board options are fixed.
+      status_[encoder_board1]->append(status);
+      status_[encoder_board2]->append(status);
+
       break;
     }
 
     case CanframeIDs::BOARD2_STATUSMSG: {
-      EncoderBoardStatus status;
+      BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
       status_[encoder_board1]->append(status);
@@ -353,20 +361,13 @@ void CanBusControlBoards::loop() {
     }
 
     case CanframeIDs::BOARD3_STATUSMSG: {
-      EncoderBoardStatus status;
+      BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
       status_[encoder_board2]->append(status);
       break;
     }
     }
-
-    //        static int count = 0;
-    //        if(count % 4000 == 0)
-    //        {
-    //            print_status();
-    //        }
-    //        count++;
   }
 }
 

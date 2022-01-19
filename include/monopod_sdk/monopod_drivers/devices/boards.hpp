@@ -82,88 +82,21 @@ public:
 //==============================================================================
 
 /**
- * @brief This class represent a message that describe the state of a board.
- */
-class BoardStatusInterface {
-public:
-  /**
-   * @brief This encodes the error codes. deault is 0 which is no code
-   */
-  uint8_t error_code : 3;
-  /**
-   * @brief Simply print the status of the motor board.
-   */
-  virtual void print() const {
-    rt_printf("Status Message Base Class is Not Implemented.");
-    exit(-1);
-  };
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  virtual bool is_ready() const {
-    rt_printf("Status Message Base Class is Not Implemented.");
-    exit(-1);
-  };
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  virtual uint8_t get_error_code() const {
-    rt_printf("Status Message Base Class is Not Implemented.");
-    exit(-1);
-  };
-
-  /**
-   * @brief Get a human-readable description of the error code.
-   */
-  virtual std::string get_error_description() const {
-    rt_printf("Status Message Base Class is Not Implemented.");
-    exit(-1);
-  };
-};
-
-/**
- * @brief This class represent a message that describe the state of the board
- * with only encoders. Currently this class is a dummy class.
- */
-class EncoderBoardStatus : public BoardStatusInterface {
-public:
-  /**
-   * @brief Simply print the status of the motor board.
-   */
-  void print() const {
-    rt_printf("printing encoder status for encoder board.");
-  }
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  bool is_ready() const { return true; }
-
-  /**
-   * @brief Get a human-readable description of the error code.
-   */
-  std::string get_error_description() const {
-    return "printing human readable message of the encoder status for encoder "
-           "board.";
-  }
-
-  /**
-   * @brief Check if the all status are green.
-   */
-  uint8_t get_error_code() const { return error_code; }
-};
-
-/**
  * @brief This class represent a 8 bits message that describe the state
- * (enable/disabled) of the card and the two motors.
+ * (enable/disabled) of the card and the two motors or that of the car and 2
+ * encoders.
  */
-class MotorBoardStatus : public BoardStatusInterface {
+class BoardStatus {
 public:
   /**
    * These are the list of bits of the message.
    */
+
+  /**
+   * @brief This encodes the error codes. deault is 0 which is no code
+   */
+  uint8_t error_code : 3;
+
   /**
    * @brief Bits 0 enables/disable of the system (motor board).
    */
@@ -298,7 +231,7 @@ public:
   /**
    * @brief A useful shortcut
    */
-  typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
+  typedef time_series::TimeSeries<BoardStatus> StatusTimeseries;
   /**
    * @brief A useful shortcut
    */

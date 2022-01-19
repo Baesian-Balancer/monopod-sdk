@@ -26,7 +26,7 @@ public:
   /**
    * @brief A useful shortcut
    */
-  typedef time_series::TimeSeries<BoardStatusInterface> StatusTimeseries;
+  typedef time_series::TimeSeries<BoardStatus> StatusTimeseries;
 
   /**
    * @brief A useful shortcut

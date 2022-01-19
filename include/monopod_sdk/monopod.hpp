@@ -43,8 +43,15 @@ public:
 
   /**
    * @brief Initialize canbus connections to encoder board and motor board.
+   *
+   * @param num_joints is the number of joints the robot is running. Supports 2
+   * (only leg), 3 (fixed hip_joint and planarizer_yaw_joint),4 (fixed
+   * hip_joint), 5 (free).
+   * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
+   * @param knee_home_offset_rad knee offset from found encoder index 0 (rad)
    */
-  bool initialize();
+  bool initialize(int num_joints = 5, const double &hip_home_offset_rad = 0,
+                  const double &knee_home_offset_rad = 0);
 
   /**
    * @brief is the monopod sdk Initialized?.
@@ -422,6 +429,11 @@ private:
    * @brief robot Leg interface object
    */
   std::unique_ptr<monopod_drivers::Leg> leg_;
+
+  /**
+   * @brief number joints active.
+   */
+  long unsigned int num_joints_;
 
   /**
    * @brief managing the stopping of the loop

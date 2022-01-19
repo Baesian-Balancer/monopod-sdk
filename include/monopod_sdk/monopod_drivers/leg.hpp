@@ -47,12 +47,10 @@ public:
   bool initialize() {
 
     auto motor_hip_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, hip_joint,
-        motor_max_current_ * 0.99); // 0.99 means that safe motor will have a
-                                    // chance to limit current before
+        board_, hip_joint, motor_max_current_);
 
     auto motor_knee_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, knee_joint, motor_max_current_ * 0.99);
+        board_, knee_joint, motor_max_current_);
 
     joints_[hip_joint] =
         std::make_shared<MotorJointModule>(motor_hip_joint,
@@ -78,8 +76,8 @@ public:
 
     // wait until all board are ready and connected
     board_->wait_until_ready();
-
-    return true;
+    initialized = true;
+    return initialized;
   }
 
   // =========================================================================
@@ -94,6 +92,7 @@ public:
    * meassurement type enum.
    */
   ObservationMap get_measurements() const {
+    throw_if_not_init();
 
     ObservationMap data = {};
 
@@ -113,6 +112,7 @@ public:
    * @return std::vector<double> (rad)
    */
   std::vector<double> get_zero_angles() const {
+    throw_if_not_init();
 
     std::vector<double> positions;
     positions.reserve(num_joints_);
@@ -135,9 +135,10 @@ public:
    * @param joint_index is the motor to control.
    */
   void set_target_torques(const std::vector<double> &torque_targets) {
+    throw_if_not_init();
     if (torque_targets.size() != num_joints_)
-      throw std::runtime_error(
-          "need same number of elements as number joints.");
+      throw std::runtime_error("need same number of elements as number joints. "
+                               "(monopod_drivers::Leg)");
 
     joints_[hip_joint]->set_torque(torque_targets[0]);
     joints_[knee_joint]->set_torque(torque_targets[1]);
@@ -147,6 +148,7 @@ public:
    * @brief Send the set torque
    */
   void send_target_torques() {
+    throw_if_not_init();
     joints_[hip_joint]->send_torque();
     joints_[knee_joint]->send_torque();
   }
@@ -158,9 +160,10 @@ public:
    * @param zero_angles (rad)
    */
   void set_zero_angles(const std::vector<double> &zero_angles) {
+    throw_if_not_init();
     if (zero_angles.size() != num_joints_)
-      throw std::runtime_error(
-          "need same number of elements as number joints.");
+      throw std::runtime_error("need same number of elements as number joints. "
+                               "(monopod_drivers::Leg)");
 
     size_t i = 0;
     for (const auto &pair : joints_) {
@@ -177,9 +180,10 @@ public:
    * @param reverse_polarity
    */
   void set_joint_polarities(std::vector<bool> reverse_polarities) {
+    throw_if_not_init();
     if (reverse_polarities.size() != num_joints_)
-      throw std::runtime_error(
-          "need same number of elements as number joints.");
+      throw std::runtime_error("need same number of elements as number joints. "
+                               "(monopod_drivers::Leg)");
 
     size_t i = 0;
     for (const auto &pair : joints_) {
@@ -195,6 +199,7 @@ public:
    */
   bool calibrate(const double &hip_home_offset_rad,
                  const double &knee_home_offset_rad) {
+    throw_if_not_init();
     double search_distance_limit_rad = 2 * M_PI;
     LVector home_offset_rad = {hip_home_offset_rad, knee_home_offset_rad};
     execute_homing(search_distance_limit_rad, home_offset_rad);
@@ -221,7 +226,16 @@ private:
    */
   double motor_max_current_;
 
+  /**
+   * @brief is Initialized.
+   */
+  bool initialized = false;
+
 private:
+  void throw_if_not_init() const {
+    if (!initialized)
+      throw std::runtime_error("Need to initialize the planarizer before use.");
+  }
   /**
    * @brief Perform homing for all joints.
    *
