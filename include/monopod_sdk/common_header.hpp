@@ -3,9 +3,13 @@
 
 namespace monopod_drivers {
 
-// Planarizer matrices for storing data ==================================
+/** Definitions of constants for robot
+ */
 
-// Leg matrices for storing data ==================================
+/** Max current before the robot gets kill in amps (A).
+ */
+#define MAX_CURRENT 20.0
+#define NUMBER_LEG_JOINTS 2
 
 /**
  * @brief Defines a static sized Eigen vector type to store data for the leg.
@@ -51,7 +55,7 @@ enum MeasurementIndex {
   encoder_index,
   measurement_count, // Meassurement count is the 'length' of the meassurement
                      // vector in motor board.
-  torque // this is only used for monopodsdk
+  torque             // this is only used for monopodsdk
 };
 
 typedef std::unordered_map<MeasurementIndex, double> map_inner;

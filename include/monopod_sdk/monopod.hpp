@@ -67,7 +67,8 @@ public:
   /**
    * @brief Calibrate the Encoders.
    */
-  void calibrate();
+  void calibrate(const double &hip_home_offset_rad = 0,
+                 const double &knee_home_offset_rad = 0);
 
   /**
    * @brief Get model name

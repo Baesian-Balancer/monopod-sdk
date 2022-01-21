@@ -31,27 +31,27 @@ bool Monopod::initialize(int num_joints, const double &hip_home_offset_rad,
     read_joint_indexing = {hip_joint, knee_joint, boom_connector_joint,
                            planarizer_yaw_joint, planarizer_pitch_joint};
     leg_->initialize();
-    planarizer_->initialize(num_joints -
-                            leg_->num_joints_ /* Remove the leg joints*/);
-    rt_printf("Controlling the leg and %lu joints.\n",
-              num_joints - leg_->num_joints_);
+    /* Remove the leg joints*/
+    planarizer_->initialize(num_joints - NUMBER_LEG_JOINTS);
+    rt_printf("Controlling the leg and %d joints.\n",
+              num_joints - NUMBER_LEG_JOINTS);
     break;
   case 4:
     read_joint_indexing = {hip_joint, knee_joint, planarizer_yaw_joint,
                            planarizer_pitch_joint};
     leg_->initialize();
-    planarizer_->initialize(num_joints -
-                            leg_->num_joints_ /* Remove the leg joints*/);
-    rt_printf("Controlling the leg and %lu joints.\n",
-              num_joints - leg_->num_joints_);
+    /* Remove the leg joints*/
+    planarizer_->initialize(num_joints - NUMBER_LEG_JOINTS);
+    rt_printf("Controlling the leg and %d joints.\n",
+              num_joints - NUMBER_LEG_JOINTS);
     break;
   case 3:
     read_joint_indexing = {hip_joint, knee_joint, planarizer_pitch_joint};
     leg_->initialize();
-    planarizer_->initialize(num_joints -
-                            leg_->num_joints_ /* Remove the leg joints*/);
-    rt_printf("Controlling the leg and %lu joints.\n",
-              num_joints - leg_->num_joints_);
+    /* Remove the leg joints*/
+    planarizer_->initialize(num_joints - NUMBER_LEG_JOINTS);
+    rt_printf("Controlling the leg and %d joints.\n",
+              num_joints - NUMBER_LEG_JOINTS);
     break;
   case 2:
     leg_->initialize();
@@ -62,11 +62,17 @@ bool Monopod::initialize(int num_joints, const double &hip_home_offset_rad,
         "only Supports 2 (only leg), 3 (fixed hip_joint and "
         "planarizer_yaw_joint),4 (fixed hip_joint), 5 (free) joints.\n");
   }
-  // todo: Make calibration more robust??
-  leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+  calibrate(hip_home_offset_rad, knee_home_offset_rad);
   num_joints_ = num_joints;
   is_initialized = true;
   return initialized();
+}
+
+void Monopod::calibrate(const double &hip_home_offset_rad,
+                        const double &knee_home_offset_rad) {
+
+  // todo: Make calibration more robust??
+  leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
 }
 
 bool Monopod::initialized() { return is_initialized; }

@@ -24,14 +24,13 @@ MotorJointModule::MotorJointModule(
 void MotorJointModule::set_torque(const double &desired_torque) {
   double desired_current = joint_torque_to_motor_current(desired_torque);
 
-  // TODO: Figure out what to do with current safety
-  // if (std::fabs(desired_current) > max_current_) {
-  //   std::cout << "something went wrong, it should never happen"
-  //                " that desired_current > "
-  //             << max_current_ << ". desired_current: " << desired_current
-  //             << std::endl;
-  //   exit(-1);
-  // }
+  if (std::fabs(desired_current) > MAX_CURRENT) {
+    std::cout << "something went wrong, it should never happen"
+                 " that desired_current > "
+              << MAX_CURRENT << ". desired_current: " << desired_current
+              << std::endl;
+    exit(-1);
+  }
 
   double safe_current_target = std::min(desired_current, max_current_);
   safe_current_target = std::max(safe_current_target, -max_current_);
