@@ -38,17 +38,7 @@ CanBusControlBoards::~CanBusControlBoards() {
 void CanBusControlBoards::set_active_board(const int &index) {
   switch (index) {
   case motor_board:
-    active_boards_[index] = true;
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
-    break;
   case encoder_board1:
-    active_boards_[index] = true;
-    break;
   case encoder_board2:
     active_boards_[index] = true;
     break;
@@ -234,6 +224,13 @@ void CanBusControlBoards::loop() {
   send_newest_command();
 
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
                                    ControlBoardsCommand::Contents::ENABLE));
   send_newest_command();
 
