@@ -407,6 +407,15 @@ public:
    */
 
   /**
+   * @brief Set a board to an active state if it is not already active. This
+   * means the board will now have its status checked for is_ready and if the
+   * board is the motor_board we must send enable the motors etc.
+   *
+   * @param index
+   */
+  virtual void set_active_board(const int &index) = 0;
+
+  /**
    * @brief set_control save the control internally. In order to actaully send
    * the controls to the network please call "send_if_input_changed"
    *
@@ -542,6 +551,15 @@ public:
   /**
    * Setters
    */
+
+  /**
+   * @brief Set a board to an active state if it is not already active. This
+   * means the board will now have its status checked for is_ready and if the
+   * board is the motor_board we must send enable the motors etc.
+   *
+   * @param index
+   */
+  virtual void set_active_board(const int &index);
 
   /**
    * @brief Set the controls, see ControlBoardsInterface::set_control
@@ -700,6 +718,10 @@ private:
     BOARD2_ACC = 0x71,
     BOARD3_ACC = 0x72,
   };
+  /**
+   * State Info
+   */
+  std::vector<bool> active_boards_;
 
   /**
    * Outputs

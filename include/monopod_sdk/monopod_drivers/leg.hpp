@@ -7,6 +7,7 @@
 
 #include <time_series/time_series.hpp>
 
+#include "monopod_sdk/monopod_drivers/devices/boards.hpp"
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 #include "monopod_sdk/monopod_drivers/motor_joint_module.hpp"
@@ -211,13 +212,12 @@ private:
   /**
    * @brief Canbus ControlBoards.
    */
-  std::shared_ptr<monopod_drivers::ControlBoardsInterface> board_;
+  std::shared_ptr<ControlBoardsInterface> board_;
 
   /**
    * @brief Hip and knee joint modules for the leg
    */
-  std::unordered_map<JointNameIndexing,
-                     std::shared_ptr<monopod_drivers::MotorJointModule>>
+  std::unordered_map<JointNameIndexing, std::shared_ptr<MotorJointModule>>
       joints_;
 
   /**

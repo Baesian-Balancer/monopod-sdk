@@ -4,7 +4,9 @@ namespace monopod_drivers {
 
 Encoder::Encoder(Encoder::Ptr<monopod_drivers::ControlBoardsInterface> board,
                  monopod_drivers::JointNameIndexing encoder_id)
-    : board_(board), encoder_id_(encoder_id) {}
+    : board_(board), encoder_id_(encoder_id) {
+  set_board_active();
+}
 
 Encoder::Ptr<const Encoder::ScalarTimeseries>
 Encoder::get_measurement(const MeasurementIndex &index) const {
@@ -83,6 +85,7 @@ Encoder::get_measurement(const MeasurementIndex &index) const {
 
   throw std::invalid_argument("index needs to match one of the measurements");
 }
+
 Encoder::Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const {
   switch (encoder_id_) {
   case hip_joint:
@@ -97,6 +100,24 @@ Encoder::Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const {
   }
   throw std::invalid_argument(
       "index needs to match one of the boards in control board interface");
+}
+
+void Encoder::set_board_active() const {
+  switch (encoder_id_) {
+  case hip_joint:
+  case knee_joint:
+    board_->set_active_board(ControlBoardsInterface::motor_board);
+    break;
+  case planarizer_pitch_joint:
+  case planarizer_yaw_joint:
+    board_->set_active_board(ControlBoardsInterface::encoder_board1);
+    break;
+  case boom_connector_joint:
+    board_->set_active_board(ControlBoardsInterface::encoder_board2);
+    break;
+  }
+  throw std::invalid_argument("encoder_id needs to match one of the joints in "
+                              "the JointNameIndexing enum.");
 }
 
 void Encoder::print() const {

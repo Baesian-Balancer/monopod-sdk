@@ -30,6 +30,7 @@ void MotorJointModule::set_torque(const double &desired_torque) {
               << std::endl;
     exit(-1);
   }
+
   motor_->set_current_target(polarity_ * desired_current);
 }
 
@@ -45,6 +46,7 @@ double MotorJointModule::get_sent_torque() const {
   if (measurement_history->length() == 0) {
     return std::numeric_limits<double>::quiet_NaN();
   }
+
   return motor_current_to_joint_torque(measurement_history->newest_element());
 }
 

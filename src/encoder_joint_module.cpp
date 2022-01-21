@@ -15,6 +15,10 @@ EncoderJointModule::EncoderJointModule(
   set_zero_angle(zero_angle);
 }
 
+// Todo: implement these two methods
+void EncoderJointModule::valid() {}
+void EncoderJointModule::reset() {}
+
 void EncoderJointModule::set_zero_angle(const double &zero_angle) {
   zero_angle_ = zero_angle;
 }

@@ -271,6 +271,7 @@ protected:
 
   //! @brief P gain of the position PD controller.
   double position_control_gain_p_;
+
   //! @brief D gain of the position PD controller.
   double position_control_gain_d_;
 

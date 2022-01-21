@@ -35,6 +35,18 @@ public:
                      const bool &reverse_polarity = false);
 
   /**
+   * @brief Is the robot in a valid state?
+   */
+  virtual void valid();
+
+  /**
+   * @brief If the joint module is not valid (safemode after limit reached) the
+   * joint will be reset into a valid state. This means the joint must be set
+   * back into the valid state first otherwise it will trigger the limits again.
+   */
+  virtual void reset();
+
+  /**
    * @brief Set the zero_angle. The zero_angle is the angle between the
    * closest positive encoder index and the zero configuration.
    *

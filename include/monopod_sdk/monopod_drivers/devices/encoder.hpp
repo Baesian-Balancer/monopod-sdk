@@ -105,7 +105,6 @@ public:
   /**
    * @brief Get the status.
    *
-   * @param index
    * @return Ptr<const StatusTimeseries> the pointer to the desired
    * status history.
    */
@@ -115,6 +114,12 @@ public:
   virtual void print() const;
 
 protected:
+  /**
+   * @brief This sets the board that relates to the specified encoder_id to be
+   * active in the CanBusControlBoards
+   */
+  void set_board_active() const;
+
   /**
    * @brief The EncoderBoard to be used for the communication.
    */
