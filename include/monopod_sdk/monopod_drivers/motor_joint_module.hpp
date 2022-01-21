@@ -80,7 +80,7 @@ struct HomingState {
  * here to help converting the data from the motor side to the joint side. It
  * also allows the calibration of the joint position during initialization.
  */
-class MotorJointModule {
+class MotorJointModule : public EncoderJointModule {
 public:
   /**
    * @brief Construct a new MotorJointModule object
@@ -95,89 +95,45 @@ public:
    * @param reverse_polarity
    * @param max_current
    */
-  MotorJointModule(std::shared_ptr<monopod_drivers::MotorInterface> motor,
+  MotorJointModule(JointNameIndexing joint_id,
+                   std::shared_ptr<monopod_drivers::MotorInterface> motor,
                    const double &motor_constant, const double &gear_ratio,
                    const double &zero_angle,
                    const bool &reverse_polarity = false);
-  /**
-   * @brief Set the zero_angle. The zero_angle is the angle between the
-   * closest positive motor index and the zero configuration.
-   *
-   * @param zero_angle (rad)
-   */
-  void set_zero_angle(const double &zero_angle);
-
-  /**
-   * @brief Define if the motor should turn clock-wize or counter clock-wize.
-   *
-   * @param reverse_polarity true:reverse rotation axis, false:do nothing.
-   */
-  void set_joint_polarity(const bool &reverse_polarity);
 
   /**
    * @brief Set the joint torque to be sent.
    *
    * @param desired_torque (Nm)
    */
-  void set_torque(const double &desired_torque);
+  virtual void set_torque(const double &desired_torque);
 
   /**
    * @brief send the joint torque to the motor. The conversion between joint
    * torque and motor current is done automatically.
    */
-  void send_torque();
+  virtual void send_torque();
 
   /**
    * @brief Get the maximum admissible joint torque that can be applied.
    *
    * @return double
    */
-  double get_max_torque() const;
+  virtual double get_max_torque() const;
 
   /**
    * @brief Get the sent joint torque.
    *
    * @return double (Nm).
    */
-  double get_sent_torque() const;
+  virtual double get_sent_torque() const;
 
   /**
    * @brief Get the measured joint torque.
    *
    * @return double (Nm).
    */
-  double get_measured_torque() const;
-
-  /**
-   * @brief Get the measured angle of the joint.
-   *
-   * @return double (rad).
-   */
-  double get_measured_angle() const;
-
-  /**
-   * @brief Get the measured velocity of the joint. This data is computed on
-   * board of the control card.
-   *
-   * @return double (rad/s).
-   */
-  double get_measured_velocity() const;
-
-  /**
-   * @brief Get the measured index angle. There is one index per motor
-   * rotation so there are gear_ratio indexes per joint rotation.
-   *
-   * @return double (rad).
-   */
-  double get_measured_index_angle() const;
-
-  /**
-   * @brief Get the zero_angle_. These are the angle between the starting pose
-   * and the theoretical zero pose.
-   *
-   * @return double (rad).
-   */
-  double get_zero_angle() const;
+  virtual double get_measured_torque() const;
 
   /**
    * @brief Set control gains for PD position controller.
@@ -197,24 +153,6 @@ public:
   double execute_position_controller(double target_position_rad) const;
 
   /**
-   * @deprecated !!!!!!!
-   * @brief This method calibrate the joint position knowing the angle between
-   * the closest (in positive torque) motor index and the theoretical zero
-   * pose. Warning, this method should be called in a real time thread!
-   *
-   * @param[in][out] angle_zero_to_index (rad) this is the angle between the
-   * closest (in positive torque) motor index and the theoretical zero pose.
-   * @param[out] index_angle (rad) is the angle where we met the index. This
-   * angle is relative to the configuration when the robot booted.
-   * @param[in] mechanical_calibration defines if the leg started in the zero
-   * configuration or not
-   * @return true if success.
-   * @return false if problem arose.
-   */
-  bool calibrate(double &angle_zero_to_index, double &index_angle,
-                 bool mechanical_calibration = false);
-
-  /**
    * @brief Set zero position relative to current position
    *
    * @param home_offset_rad  Offset from home position to zero position.
@@ -227,7 +165,6 @@ public:
    *
    * This has to be called before update_homing().
    *
-   * @param joint_id ID of the joint.  This is only used for debug prints.
    * @param search_distance_limit_rad  Maximum distance the motor moves while
    *     searching for the encoder index.  Unit: radian.
    * @param home_offset_rad  Offset from home position to zero position.
@@ -237,8 +174,7 @@ public:
    *     search for the next encoder index in negative direction.  Unit:
    *     radian.
    */
-  void init_homing(int joint_id, double search_distance_limit_rad,
-                   double home_offset_rad,
+  void init_homing(double search_distance_limit_rad, double home_offset_rad,
                    double profile_step_size_rad = 0.001);
 
   /**
@@ -279,7 +215,7 @@ public:
    */
   double get_distance_travelled_during_homing() const;
 
-private:
+protected:
   /**
    * @brief Convert from joint torque to motor current.
    *
@@ -326,20 +262,7 @@ private:
    * \f$ \tau_{motor} = k * i_{motor} \f$
    */
   double motor_constant_;
-  /**
-   * @brief This correspond to the reduction (\f$ \beta \f$) between the motor
-   * rotation and the joint. \f$ \theta_{joint} = \theta_{motor} / \beta \f$
-   */
-  double gear_ratio_;
-  /**
-   * @brief This is the distance between the closest positive index and the
-   * zero configuration.
-   */
-  double zero_angle_;
-  /**
-   * @brief This change the motor rotation direction.
-   */
-  double polarity_;
+
   /**
    * @brief This is the maximum current we can apply during one experiment.
    * The program shut down if this value is achieved.

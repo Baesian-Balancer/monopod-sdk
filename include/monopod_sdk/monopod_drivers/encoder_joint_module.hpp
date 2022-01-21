@@ -29,7 +29,8 @@ public:
    * and the zero configuration.
    * @param reverse_polarity
    */
-  EncoderJointModule(std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
+  EncoderJointModule(JointNameIndexing joint_id,
+                     std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
                      const double &gear_ratio, const double &zero_angle,
                      const bool &reverse_polarity = false);
 
@@ -39,21 +40,21 @@ public:
    *
    * @param zero_angle (rad)
    */
-  void set_zero_angle(const double &zero_angle);
+  virtual void set_zero_angle(const double &zero_angle);
 
   /**
    * @brief Define if the encoder should turn clock-wize or counter clock-wize.
    *
    * @param reverse_polarity true:reverse rotation axis, false:do nothing.
    */
-  void set_joint_polarity(const bool &reverse_polarity);
+  virtual void set_joint_polarity(const bool &reverse_polarity);
 
   /**
    * @brief Get the measured angle of the joint.
    *
    * @return double (rad).
    */
-  double get_measured_angle() const;
+  virtual double get_measured_angle() const;
 
   /**
    * @brief Get the measured velocity of the joint. This data is computed on
@@ -61,7 +62,7 @@ public:
    *
    * @return double (rad/s).
    */
-  double get_measured_velocity() const;
+  virtual double get_measured_velocity() const;
 
   /**
    * @brief Get the measured index angle. There is one index per encoder
@@ -69,7 +70,7 @@ public:
    *
    * @return double (rad).
    */
-  double get_measured_index_angle() const;
+  virtual double get_measured_index_angle() const;
 
   /**
    * @brief Get the zero_angle_. These are the angle between the starting pose
@@ -77,9 +78,9 @@ public:
    *
    * @return double (rad).
    */
-  double get_zero_angle() const;
+  virtual double get_zero_angle() const;
 
-private:
+protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.
    *
@@ -87,7 +88,8 @@ private:
    * check: monopod_drivers::EncoderInterface::MeasurementIndex
    * @return double the measurement.
    */
-  double get_joint_measurement(const MeasurementIndex &measurement_id) const;
+  virtual double
+  get_joint_measurement(const MeasurementIndex &measurement_id) const;
 
   /**
    * @brief Get the last encoder measurement index for a specific data. If there
@@ -97,8 +99,13 @@ private:
    * check: monopod_drivers::EncoderInterface::MeasurementIndex
    * @return double the measurement.
    */
-  long int
+  virtual long int
   get_joint_measurement_index(const MeasurementIndex &measurement_id) const;
+
+  /**
+   * @brief This is the joint ID used when initializing the joint.
+   */
+  JointNameIndexing joint_id_;
 
   /**
    * @brief This is the pointer to the encoder interface.

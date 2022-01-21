@@ -46,22 +46,22 @@ public:
     auto encoder_ppj = std::make_shared<monopod_drivers::Encoder>(
         board_, JointNameIndexing::planarizer_pitch_joint /* encoder id 0 */);
 
-    joints_[planarizer_pitch_joint] =
-        std::make_shared<EncoderJointModule>(encoder_ppj,
-                                             1.0, // gear_ratios,
-                                             0.0, // zero_angles,
-                                             false);
+    joints_[planarizer_pitch_joint] = std::make_shared<EncoderJointModule>(
+        planarizer_pitch_joint, encoder_ppj,
+        1.0, // gear_ratios,
+        0.0, // zero_angles,
+        false);
     if (num_joints_ == 2 || num_joints_ == 3) {
       /*If num_joints_ == 2 we need to make a second encoder joint for
        * meassurements. this is fixed hip mode*/
       auto encoder_pyj = std::make_shared<monopod_drivers::Encoder>(
           board_, JointNameIndexing::planarizer_yaw_joint /* encoder id 1*/);
 
-      joints_[planarizer_yaw_joint] =
-          std::make_shared<EncoderJointModule>(encoder_pyj,
-                                               1.0, // gear_ratios,
-                                               0.0, // zero_angles,
-                                               false);
+      joints_[planarizer_yaw_joint] = std::make_shared<EncoderJointModule>(
+          planarizer_yaw_joint, encoder_pyj,
+          1.0, // gear_ratios,
+          0.0, // zero_angles,
+          false);
     }
 
     if (num_joints_ == 3) { /*If num_joints_ == 3 we need to create second
@@ -70,11 +70,11 @@ public:
       auto encoder_bcj = std::make_shared<monopod_drivers::Encoder>(
           board_, JointNameIndexing::boom_connector_joint /* encoder id 0 */);
 
-      joints_[boom_connector_joint] =
-          std::make_shared<EncoderJointModule>(encoder_bcj,
-                                               1.0, // gear_ratios,
-                                               0.0, // zero_angles,
-                                               false);
+      joints_[boom_connector_joint] = std::make_shared<EncoderJointModule>(
+          boom_connector_joint, encoder_bcj,
+          1.0, // gear_ratios,
+          0.0, // zero_angles,
+          false);
     }
 
     // wait until canbus 1 board is ready and connected

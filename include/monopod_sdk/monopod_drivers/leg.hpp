@@ -52,14 +52,14 @@ public:
         board_, knee_joint, motor_max_current_);
 
     joints_[hip_joint] =
-        std::make_shared<MotorJointModule>(motor_hip_joint,
+        std::make_shared<MotorJointModule>(hip_joint, motor_hip_joint,
                                            0.025, // motor_constants[i],
                                            9.0,   // gear_ratios[i],
                                            0.0,   // zero_angles[i],
                                            false);
 
     joints_[knee_joint] =
-        std::make_shared<MotorJointModule>(motor_knee_joint,
+        std::make_shared<MotorJointModule>(knee_joint, motor_knee_joint,
                                            0.025, // motor_constants[i],
                                            9.0,   // gear_ratios[i],
                                            0.0,   // zero_angles[i],
@@ -262,10 +262,10 @@ private:
                                   double profile_step_size_rad = 0.001) {
     // Initialise homing for all joints
 
-    joints_[hip_joint]->init_homing((int)hip_joint, search_distance_limit_rad,
+    joints_[hip_joint]->init_homing(search_distance_limit_rad,
                                     home_offset_rad[0], profile_step_size_rad);
 
-    joints_[knee_joint]->init_homing((int)knee_joint, search_distance_limit_rad,
+    joints_[knee_joint]->init_homing(search_distance_limit_rad,
                                      home_offset_rad[1], profile_step_size_rad);
 
     // run homing for all joints until all of them are done

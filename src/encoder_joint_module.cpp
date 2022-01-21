@@ -6,13 +6,13 @@
 namespace monopod_drivers {
 
 EncoderJointModule::EncoderJointModule(
+    JointNameIndexing joint_id,
     std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
     const double &gear_ratio, const double &zero_angle,
-    const bool &reverse_polarity) {
-  encoder_ = encoder;
-  gear_ratio_ = gear_ratio;
+    const bool &reverse_polarity)
+    : joint_id_(joint_id), encoder_(encoder), gear_ratio_(gear_ratio),
+      polarity_(reverse_polarity ? -1.0 : 1.0) {
   set_zero_angle(zero_angle);
-  polarity_ = reverse_polarity ? -1.0 : 1.0;
 }
 
 void EncoderJointModule::set_zero_angle(const double &zero_angle) {
