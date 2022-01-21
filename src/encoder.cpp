@@ -1,15 +1,3 @@
-/**
- * @file Encoder.cpp
- * @author Manuel Wuthrich (manuel.wuthrich@gmail.com)
- * @author Maximilien Naveau (maximilien.naveau@gmail.com)
- * @brief
- * @version 0.1
- * @date 2018-11-27
- *
- * @copyright Copyright (c) 2018
- *
- */
-
 #include "monopod_sdk/monopod_drivers/devices/encoder.hpp"
 
 namespace monopod_drivers {
@@ -23,8 +11,6 @@ Encoder::get_measurement(const MeasurementIndex &index) const {
   switch (encoder_id_) {
   case hip_joint:
     switch (index) {
-    case current:
-      return board_->get_measurement(ControlBoardsInterface::current_0);
     case position:
       return board_->get_measurement(ControlBoardsInterface::position_0);
     case velocity:
@@ -33,12 +19,12 @@ Encoder::get_measurement(const MeasurementIndex &index) const {
       throw std::invalid_argument("acceleration not supported yet.");
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_0);
+    default:
+      break;
     }
     break;
   case knee_joint:
     switch (index) {
-    case current:
-      return board_->get_measurement(ControlBoardsInterface::current_1);
     case position:
       return board_->get_measurement(ControlBoardsInterface::position_1);
     case velocity:
@@ -47,11 +33,51 @@ Encoder::get_measurement(const MeasurementIndex &index) const {
       throw std::invalid_argument("acceleration not supported yet.");
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_1);
+    default:
+      break;
+    }
+    break;
+  case planarizer_pitch_joint:
+    switch (index) {
+    case position:
+      return board_->get_measurement(ControlBoardsInterface::position_2);
+    case velocity:
+      return board_->get_measurement(ControlBoardsInterface::velocity_2);
+    case acceleration:
+      throw std::invalid_argument("acceleration not supported yet.");
+    case encoder_index:
+      return board_->get_measurement(ControlBoardsInterface::encoder_index_2);
+    default:
+      break;
+    }
+    break;
+  case planarizer_yaw_joint:
+    switch (index) {
+    case position:
+      return board_->get_measurement(ControlBoardsInterface::position_3);
+    case velocity:
+      return board_->get_measurement(ControlBoardsInterface::velocity_3);
+    case acceleration:
+      throw std::invalid_argument("acceleration not supported yet.");
+    case encoder_index:
+      return board_->get_measurement(ControlBoardsInterface::encoder_index_3);
+    default:
+      break;
     }
     break;
   case boom_connector_joint:
-  case planarizer_yaw_joint:
-  case planarizer_pitch_joint:
+    switch (index) {
+    case position:
+      return board_->get_measurement(ControlBoardsInterface::position_4);
+    case velocity:
+      return board_->get_measurement(ControlBoardsInterface::velocity_4);
+    case acceleration:
+      throw std::invalid_argument("acceleration not supported yet.");
+    case encoder_index:
+      return board_->get_measurement(ControlBoardsInterface::encoder_index_4);
+    default:
+      break;
+    }
     break;
   }
 
@@ -74,8 +100,7 @@ Encoder::Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const {
 }
 
 void Encoder::print() const {
-  BoardStatusInterface encoder_board_status;
-  double encoder_current = std::nan("");
+  BoardStatus encoder_board_status;
   double encoder_position = std::nan("");
   double encoder_velocity = std::nan("");
   double encoder_encoder_index = std::nan("");

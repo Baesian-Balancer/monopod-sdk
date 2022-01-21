@@ -4,10 +4,10 @@
  * Gesellschaft, License BSD-3-Clause
  */
 
-#include <signal.h>
-#include <atomic>
-#include "sine_position_control.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
+#include "sine_position_control.hpp"
+#include <atomic>
+#include <signal.h>
 
 /**
  * @brief Defines a static Eigen vector type in order to define the
@@ -25,10 +25,7 @@ std::atomic_bool StopDemos(false);
  *
  * @param s
  */
-void my_handler(int)
-{
-    StopDemos = true;
-}
+void my_handler(int) { StopDemos = true; }
 
 /**
  * @brief This is the main demo program.
@@ -37,40 +34,41 @@ void my_handler(int)
  * @param argv
  * @return int
  */
-int main(int, char **)
-{
-    // make sure we catch the ctrl+c signal to kill the application properly.
-    struct sigaction sigIntHandler;
-    sigIntHandler.sa_handler = my_handler;
-    sigemptyset(&sigIntHandler.sa_mask);
-    sigIntHandler.sa_flags = 0;
-    sigaction(SIGINT, &sigIntHandler, NULL);
-    StopDemos = false;
+int main(int, char **) {
+  // make sure we catch the ctrl+c signal to kill the application properly.
+  struct sigaction sigIntHandler;
+  sigIntHandler.sa_handler = my_handler;
+  sigemptyset(&sigIntHandler.sa_mask);
+  sigIntHandler.sa_flags = 0;
+  sigaction(SIGINT, &sigIntHandler, NULL);
+  StopDemos = false;
 
-    auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-    auto board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
+  auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
+  auto board_ =
+      std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 
-    std::shared_ptr<monopod_drivers::Leg> leg = std::make_shared<monopod_drivers::Leg>(board_);
-    leg->initialize();
+  std::shared_ptr<monopod_drivers::Leg> leg =
+      std::make_shared<monopod_drivers::Leg>(board_);
+  leg->initialize();
+  leg->calibrate(1, 1);
 
-    rt_printf("leg is set up \n");
+  rt_printf("leg is set up \n");
 
-    // construct a simple PD controller.
-    monopod_drivers::SinePositionControl controller(leg);
+  // construct a simple PD controller.
+  monopod_drivers::SinePositionControl controller(leg);
 
-    rt_printf("controllers are set up \n");
+  rt_printf("controllers are set up \n");
 
-    controller.start_loop();
+  controller.start_loop();
 
-    rt_printf("loops have started \n");
+  rt_printf("loops have started \n");
 
-    // Wait until the application is killed.
-    while (!StopDemos)
-    {
-        real_time_tools::Timer::sleep_sec(0.01);
-    }
+  // Wait until the application is killed.
+  while (!StopDemos) {
+    real_time_tools::Timer::sleep_sec(0.01);
+  }
 
-    controller.stop_loop();
+  controller.stop_loop();
 
-    return 0;
+  return 0;
 }

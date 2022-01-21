@@ -1,18 +1,9 @@
-/**
- * @file device_interface.hpp
- * @license License BSD-3-Clause
- * @copyright Copyright (c) 2019, New York University and Max Planck
- * Gesellschaft.
- * @date 2019-07-11
- */
-
 #pragma once
 
 /**
  * @brief This namespace is the standard namespace of the package.
  */
-namespace monopod_drivers
-{
+namespace monopod_drivers {
 /**
  * @brief this class exists purely for logical reasons, it does not in
  * itself implement anything.
@@ -33,8 +24,6 @@ namespace monopod_drivers
  * the next element or step through them one by one such that none of them is
  * missed)
  */
-class DeviceInterface
-{
-};
+class DeviceInterface {};
 
-}  // namespace monopod_drivers
+} // namespace monopod_drivers
