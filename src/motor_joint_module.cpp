@@ -8,14 +8,12 @@ namespace monopod_drivers {
 MotorJointModule::MotorJointModule(
     std::shared_ptr<monopod_drivers::MotorInterface> motor,
     const double &motor_constant, const double &gear_ratio,
-    const double &zero_angle, const bool &reverse_polarity,
-    const double &max_current) {
+    const double &zero_angle, const bool &reverse_polarity) {
   motor_ = motor;
   motor_constant_ = motor_constant;
   gear_ratio_ = gear_ratio;
   set_zero_angle(zero_angle);
   polarity_ = reverse_polarity ? -1.0 : 1.0;
-  max_current_ = max_current;
 
   position_control_gain_p_ = 0;
   position_control_gain_d_ = 0;
@@ -31,10 +29,6 @@ void MotorJointModule::set_torque(const double &desired_torque) {
               << std::endl;
     exit(-1);
   }
-
-  double safe_current_target = std::min(desired_current, max_current_);
-  safe_current_target = std::max(safe_current_target, -max_current_);
-
   motor_->set_current_target(polarity_ * desired_current);
 }
 
@@ -48,7 +42,7 @@ void MotorJointModule::set_joint_polarity(const bool &reverse_polarity) {
 void MotorJointModule::send_torque() { motor_->send_if_input_changed(); }
 
 double MotorJointModule::get_max_torque() const {
-  return motor_current_to_joint_torque(max_current_);
+  return motor_current_to_joint_torque(MAX_CURRENT);
 }
 
 double MotorJointModule::get_sent_torque() const {
@@ -62,16 +56,16 @@ double MotorJointModule::get_sent_torque() const {
 
 double MotorJointModule::get_measured_torque() const {
   return motor_current_to_joint_torque(
-      get_motor_measurement(MeasurementIndex::current));
+      get_joint_measurement(MeasurementIndex::current));
 }
 
 double MotorJointModule::get_measured_angle() const {
-  return get_motor_measurement(MeasurementIndex::position) / gear_ratio_ -
+  return get_joint_measurement(MeasurementIndex::position) / gear_ratio_ -
          zero_angle_;
 }
 
 double MotorJointModule::get_measured_velocity() const {
-  return get_motor_measurement(MeasurementIndex::velocity) / gear_ratio_;
+  return get_joint_measurement(MeasurementIndex::velocity) / gear_ratio_;
 }
 
 double MotorJointModule::joint_torque_to_motor_current(double torque) const {
@@ -83,28 +77,28 @@ double MotorJointModule::motor_current_to_joint_torque(double current) const {
 }
 
 double MotorJointModule::get_measured_index_angle() const {
-  return get_motor_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
+  return get_joint_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
 }
 
 double MotorJointModule::get_zero_angle() const { return zero_angle_; }
 
-double MotorJointModule::get_motor_measurement(
+double MotorJointModule::get_joint_measurement(
     const MeasurementIndex &measurement_id) const {
   auto measurement_history = motor_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_motor_measurement returns NaN\n");
+    // rt_printf("get_joint_measurement returns NaN\n");
     return std::numeric_limits<double>::quiet_NaN();
   }
   return polarity_ * measurement_history->newest_element();
 }
 
-long int MotorJointModule::get_motor_measurement_index(
+long int MotorJointModule::get_joint_measurement_index(
     const MeasurementIndex &measurement_id) const {
   auto measurement_history = motor_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_motor_measurement_index returns NaN\n");
+    // rt_printf("get_joint_measurement_index returns NaN\n");
     return -1;
   }
   return measurement_history->newest_timeindex();
@@ -124,7 +118,7 @@ double MotorJointModule::execute_position_controller(
                           position_control_gain_d_ * get_measured_velocity();
 
   // clamp torque
-  const double max_torque = motor_current_to_joint_torque(max_current_) * 0.9;
+  const double max_torque = motor_current_to_joint_torque(MAX_CURRENT) * 0.9;
   if (desired_torque > max_torque) {
     desired_torque = max_torque;
   } else if (desired_torque < -max_torque) {
@@ -148,7 +142,7 @@ bool MotorJointModule::calibrate(double &angle_zero_to_index,
   zero_angle_ = 0.0;
 
   long int last_index_time =
-      get_motor_measurement_index(MeasurementIndex::encoder_index);
+      get_joint_measurement_index(MeasurementIndex::encoder_index);
   if (std::isnan(last_index_time)) {
     last_index_time = -1;
   }
@@ -171,7 +165,7 @@ bool MotorJointModule::calibrate(double &angle_zero_to_index,
     send_torque();
     // check stop
     long int actual_index_time =
-        get_motor_measurement_index(MeasurementIndex::encoder_index);
+        get_joint_measurement_index(MeasurementIndex::encoder_index);
     double actual_index_angle = get_measured_index_angle();
 
     reached_next_index = (actual_index_time > last_index_time);
@@ -279,7 +273,7 @@ void MotorJointModule::init_homing(int joint_id,
   homing_state_.home_offset_rad = home_offset_rad;
   homing_state_.profile_step_size_rad = profile_step_size_rad;
   homing_state_.last_encoder_index_time_index =
-      get_motor_measurement_index(MeasurementIndex::encoder_index);
+      get_joint_measurement_index(MeasurementIndex::encoder_index);
   homing_state_.target_position_rad = get_measured_angle();
   homing_state_.step_count = 0;
   homing_state_.start_position = get_measured_angle();
@@ -349,7 +343,7 @@ HomingReturnCode MotorJointModule::update_homing() {
 
     // Check if new encoder index was observed
     const long int actual_index_time =
-        get_motor_measurement_index(MeasurementIndex::encoder_index);
+        get_joint_measurement_index(MeasurementIndex::encoder_index);
     if (actual_index_time > homing_state_.last_encoder_index_time_index) {
       // -- FINISHED
       const double index_angle = get_measured_index_angle();

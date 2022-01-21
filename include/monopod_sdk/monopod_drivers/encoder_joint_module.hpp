@@ -87,7 +87,7 @@ private:
    * check: monopod_drivers::EncoderInterface::MeasurementIndex
    * @return double the measurement.
    */
-  double get_encoder_measurement(const MeasurementIndex &measurement_id) const;
+  double get_joint_measurement(const MeasurementIndex &measurement_id) const;
 
   /**
    * @brief Get the last encoder measurement index for a specific data. If there
@@ -98,7 +98,7 @@ private:
    * @return double the measurement.
    */
   long int
-  get_encoder_measurement_index(const MeasurementIndex &measurement_id) const;
+  get_joint_measurement_index(const MeasurementIndex &measurement_id) const;
 
   /**
    * @brief This is the pointer to the encoder interface.
@@ -110,11 +110,13 @@ private:
    * rotation and the joint. \f$ \theta_{joint} = \theta_{encoder} / \beta \f$
    */
   double gear_ratio_;
+
   /**
    * @brief This is the distance between the closest positive index and the
    * zero configuration.
    */
   double zero_angle_;
+
   /**
    * @brief This change the encoder rotation direction.
    */

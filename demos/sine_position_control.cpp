@@ -95,7 +95,7 @@ void SinePositionControl::loop() {
     // Printings
     if ((count % (int)(0.2 / control_period)) == 0) {
       rt_printf("\33[H\33[2J"); // clear screen
-      for (unsigned int i = 0; i < leg_->num_joints_; ++i) {
+      for (unsigned int i = 0; i < NUMBER_LEG_JOINTS; ++i) {
         rt_printf("des_pose: %8f ; ", desired_position);
         rt_printf("des_torque_hip: %8f ; ", desired_torque_hip);
         rt_printf("des_torque_knee: %8f ; ", desired_torque_knee);

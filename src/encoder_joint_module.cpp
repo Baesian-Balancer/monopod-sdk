@@ -24,37 +24,37 @@ void EncoderJointModule::set_joint_polarity(const bool &reverse_polarity) {
 }
 
 double EncoderJointModule::get_measured_angle() const {
-  return get_encoder_measurement(MeasurementIndex::position) / gear_ratio_ -
+  return get_joint_measurement(MeasurementIndex::position) / gear_ratio_ -
          zero_angle_;
 }
 
 double EncoderJointModule::get_measured_velocity() const {
-  return get_encoder_measurement(MeasurementIndex::velocity) / gear_ratio_;
+  return get_joint_measurement(MeasurementIndex::velocity) / gear_ratio_;
 }
 
 double EncoderJointModule::get_measured_index_angle() const {
-  return get_encoder_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
+  return get_joint_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
 }
 
 double EncoderJointModule::get_zero_angle() const { return zero_angle_; }
 
-double EncoderJointModule::get_encoder_measurement(
+double EncoderJointModule::get_joint_measurement(
     const MeasurementIndex &measurement_id) const {
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_encoder_measurement returns NaN\n");
+    // rt_printf("get_joint_measurement returns NaN\n");
     return std::numeric_limits<double>::quiet_NaN();
   }
   return polarity_ * measurement_history->newest_element();
 }
 
-long int EncoderJointModule::get_encoder_measurement_index(
+long int EncoderJointModule::get_joint_measurement_index(
     const MeasurementIndex &measurement_id) const {
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_encoder_measurement_index returns NaN\n");
+    // rt_printf("get_joint_measurement_index returns NaN\n");
     return -1;
   }
   return measurement_history->newest_timeindex();

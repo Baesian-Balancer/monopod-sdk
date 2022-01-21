@@ -26,7 +26,6 @@ public:
    * @brief Enumerate the num_joints For readability
    *
    */
-  static constexpr long unsigned int num_joints_ = 2;
 
   /**
    * @brief Construct the LegInterface object
@@ -57,14 +56,14 @@ public:
                                            0.025, // motor_constants[i],
                                            9.0,   // gear_ratios[i],
                                            0.0,   // zero_angles[i],
-                                           false, motor_max_current_);
+                                           false);
 
     joints_[knee_joint] =
         std::make_shared<MotorJointModule>(motor_knee_joint,
                                            0.025, // motor_constants[i],
                                            9.0,   // gear_ratios[i],
                                            0.0,   // zero_angles[i],
-                                           false, motor_max_current_);
+                                           false);
 
     // The the control gains in order to perform the calibration
     double kp, kd;
@@ -115,7 +114,7 @@ public:
     throw_if_not_init();
 
     std::vector<double> positions;
-    positions.reserve(num_joints_);
+    positions.reserve(NUMBER_LEG_JOINTS);
 
     for (const auto &pair : joints_) {
       positions.push_back(pair.second->get_zero_angle());
@@ -136,7 +135,7 @@ public:
    */
   void set_target_torques(const std::vector<double> &torque_targets) {
     throw_if_not_init();
-    if (torque_targets.size() != num_joints_)
+    if (torque_targets.size() != NUMBER_LEG_JOINTS)
       throw std::runtime_error("need same number of elements as number joints. "
                                "(monopod_drivers::Leg)");
 
@@ -161,7 +160,7 @@ public:
    */
   void set_zero_angles(const std::vector<double> &zero_angles) {
     throw_if_not_init();
-    if (zero_angles.size() != num_joints_)
+    if (zero_angles.size() != NUMBER_LEG_JOINTS)
       throw std::runtime_error("need same number of elements as number joints. "
                                "(monopod_drivers::Leg)");
 
@@ -181,7 +180,7 @@ public:
    */
   void set_joint_polarities(std::vector<bool> reverse_polarities) {
     throw_if_not_init();
-    if (reverse_polarities.size() != num_joints_)
+    if (reverse_polarities.size() != NUMBER_LEG_JOINTS)
       throw std::runtime_error("need same number of elements as number joints. "
                                "(monopod_drivers::Leg)");
 
@@ -325,8 +324,8 @@ private:
                             .maxCoeff() /
                         average_speed_rad_per_sec;
 
-    std::array<TimePolynome<5>, num_joints_> min_jerk_trajs;
-    for (unsigned i = 0; i < num_joints_; i++) {
+    std::array<TimePolynome<5>, NUMBER_LEG_JOINTS> min_jerk_trajs;
+    for (unsigned i = 0; i < NUMBER_LEG_JOINTS; i++) {
       min_jerk_trajs[i].set_parameters(final_time, initial_joint_positions[i],
                                        0.0 /*initial speed*/,
                                        angle_to_reach_rad[i]);

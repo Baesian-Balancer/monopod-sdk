@@ -9,6 +9,7 @@
 
 #include "monopod_sdk/common_header.hpp"
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
+#include "monopod_sdk/monopod_drivers/encoder_joint_module.hpp"
 #include "monopod_sdk/monopod_drivers/utils/polynome.hpp"
 
 namespace monopod_drivers {
@@ -97,16 +98,7 @@ public:
   MotorJointModule(std::shared_ptr<monopod_drivers::MotorInterface> motor,
                    const double &motor_constant, const double &gear_ratio,
                    const double &zero_angle,
-                   const bool &reverse_polarity = false,
-                   const double &max_current = 2.1);
-
-  /**
-   * @brief Set the joint torque to be sent.
-   *
-   * @param desired_torque (Nm)
-   */
-  void set_torque(const double &desired_torque);
-
+                   const bool &reverse_polarity = false);
   /**
    * @brief Set the zero_angle. The zero_angle is the angle between the
    * closest positive motor index and the zero configuration.
@@ -121,6 +113,13 @@ public:
    * @param reverse_polarity true:reverse rotation axis, false:do nothing.
    */
   void set_joint_polarity(const bool &reverse_polarity);
+
+  /**
+   * @brief Set the joint torque to be sent.
+   *
+   * @param desired_torque (Nm)
+   */
+  void set_torque(const double &desired_torque);
 
   /**
    * @brief send the joint torque to the motor. The conversion between joint
@@ -304,7 +303,7 @@ private:
    * check: monopod_drivers::MotorInterface::MeasurementIndex
    * @return double the measurement.
    */
-  double get_motor_measurement(const MeasurementIndex &measurement_id) const;
+  double get_joint_measurement(const MeasurementIndex &measurement_id) const;
 
   /**
    * @brief Get the last motor measurement index for a specific data. If there
@@ -315,7 +314,7 @@ private:
    * @return double the measurement.
    */
   long int
-  get_motor_measurement_index(const MeasurementIndex &measurement_id) const;
+  get_joint_measurement_index(const MeasurementIndex &measurement_id) const;
 
   /**
    * @brief This is the pointer to the motor interface.
