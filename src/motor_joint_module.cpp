@@ -31,6 +31,20 @@ void MotorJointModule::set_torque(const double &desired_torque) {
     exit(-1);
   }
 
+  // From safe motor...
+
+  /*
+    // limit current to avoid overheating ----------------------------------
+    double safe_current_target = std::min(current_target, max_current_target_);
+    safe_current_target = std::max(safe_current_target, -max_current_target_);
+
+    // limit velocity to avoid breaking the robot --------------------------
+    if (!std::isnan(max_velocity_) && get_measurement(velocity)->length() > 0 &&
+        std::fabs(get_measurement(velocity)->newest_element()) > max_velocity_)
+      safe_current_target = 0;
+
+    */
+
   motor_->set_current_target(polarity_ * desired_current);
 }
 

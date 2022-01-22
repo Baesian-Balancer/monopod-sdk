@@ -265,7 +265,7 @@ protected:
 
   /**
    * @brief This is the maximum current we can apply during one experiment.
-   * The program shut down if this value is achieved.
+   * The program will truncate the input if this is reached.
    */
   double max_current_;
 

@@ -31,9 +31,12 @@ public:
   /**
    * @brief Construct the LegInterface object
    */
-  Leg(std::shared_ptr<ControlBoardsInterface> board,
-      double motor_max_current = 5.0)
-      : board_(board), motor_max_current_(motor_max_current) {}
+  Leg(const std::shared_ptr<MotorJointModule> &hip_joint_module,
+      const std::shared_ptr<MotorJointModule> &knee_joint_module) {
+
+    joints_[hip_joint] = hip_joint_module;
+    joints_[knee_joint] = knee_joint_module;
+  }
 
   /**
    * @brief Destroy the LegInterface object
@@ -41,30 +44,10 @@ public:
   ~Leg() {}
 
   /**
-   * @brief Initialize canbus connecion, esablish connection to the motors, and
-   * set motor constants.
+   * @brief Initialize canbus connecion, esablish connection to the motors,
+   * and set motor constants.
    */
   bool initialize() {
-
-    auto motor_hip_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, hip_joint, motor_max_current_);
-
-    auto motor_knee_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, knee_joint, motor_max_current_);
-
-    joints_[hip_joint] =
-        std::make_shared<MotorJointModule>(hip_joint, motor_hip_joint,
-                                           0.025, // motor_constants[i],
-                                           9.0,   // gear_ratios[i],
-                                           0.0,   // zero_angles[i],
-                                           false);
-
-    joints_[knee_joint] =
-        std::make_shared<MotorJointModule>(knee_joint, motor_knee_joint,
-                                           0.025, // motor_constants[i],
-                                           9.0,   // gear_ratios[i],
-                                           0.0,   // zero_angles[i],
-                                           false);
 
     // The the control gains in order to perform the calibration
     double kp, kd;
@@ -85,24 +68,16 @@ public:
   // =========================================================================
 
   /**
-   * @brief Get all meassurements of the leg. This includes Position, Velocity,
-   * Torque, and In the future Acceleration.
+   * @brief Get all meassurements of the leg. This includes Position,
+   * Velocity, Torque, and In the future Acceleration.
    *
    * @return unordered map of LVector measurements. Indexed with the
    * meassurement type enum.
    */
-  ObservationMap get_measurements() const {
+  double get_measured_torque(const JointNameIndexing &joint_index) const {
     throw_if_not_init();
 
-    ObservationMap data = {};
-
-    for (const auto &pair : joints_) {
-      data[pair.first][position] = pair.second->get_measured_angle();
-      data[pair.first][velocity] = pair.second->get_measured_velocity();
-      data[pair.first][torque] = pair.second->get_measured_torque();
-    }
-
-    return data;
+    return joints_.at(joint_index)->get_measured_torque();
   }
 
   /**
@@ -130,8 +105,8 @@ public:
   /**
    * @brief Set the torque targets for each joint.
    *
-   * @param torque_targets are the torque to achieve on the motor card. the data
-   * format is {hip, knee}
+   * @param torque_targets are the torque to achieve on the motor card. the
+   * data format is {hip, knee}
    * @param joint_index is the motor to control.
    */
   void set_target_torques(const std::vector<double> &torque_targets) {
@@ -219,11 +194,6 @@ private:
    */
   std::unordered_map<JointNameIndexing, std::shared_ptr<MotorJointModule>>
       joints_;
-
-  /**
-   * @brief Max allowable current for the joint.
-   */
-  double motor_max_current_;
 
   /**
    * @brief is Initialized.

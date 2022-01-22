@@ -28,7 +28,7 @@ int main(int, char **) {
   monopod_drivers::Monopod monopod;
   rt_printf("controllers are set up \n");
 
-  monopod.initialize(2);
+  monopod.initialize(monopod_drivers::Mode::motor_board);
   rt_printf("initialized monopod sdk \n");
 
   while (!StopDemos) {

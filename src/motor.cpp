@@ -105,28 +105,4 @@ void Motor::print() const {
   rt_printf("\n");
 }
 
-SafeMotor::SafeMotor(Motor::Ptr<ControlBoardsInterface> board,
-                     JointNameIndexing motor_id,
-                     const double &max_current_target,
-                     const size_t &history_length, const double &max_velocity)
-    : Motor(board, motor_id), max_current_target_(max_current_target),
-      max_velocity_(max_velocity) {
-  current_target_ =
-      std::make_shared<ScalarTimeseries>(history_length, 0, false);
-}
-
-void SafeMotor::set_current_target(const double &current_target) {
-  current_target_->append(current_target);
-
-  // limit current to avoid overheating ----------------------------------
-  double safe_current_target = std::min(current_target, max_current_target_);
-  safe_current_target = std::max(safe_current_target, -max_current_target_);
-
-  // limit velocity to avoid breaking the robot --------------------------
-  if (!std::isnan(max_velocity_) && get_measurement(velocity)->length() > 0 &&
-      std::fabs(get_measurement(velocity)->newest_element()) > max_velocity_)
-    safe_current_target = 0;
-  Motor::set_current_target(safe_current_target);
-}
-
 } // namespace monopod_drivers

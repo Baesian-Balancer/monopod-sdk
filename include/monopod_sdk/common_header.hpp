@@ -82,10 +82,22 @@ enum class Mode {
   Fixed,
 
   /**
-   * @brief Specify custom joints to initialize
+   * @brief motor board
    *
    */
-  Custom
+  motor_board,
+
+  /**
+   * @brief encoder board 1
+   *
+   */
+  encoder_board1,
+
+  /**
+   * @brief encoder board 2
+   *
+   */
+  encoder_board2
 };
 
 } // end namespace monopod_drivers

@@ -36,6 +36,10 @@ double EncoderJointModule::get_measured_velocity() const {
   return get_joint_measurement(MeasurementIndex::velocity) / gear_ratio_;
 }
 
+double EncoderJointModule::get_measured_acceleration() const {
+  return get_joint_measurement(MeasurementIndex::acceleration) / gear_ratio_;
+}
+
 double EncoderJointModule::get_measured_index_angle() const {
   return get_joint_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
 }

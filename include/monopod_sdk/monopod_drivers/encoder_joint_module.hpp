@@ -77,6 +77,14 @@ public:
   virtual double get_measured_velocity() const;
 
   /**
+   * @brief Get the measured acceleration of the joint. This data is computed on
+   * board of the control card.
+   *
+   * @return double (rad/s^2).
+   */
+  virtual double get_measured_acceleration() const;
+
+  /**
    * @brief Get the measured index angle. There is one index per encoder
    * rotation so there are gear_ratio indexes per joint rotation.
    *

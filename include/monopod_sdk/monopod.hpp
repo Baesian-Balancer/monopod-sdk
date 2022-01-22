@@ -12,7 +12,6 @@
 
 #include "monopod_sdk/common_header.hpp"
 #include "monopod_sdk/monopod_drivers/leg.hpp"
-#include "monopod_sdk/monopod_drivers/planarizer.hpp"
 
 namespace monopod_drivers {
 
@@ -42,14 +41,10 @@ public:
   /**
    * @brief Initialize can_bus connections to encoder board and motor board.
    *
-   * @param num_joints is the number of joints the robot is running. Supports 2
-   * (only leg), 3 (fixed hip_joint and planarizer_yaw_joint),4 (fixed
-   * hip_joint), 5 (free).
-   * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
-   * @param knee_home_offset_rad knee offset from found encoder index 0 (rad)
+   * @param monopod_mode defines the task mode of the monopod. Can also specify
+   * individual boards.
    */
-  bool initialize(int num_joints = 5, const double &hip_home_offset_rad = 0,
-                  const double &knee_home_offset_rad = 0);
+  bool initialize(Mode monopod_mode);
 
   /**
    * @brief is the monopod sdk Initialized?.
@@ -58,6 +53,9 @@ public:
 
   /**
    * @brief Calibrate the Encoders.
+   *
+   * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
+   * @param knee_home_offset_rad knee offset from found encoder index 0 (rad)
    */
   void calibrate(const double &hip_home_offset_rad = 0,
                  const double &knee_home_offset_rad = 0);
@@ -369,7 +367,6 @@ public:
   bool Contains(const std::vector<T> &Vec, const T &Element) const {
     if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
       return true;
-
     return false;
   }
 
@@ -387,29 +384,30 @@ private:
   std::shared_ptr<monopod_drivers::CanBus> can_bus_;
 
   /**
-   * @brief Canbus ControlBoards.
+   * @brief Canbus ControlBoards. This maintains connection with the canbus and
+   * holds meassurement and write buffers.
    */
   std::shared_ptr<monopod_drivers::CanBusControlBoards> can_bus_board_;
 
   /**
-   * @brief robot Planarizer interface object
+   * @brief Holds encoder joint modules for each active joint.
    */
-  std::unique_ptr<monopod_drivers::Planarizer> planarizer_;
+  std::unordered_map<int, std::shared_ptr<EncoderJointModule>> encoders_;
+
+  /**
+   * @brief Holds motor joint modules for each active controllable joint.
+   */
+  std::unordered_map<int, std::shared_ptr<MotorJointModule>> motors_;
+
+  /**
+   * @brief The task mode of the monopod. Either predefined or custom.
+   */
+  Mode monopod_mode_;
 
   /**
    * @brief robot Leg interface object
    */
   std::unique_ptr<monopod_drivers::Leg> leg_;
-
-  /**
-   * @brief number joints active.
-   */
-  long unsigned int num_joints_;
-
-  /**
-   * @brief managing the stopping of the loop
-   */
-  bool stop_loop;
 
   /**
    * @brief boolen defining if sdk is initialized.
@@ -458,74 +456,6 @@ private:
     JointLimit acceleration_limit = {};
     double max_torque_target = 0;
   };
-
-  /**
-   * @brief Read/Write buffer
-   */
-  struct Buffers {
-    /**
-     * @brief Mutex lock for write buffer
-     */
-    std::mutex write_door;
-
-    /**
-     * @brief Write Buffer
-     */
-    using JointWriteState = double;
-    std::unordered_map<JointNameIndexing, JointWriteState> write = {
-        {hip_joint, 0.0}, {knee_joint, 0.0}};
-
-    /**
-     * @brief Mutex lock for read buffer
-     */
-    std::mutex read_door;
-
-    /**
-     * @brief Read Buffer
-     */
-    std::unordered_map<JointNameIndexing, JointReadState> read = {
-        {planarizer_pitch_joint, {}},
-        {planarizer_yaw_joint, {}},
-        {boom_connector_joint, {}},
-        {hip_joint, {}},
-        {knee_joint, {}}};
-
-    /**
-     * @brief Mutex lock for Setting buffer
-     */
-    std::mutex settings_door;
-
-    /**
-     * @brief Setting Write Buffer
-     */
-    std::unordered_map<JointNameIndexing, JointSettingState> settings = {
-        {planarizer_pitch_joint, {}},
-        {planarizer_yaw_joint, {}},
-        {boom_connector_joint, {}},
-        {hip_joint, {}},
-        {knee_joint, {}}};
-
-    /**
-     * @brief Mutex lock for PID buffer. PID is seperate because it is rarely
-     * changed and requires us to send commands to device. this means it is
-     */
-    std::mutex pid_door;
-
-    /**
-     * @brief Bool indicator whether Setting buffer was modified
-     */
-    bool pid_modified = false;
-
-    /**
-     * @brief Setting Write Buffer
-     */
-    std::unordered_map<JointNameIndexing, PID> pid = {
-        {planarizer_pitch_joint, {}},
-        {planarizer_yaw_joint, {}},
-        {boom_connector_joint, {}},
-        {hip_joint, {}},
-        {knee_joint, {}}};
-  } buffers;
 
 }; // end class Monopod definition
 
