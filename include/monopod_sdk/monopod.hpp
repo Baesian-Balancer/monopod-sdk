@@ -1,8 +1,5 @@
 #pragma once
 
-#include <real_time_tools/spinner.hpp>
-#include <real_time_tools/thread.hpp>
-#include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
 #include <algorithm>
@@ -18,6 +15,7 @@
 #include "monopod_sdk/monopod_drivers/planarizer.hpp"
 
 namespace monopod_drivers {
+
 /**
  * @brief Drivers for open sim2real monopod. Interfaces with the monopod TI
  * motors using monopod_drivers::BlmcJointModule. This class creates a real time
@@ -42,7 +40,7 @@ public:
   ~Monopod();
 
   /**
-   * @brief Initialize canbus connections to encoder board and motor board.
+   * @brief Initialize can_bus connections to encoder board and motor board.
    *
    * @param num_joints is the number of joints the robot is running. Supports 2
    * (only leg), 3 (fixed hip_joint and planarizer_yaw_joint),4 (fixed
@@ -57,12 +55,6 @@ public:
    * @brief is the monopod sdk Initialized?.
    */
   bool initialized();
-
-  /**
-   * @brief This method is a helper to start the thread loop. Requires the class
-   * to be initialized before the loop can be started.
-   */
-  void start_loop();
 
   /**
    * @brief Calibrate the Encoders.
@@ -92,6 +84,7 @@ public:
    * @return bool whether joint is controllable
    */
   bool is_joint_controllable(const int joint_index);
+
   // ======================================
   // setters
   //=======================================
@@ -295,24 +288,6 @@ public:
 
 private:
   /**
-   * @brief this function is just a wrapper around the actual loop function,
-   * such that it can be spawned as a posix thread.
-   */
-  static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer) {
-    ((Monopod *)(instance_pointer))->loop();
-    return THREAD_FUNCTION_RETURN_VALUE;
-  }
-
-  /**
-   * @brief this is a simple control loop which runs at a kilohertz.
-   *
-   * it reads the measurement from the analog sensor, in this case the
-   * slider. then it scales it and sends it as the current target to
-   * the motor.
-   */
-  void loop();
-
-  /**
    * @brief Simple helper method to serialized getting of data.
    *
    * Gets indees on joint index enum
@@ -407,11 +382,6 @@ public:
 
 private:
   /**
-   * @brief the realt time thread object.
-   */
-  real_time_tools::RealTimeThread rt_thread_;
-
-  /**
    * @brief Canbus connection.
    */
   std::shared_ptr<monopod_drivers::CanBus> can_bus_;
@@ -419,7 +389,7 @@ private:
   /**
    * @brief Canbus ControlBoards.
    */
-  std::shared_ptr<monopod_drivers::CanBusControlBoards> board_;
+  std::shared_ptr<monopod_drivers::CanBusControlBoards> can_bus_board_;
 
   /**
    * @brief robot Planarizer interface object

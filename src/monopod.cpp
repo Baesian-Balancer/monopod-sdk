@@ -12,16 +12,14 @@ Monopod::Monopod() {
   read_joint_indexing = {hip_joint, knee_joint};
   write_joint_indexing = {hip_joint, knee_joint};
   can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-  board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
+  can_bus_board_ =
+      std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 
-  leg_ = std::make_unique<monopod_drivers::Leg>(board_);
-  planarizer_ = std::make_unique<monopod_drivers::Planarizer>(board_);
+  leg_ = std::make_unique<monopod_drivers::Leg>(can_bus_board_);
+  planarizer_ = std::make_unique<monopod_drivers::Planarizer>(can_bus_board_);
 }
 
-Monopod::~Monopod() {
-  stop_loop = true;
-  rt_thread_.join();
-}
+Monopod::~Monopod() { stop_loop = true; }
 
 bool Monopod::initialize(int num_joints, const double &hip_home_offset_rad,
                          const double &knee_home_offset_rad) {
@@ -62,6 +60,7 @@ bool Monopod::initialize(int num_joints, const double &hip_home_offset_rad,
         "only Supports 2 (only leg), 3 (fixed hip_joint and "
         "planarizer_yaw_joint),4 (fixed hip_joint), 5 (free) joints.\n");
   }
+
   calibrate(hip_home_offset_rad, knee_home_offset_rad);
   num_joints_ = num_joints;
   is_initialized = true;
@@ -76,15 +75,6 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
 }
 
 bool Monopod::initialized() { return is_initialized; }
-
-void Monopod::start_loop() {
-  if (is_initialized) {
-    rt_thread_.create_realtime_thread(&Monopod::loop, this);
-  } else {
-    throw std::runtime_error(
-        "Need to initialize monopod_sdk before starting the realtime loop.\n");
-  }
-}
 
 bool Monopod::is_joint_controllable(const int joint_index) {
   return is_initialized && Contains(write_joint_indexing, joint_index);
@@ -394,115 +384,6 @@ bool Monopod::set_torque_targets(const std::vector<double> &torque_targets,
   buffers.settings_door.unlock(); // Unlock settings buffers
   buffers.write_door.unlock();    // Unlock write buffers
   return ok;
-}
-
-//===================================================================
-// Private methods
-//===================================================================
-
-/**
- * @brief this is a simple loop which runs at a kilohertz.
- *
- */
-void Monopod::loop() {
-  real_time_tools::Spinner spinner;
-  spinner.set_period(0.001); // 1kz loop
-
-  // size_t count = 0;
-  // size_t count_in = 0;
-
-  while (!stop_loop) {
-    /*
-     * Collect data
-     */
-    // todo: Fix the way different joint numbers is handled....
-    monopod_drivers::ObservationMap data_leg = leg_->get_measurements();
-    monopod_drivers::ObservationMap data_planarizer;
-    if (num_joints_ != 2)
-      data_planarizer = planarizer_->get_measurements();
-    /*
-     * This section gets data from encoder joints then
-     */
-    std::vector<double> cur_pos;
-    std::vector<double> cur_vel;
-
-    cur_pos.reserve(read_joint_indexing.size());
-    cur_vel.reserve(read_joint_indexing.size());
-    // std::vector<double> cur_acc(read_joint_indexing.size(), 0);
-
-    for (const auto &joint_index : read_joint_indexing) {
-      if (Contains(write_joint_indexing, joint_index)) {
-        /* handle Leg data here */
-        cur_pos.push_back(data_leg[(JointNameIndexing)joint_index]
-                                  [monopod_drivers::position]);
-        cur_vel.push_back(data_leg[(JointNameIndexing)joint_index]
-                                  [monopod_drivers::velocity]);
-      } else {
-        /* handle Planarizer data here */
-        cur_pos.push_back(data_planarizer[(JointNameIndexing)joint_index]
-                                         [monopod_drivers::position]);
-        cur_vel.push_back(data_planarizer[(JointNameIndexing)joint_index]
-                                         [monopod_drivers::velocity]);
-      }
-    }
-
-    /*
-     * Check Limits of all the observations. If it is outside the limits we
-     * have an issue and will want to enter a 'safe mode' instead of allowing
-     * more actions. Safe mode will not prevent observations from being updated.
-     */
-    Monopod::JointLimit limit;
-    bool valid = true;
-
-    buffers.settings_door.lock(); // Lock settings buffers
-    buffers.read_door.lock();     // Lock read buffers
-    {
-      for (size_t i = 0; i != read_joint_indexing.size(); i++) {
-        limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]]
-                    .position_limit;
-        valid = valid && in_range(cur_pos[i], limit.min, limit.max);
-        buffers.read[(JointNameIndexing)read_joint_indexing[i]].pos =
-            cur_pos[i];
-
-        limit = buffers.settings[(JointNameIndexing)read_joint_indexing[i]]
-                    .velocity_limit;
-        valid = valid && in_range(cur_vel[i], limit.min, limit.max);
-        buffers.read[(JointNameIndexing)read_joint_indexing[i]].vel =
-            cur_vel[i];
-
-        // limit =
-        // buffers.settings[(JointNameIndexing)read_joint_indexing[i]].acceleration_limit;
-        // valid = valid && in_range(cur_acc[i], limit.min, limit.max);
-        // buffers.read[(JointNameIndexing)read_joint_indexing[i]].acc =
-        // cur_acc[i];
-      }
-    }
-    buffers.read_door.unlock();     // Unlock read buffers
-    buffers.settings_door.unlock(); // Unlock settings buffers
-
-    /*
-     * Set the new torque values if observation was valid
-     */
-    // Note: Do I need to check limits here? or should we handle this in safe
-    // motor/encoder?
-    if (valid) {
-      auto torques = get_torque_targets({hip_joint, knee_joint});
-      // TODO: This assumes torques has a value. This might not be the case
-      // those? In which case it must be handled
-
-      leg_->set_target_torques(torques.value());
-      leg_->send_target_torques();
-    } else {
-      // TODO: This sets torques to 0 as the safe mode right now? We might want
-      // to handle this in a mor creative way...
-      std::vector<double> torques(2, 0);
-
-      leg_->set_target_torques(torques);
-      leg_->send_target_torques();
-    }
-
-    spinner.spin();
-  }
 }
 
 } // namespace monopod_drivers

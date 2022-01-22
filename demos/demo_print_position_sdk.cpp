@@ -31,9 +31,6 @@ int main(int, char **) {
   monopod.initialize(2);
   rt_printf("initialized monopod sdk \n");
 
-  monopod.start_loop();
-  rt_printf("loops have started \n");
-
   while (!StopDemos) {
     real_time_tools::Timer::sleep_sec(1);
 

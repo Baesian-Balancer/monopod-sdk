@@ -60,7 +60,32 @@ enum MeasurementIndex {
 
 typedef std::unordered_map<MeasurementIndex, double> map_inner;
 typedef std::unordered_map<JointNameIndexing, map_inner> ObservationMap;
-
 typedef std::unordered_map<JointNameIndexing, double> ActionMap;
+
+enum class Mode {
+  /**
+   * @brief Complete free boom connector (5 joints total)
+   *
+   */
+  Free,
+
+  /**
+   * @brief Fixed boom connector (4 joints total)
+   *
+   */
+  Fixed_connector,
+
+  /**
+   * @brief Fixed boom connector and planrizer yaw (3 joints total)
+   *
+   */
+  Fixed,
+
+  /**
+   * @brief Specify custom joints to initialize
+   *
+   */
+  Custom
+};
 
 } // end namespace monopod_drivers
