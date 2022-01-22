@@ -12,12 +12,6 @@ namespace monopod_drivers {
 #define NUMBER_LEG_JOINTS 2
 
 /**
- * @brief Defines a static sized Eigen vector type to store data for the leg.
- * Data is one of pos, vel, torque
- */
-typedef Eigen::Matrix<double, 2, 1> LVector;
-
-/**
  * @brief This is a useful alias.
  */
 typedef time_series::TimeSeries<double> ScalarTimeseries;

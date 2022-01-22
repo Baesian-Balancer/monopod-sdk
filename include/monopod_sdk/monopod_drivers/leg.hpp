@@ -168,6 +168,14 @@ public:
     }
   }
 
+private:
+  /**
+   * @brief Defines a static sized Eigen vector type to store data for the leg.
+   * Data is one of pos, vel, torque
+   */
+  typedef Eigen::Matrix<double, 2, 1> LVector;
+
+public:
   /**
    * @brief Calibrate the leg. See motor_joint_module.hpp for explanation of
    * parameters and logic.
