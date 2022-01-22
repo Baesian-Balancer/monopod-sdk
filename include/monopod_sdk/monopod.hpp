@@ -405,7 +405,9 @@ private:
   Mode monopod_mode_;
 
   /**
-   * @brief robot Leg interface object
+   * @brief robot Leg interface object. This is used for calibration and coupled
+   * actions like goto position. I m not sure if this is how we should handle
+   * it.
    */
   std::unique_ptr<monopod_drivers::Leg> leg_;
 
@@ -425,18 +427,6 @@ private:
    * joints should be defined here.
    */
   std::vector<int> read_joint_indexing;
-
-  /**
-   * @brief Structure holding the observed state of a joint
-   */
-  struct JointReadState {
-    JointReadState() = default;
-    JointReadState(const double _pos, const double _vel, const double _acc)
-        : pos(_pos), vel(_vel), acc(_acc) {}
-    double pos = 0.0;
-    double vel = 0.0;
-    double acc = 0.0;
-  };
 
   /**
    * @brief Structure holding the observed state of a joint

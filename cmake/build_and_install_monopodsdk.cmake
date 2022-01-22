@@ -121,7 +121,6 @@
   # ===============================
   set(MONOPOD_DRIVERS_PUBLIC_HDRS
       include/monopod_sdk/monopod_drivers/leg.hpp
-      include/monopod_sdk/monopod_drivers/planarizer.hpp
       include/monopod_sdk/monopod_drivers/motor_joint_module.hpp
       include/monopod_sdk/monopod_drivers/encoder_joint_module.hpp
   )
