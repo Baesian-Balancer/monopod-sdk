@@ -29,7 +29,7 @@ public:
    * and the zero configuration.
    * @param reverse_polarity
    */
-  EncoderJointModule(JointNameIndexing joint_id,
+  EncoderJointModule(JointNamesIndex joint_id,
                      std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
                      const double &gear_ratio, const double &zero_angle,
                      const bool &reverse_polarity = false);
@@ -106,42 +106,41 @@ public:
    * @param index of the position type to set limit of
    * @param limit is a struct holding the limit for the specified meassurement.
    */
-  virtual void set_limit(const MeasurementIndex &index,
-                         const JointLimit &limit);
+  virtual void set_limit(const Measurements &index, const JointLimit &limit);
 
   /**
    * @brief Get the limit of the provided meassurement index.
    *
    * @param index of the position type to set limit of
    */
-  virtual JointLimit get_limit(const MeasurementIndex &index) const;
+  virtual JointLimit get_limit(const Measurements &index) const;
 
 protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.
    *
    * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::EncoderInterface::MeasurementIndex
+   * check: monopod_drivers::Measurements
    * @return double the measurement.
    */
   virtual double
-  get_joint_measurement(const MeasurementIndex &measurement_id) const;
+  get_joint_measurement(const Measurements &measurement_id) const;
 
   /**
    * @brief Get the last encoder measurement index for a specific data. If there
    * was no data yet, return NaN
    *
    * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::EncoderInterface::MeasurementIndex
+   * check: monopod_drivers::Measurements
    * @return double the measurement.
    */
   virtual long int
-  get_joint_measurement_index(const MeasurementIndex &measurement_id) const;
+  get_joint_measurement_index(const Measurements &measurement_id) const;
 
   /**
    * @brief This is the joint ID used when initializing the joint.
    */
-  JointNameIndexing joint_id_;
+  JointNamesIndex joint_id_;
 
   /**
    * @brief This is the pointer to the encoder interface.
@@ -151,7 +150,7 @@ protected:
   /**
    * @brief This is the map of the limits for each meassurement.
    */
-  std::unordered_map<MeasurementIndex, JointLimit> limits_ = {
+  std::unordered_map<Measurements, JointLimit> limits_ = {
       {position, {}}, {velocity, {}}, {acceleration, {}}};
 
   /**

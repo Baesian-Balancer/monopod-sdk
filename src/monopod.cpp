@@ -156,12 +156,12 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index) {
   return std::nullopt;
 }
 
-std::optional<std::vector<double>>
-Monopod::get_torque_targets(const std::vector<int> &joint_indexes) {
-  const std::vector<int> &jointSerialization =
+std::optional<Vector<double>>
+Monopod::get_torque_targets(const Vector<int> &joint_indexes) {
+  const Vector<int> &jointSerialization =
       joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
-  std::vector<double> data;
+  Vector<double> data;
   data.reserve(jointSerialization.size());
   for (auto &joint_index : jointSerialization) {
     if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
@@ -196,8 +196,8 @@ std::optional<double> Monopod::get_acceleration(const int &joint_index) {
   return std::nullopt;
 }
 
-std::optional<std::vector<double>>
-Monopod::get_positions(const std::vector<int> &joint_indexes) {
+std::optional<Vector<double>>
+Monopod::get_positions(const Vector<int> &joint_indexes) {
   auto lambda = [this](int joint_index) -> double {
     return encoders_[joint_index]->get_measured_index_angle();
   };
@@ -205,8 +205,8 @@ Monopod::get_positions(const std::vector<int> &joint_indexes) {
   return getJointDataSerialized(this, joint_indexes, lambda);
 }
 
-std::optional<std::vector<double>>
-Monopod::get_velocities(const std::vector<int> &joint_indexes) {
+std::optional<Vector<double>>
+Monopod::get_velocities(const Vector<int> &joint_indexes) {
   auto lambda = [this](int joint_index) -> double {
     return encoders_[joint_index]->get_measured_velocity();
   };
@@ -214,8 +214,8 @@ Monopod::get_velocities(const std::vector<int> &joint_indexes) {
   return getJointDataSerialized(this, joint_indexes, lambda);
 }
 
-std::optional<std::vector<double>>
-Monopod::get_accelerations(const std::vector<int> &joint_indexes) {
+std::optional<Vector<double>>
+Monopod::get_accelerations(const Vector<int> &joint_indexes) {
   auto lambda = [this](int joint_index) -> double {
     return encoders_[joint_index]->get_measured_acceleration();
   };
@@ -301,10 +301,10 @@ bool Monopod::set_torque_target(const double &torque_target,
   return false;
 }
 
-bool Monopod::set_torque_targets(const std::vector<double> &torque_targets,
-                                 const std::vector<int> &joint_indexes) {
+bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
+                                 const Vector<int> &joint_indexes) {
 
-  const std::vector<int> &jointSerialization =
+  const Vector<int> &jointSerialization =
       joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
   if (torque_targets.size() != jointSerialization.size())

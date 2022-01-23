@@ -106,8 +106,8 @@ public:
    * @param joint_indexes names of the joints we want to access
    * @return bool whether setting the value was successfull
    */
-  bool set_torque_targets(const std::vector<double> &torque_targets,
-                          const std::vector<int> &joint_indexes = {});
+  bool set_torque_targets(const Vector<double> &torque_targets,
+                          const Vector<int> &joint_indexes = {});
 
   /**
    * Set the PID parameters of the joint.
@@ -227,8 +227,8 @@ public:
    * @param joint_index
    * @return std::optional<double> containing the torque if success
    */
-  std::optional<std::vector<double>>
-  get_torque_targets(const std::vector<int> &joint_indexes = {});
+  std::optional<Vector<double>>
+  get_torque_targets(const Vector<int> &joint_indexes = {});
 
   /**
    * @brief Get the position of joint
@@ -262,28 +262,28 @@ public:
    * @return std::optional<vector<double>> containing vector of positions if
    * success
    */
-  std::optional<std::vector<double>>
-  get_positions(const std::vector<int> &joint_indexes = {});
+  std::optional<Vector<double>>
+  get_positions(const Vector<int> &joint_indexes = {});
 
   /**
    * @brief Get the velocity of the joint indexes
    *
    * @param joint_indexes names of the joints we want to access
-   * @return std::optional<std::vector<double>> containing vector of velocities
+   * @return std::optional<Vector<double>> containing vector of velocities
    * if success
    */
-  std::optional<std::vector<double>>
-  get_velocities(const std::vector<int> &joint_indexes = {});
+  std::optional<Vector<double>>
+  get_velocities(const Vector<int> &joint_indexes = {});
 
   /**
    * @brief Get the acceleration of the joint indexes
    *
    * @param joint_indexes names of the joints we want to access
-   * @return std::optional<std::vector<double>> containing vector of
+   * @return std::optional<Vector<double>> containing vector of
    * accelerations if success
    */
-  std::optional<std::vector<double>>
-  get_accelerations(const std::vector<int> &joint_indexes = {});
+  std::optional<Vector<double>>
+  get_accelerations(const Vector<int> &joint_indexes = {});
 
 private:
   /**
@@ -292,15 +292,15 @@ private:
    * Gets indees on joint index enum
    */
 
-  std::optional<std::vector<double>>
+  std::optional<Vector<double>>
   getJointDataSerialized(const Monopod *monopod,
-                         const std::vector<int> &joint_indexes,
+                         const Vector<int> &joint_indexes,
                          std::function<double(int)> getJointData) {
     // Take the joint index in lambda. Return the data you want.
-    const std::vector<int> &jointSerialization =
+    const Vector<int> &jointSerialization =
         joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
 
-    std::vector<double> data;
+    Vector<double> data;
     data.reserve(jointSerialization.size());
     for (auto &joint_index : jointSerialization) {
       if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
@@ -312,8 +312,7 @@ private:
     return data;
   }
 
-  std::shared_ptr<EncoderJointModule>
-  create_encoder_module(JointNameIndexing joint_index) {
+  Ptr<EncoderJointModule> create_encoder_module(JointNamesIndex joint_index) {
     /* Create encoders here */
     auto encoder =
         std::make_shared<monopod_drivers::Encoder>(can_bus_board_, joint_index);
@@ -322,8 +321,7 @@ private:
                                                 false);
   }
 
-  std::shared_ptr<MotorJointModule>
-  create_motor_module(JointNameIndexing joint_index) {
+  Ptr<MotorJointModule> create_motor_module(JointNamesIndex joint_index) {
     /* create motors here*/
     auto motor =
         std::make_shared<monopod_drivers::Motor>(can_bus_board_, joint_index);
@@ -336,7 +334,7 @@ private:
    * @brief Template helper checking if vector contains an element.
    */
   template <typename T>
-  bool Contains(const std::vector<T> &Vec, const T &Element) const {
+  bool Contains(const Vector<T> &Vec, const T &Element) const {
     if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
       return true;
     return false;
@@ -374,35 +372,35 @@ private:
   /**
    * @brief Canbus connection.
    */
-  std::shared_ptr<monopod_drivers::CanBus> can_bus_;
+  Ptr<monopod_drivers::CanBus> can_bus_;
 
   /**
    * @brief Canbus ControlBoards. This maintains connection with the canbus and
    * holds meassurement and write buffers.
    */
-  std::shared_ptr<monopod_drivers::CanBusControlBoards> can_bus_board_;
+  Ptr<monopod_drivers::CanBusControlBoards> can_bus_board_;
 
   /**
    * @brief Holds encoder joint modules for each active joint.
    */
-  std::unordered_map<int, std::shared_ptr<EncoderJointModule>> encoders_;
+  std::unordered_map<int, Ptr<EncoderJointModule>> encoders_;
 
   /**
    * @brief Read Joint names indexed same as enumerator for encoders. All valid
    * joints should be defined here.
    */
-  std::vector<int> encoder_joint_indexing;
+  Vector<int> encoder_joint_indexing;
 
   /**
    * @brief Holds motor joint modules for each active controllable joint.
    */
-  std::unordered_map<int, std::shared_ptr<MotorJointModule>> motors_;
+  std::unordered_map<int, Ptr<MotorJointModule>> motors_;
 
   /**
    * @brief Write Joint names indexed same as enumerator for actuators.  All
    * valid controlled joints should be defined here.
    */
-  std::vector<int> motor_joint_indexing;
+  Vector<int> motor_joint_indexing;
 
   /**
    * @brief robot Leg interface object. This is used for calibration and coupled

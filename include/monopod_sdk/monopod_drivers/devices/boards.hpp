@@ -7,6 +7,7 @@
 #include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
+#include "monopod_sdk/common_header.hpp"
 #include "monopod_sdk/monopod_drivers/devices/can_bus.hpp"
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/monopod_drivers/utils/os_interface.hpp"
@@ -15,8 +16,7 @@ namespace monopod_drivers {
 //==============================================================================
 /**
  * @brief This ControlBoardsCommand class is a data structurs that defines a
- * command to the
- * monopod_drivers::ControlBoardsInterface::BoardIndex::motor_board
+ * command to the monopod_drivers::ControlBoardsInterface::BoardIndex boards.
  */
 class ControlBoardsCommand {
 public:
@@ -219,31 +219,11 @@ public:
   /**
    * @brief A useful shortcut
    */
-  typedef time_series::TimeSeries<double> ScalarTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
-  typedef time_series::Index Index;
-  /**
-   * @brief A useful shortcut
-   */
-  typedef time_series::TimeSeries<Index> IndexTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
   typedef time_series::TimeSeries<BoardStatus> StatusTimeseries;
   /**
    * @brief A useful shortcut
    */
   typedef time_series::TimeSeries<ControlBoardsCommand> CommandTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
-  template <typename Type> using Ptr = std::shared_ptr<Type>;
-  /**
-   * @brief A useful shortcut
-   */
-  template <typename Type> using Vector = std::vector<Type>;
 
   /**
    * @brief This is the list of the measurement we can access.

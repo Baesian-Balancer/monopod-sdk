@@ -3,18 +3,40 @@
 
 namespace monopod_drivers {
 
-/** Definitions of constants for robot
+/**
+ * ================================================
+ * Definitions of constants for robot
+ * ================================================
  */
 
-/** Max current before the robot gets kill in amps (A).
+/**
+ * Max current before the robot gets kill in amps (A).
  */
 #define MAX_CURRENT 20.0
+
+/**
+ * Number of joints in a monopod_drivers::Leg.
+ */
 #define NUMBER_LEG_JOINTS 2
 
 /**
- * @brief This is a useful alias.
+ * ================================================
+ * Type defs
+ * ================================================
+ */
+
+/**
+ * @brief A useful shortcut
  */
 typedef time_series::TimeSeries<double> ScalarTimeseries;
+/**
+ * @brief A useful shortcut
+ */
+typedef time_series::Index Index;
+/**
+ * @brief A useful shortcut
+ */
+typedef time_series::TimeSeries<Index> IndexTimeseries;
 
 /**
  * @brief This is a shortcut for creating shared pointer in a simpler
@@ -24,12 +46,17 @@ typedef time_series::TimeSeries<double> ScalarTimeseries;
  */
 template <typename Type> using Ptr = std::shared_ptr<Type>;
 
+/**
+ * @brief A useful shortcut
+ */
+template <typename Type> using Vector = std::vector<Type>;
+
 // ====================================================================================
 
 /**
  * @brief Enumerates the joint names for indexing
  */
-enum JointNameIndexing {
+enum JointNamesIndex {
   hip_joint,
   knee_joint,
   boom_connector_joint,
@@ -41,7 +68,7 @@ enum JointNameIndexing {
  * @brief Here is a list of the different measurement available on the
  * blmc card.
  */
-enum MeasurementIndex {
+enum Measurements {
   position,
   velocity,
   acceleration,
@@ -49,7 +76,6 @@ enum MeasurementIndex {
   encoder_index,
   measurement_count, // Meassurement count is the 'length' of the meassurement
                      // vector in motor board.
-  torque             // this is only used for monopodsdk
 };
 
 /**

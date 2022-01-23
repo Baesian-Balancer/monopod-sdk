@@ -6,7 +6,7 @@
 namespace monopod_drivers {
 
 EncoderJointModule::EncoderJointModule(
-    JointNameIndexing joint_id,
+    JointNamesIndex joint_id,
     std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
     const double &gear_ratio, const double &zero_angle,
     const bool &reverse_polarity)
@@ -28,26 +28,26 @@ void EncoderJointModule::set_joint_polarity(const bool &reverse_polarity) {
 }
 
 double EncoderJointModule::get_measured_angle() const {
-  return get_joint_measurement(MeasurementIndex::position) / gear_ratio_ -
+  return get_joint_measurement(Measurements::position) / gear_ratio_ -
          zero_angle_;
 }
 
 double EncoderJointModule::get_measured_velocity() const {
-  return get_joint_measurement(MeasurementIndex::velocity) / gear_ratio_;
+  return get_joint_measurement(Measurements::velocity) / gear_ratio_;
 }
 
 double EncoderJointModule::get_measured_acceleration() const {
-  return get_joint_measurement(MeasurementIndex::acceleration) / gear_ratio_;
+  return get_joint_measurement(Measurements::acceleration) / gear_ratio_;
 }
 
 double EncoderJointModule::get_measured_index_angle() const {
-  return get_joint_measurement(MeasurementIndex::encoder_index) / gear_ratio_;
+  return get_joint_measurement(Measurements::encoder_index) / gear_ratio_;
 }
 
 double EncoderJointModule::get_zero_angle() const { return zero_angle_; }
 
 double EncoderJointModule::get_joint_measurement(
-    const MeasurementIndex &measurement_id) const {
+    const Measurements &measurement_id) const {
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
@@ -58,7 +58,7 @@ double EncoderJointModule::get_joint_measurement(
 }
 
 long int EncoderJointModule::get_joint_measurement_index(
-    const MeasurementIndex &measurement_id) const {
+    const Measurements &measurement_id) const {
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
@@ -68,12 +68,12 @@ long int EncoderJointModule::get_joint_measurement_index(
   return measurement_history->newest_timeindex();
 }
 
-void EncoderJointModule::set_limit(const MeasurementIndex &index,
+void EncoderJointModule::set_limit(const Measurements &index,
                                    const JointLimit &limit) {
   limits_[index] = limit;
 }
 
-JointLimit EncoderJointModule::get_limit(const MeasurementIndex &index) const {
+JointLimit EncoderJointModule::get_limit(const Measurements &index) const {
   return limits_.at(index);
 }
 } // namespace monopod_drivers

@@ -81,7 +81,7 @@ public:
    * @param board is the ControlBoards to be used.
    * @param motor_id is the id of the motor on the on-board card
    */
-  Motor(Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id);
+  Motor(Ptr<ControlBoardsInterface> board, JointNamesIndex motor_id);
 
   /**
    * @brief Destroy the Motor object
@@ -107,7 +107,7 @@ public:
    * measurement history.
    */
   virtual Ptr<const ScalarTimeseries>
-  get_measurement(const MeasurementIndex &index) const;
+  get_measurement(const Measurements &index) const;
 
   /**
    * @brief Get the status.
@@ -166,7 +166,7 @@ protected:
   /**
    * @brief The id of the motor on the ControlBoards.
    */
-  JointNameIndexing motor_id_;
+  JointNamesIndex motor_id_;
 };
 
 } // namespace monopod_drivers

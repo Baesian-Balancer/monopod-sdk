@@ -6,7 +6,7 @@
 namespace monopod_drivers {
 
 MotorJointModule::MotorJointModule(
-    JointNameIndexing joint_id,
+    JointNamesIndex joint_id,
     std::shared_ptr<monopod_drivers::MotorInterface> motor,
     const double &motor_constant, const double &gear_ratio,
     const double &zero_angle, const bool &reverse_polarity)
@@ -68,7 +68,7 @@ double MotorJointModule::get_sent_torque() const {
 
 double MotorJointModule::get_measured_torque() const {
   return motor_current_to_joint_torque(
-      get_joint_measurement(MeasurementIndex::current));
+      get_joint_measurement(Measurements::current));
 }
 
 double MotorJointModule::joint_torque_to_motor_current(double torque) const {
@@ -80,7 +80,7 @@ double MotorJointModule::motor_current_to_joint_torque(double current) const {
 }
 
 double MotorJointModule::get_joint_measurement(
-    const MeasurementIndex &measurement_id) const {
+    const Measurements &measurement_id) const {
   auto measurement_history = motor_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
@@ -91,7 +91,7 @@ double MotorJointModule::get_joint_measurement(
 }
 
 long int MotorJointModule::get_joint_measurement_index(
-    const MeasurementIndex &measurement_id) const {
+    const Measurements &measurement_id) const {
   auto measurement_history = motor_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
@@ -149,7 +149,7 @@ void MotorJointModule::init_homing(double search_distance_limit_rad,
   homing_state_.home_offset_rad = home_offset_rad;
   homing_state_.profile_step_size_rad = profile_step_size_rad;
   homing_state_.last_encoder_index_time_index =
-      get_joint_measurement_index(MeasurementIndex::encoder_index);
+      get_joint_measurement_index(Measurements::encoder_index);
   homing_state_.target_position_rad = get_measured_angle();
   homing_state_.step_count = 0;
   homing_state_.start_position = get_measured_angle();
@@ -219,7 +219,7 @@ HomingReturnCode MotorJointModule::update_homing() {
 
     // Check if new encoder index was observed
     const long int actual_index_time =
-        get_joint_measurement_index(MeasurementIndex::encoder_index);
+        get_joint_measurement_index(Measurements::encoder_index);
     if (actual_index_time > homing_state_.last_encoder_index_time_index) {
       // -- FINISHED
       const double index_angle = get_measured_index_angle();

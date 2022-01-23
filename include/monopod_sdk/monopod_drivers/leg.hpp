@@ -73,7 +73,7 @@ public:
    * @return unordered map of LVector measurements. Indexed with the
    * meassurement type enum.
    */
-  double get_measured_torque(const JointNameIndexing &joint_index) const {
+  double get_measured_torque(const JointNamesIndex &joint_index) const {
     throw_if_not_init();
 
     return joints_.at(joint_index)->get_measured_torque();
@@ -106,7 +106,7 @@ private:
   /**
    * @brief Hip and knee joint modules for the leg
    */
-  std::unordered_map<JointNameIndexing, std::shared_ptr<MotorJointModule>>
+  std::unordered_map<JointNamesIndex, std::shared_ptr<MotorJointModule>>
       joints_;
 
   /**
