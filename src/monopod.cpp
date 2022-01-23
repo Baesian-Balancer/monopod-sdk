@@ -24,71 +24,40 @@ bool Monopod::initialize(Mode monopod_mode) {
 
   /* This switch state using run-into. This means Free has everything in fixed
    * connector. etc */
-
-  // todo: Change the encoder and motor joint module creation to instad be a
-  // function that you pass in the joint index for.
   switch (monopod_mode) {
 
   case Mode::Free: {
-    /* Create encoders here */
-    auto encoder_bcj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, boom_connector_joint);
-
-    /* Encoder joint modules */
-    auto encoder_bcj_module = std::make_shared<EncoderJointModule>(
-        boom_connector_joint, encoder_bcj, 1.0, 0.0, false);
-
-    encoders_[boom_connector_joint] = encoder_bcj_module;
+    encoders_[boom_connector_joint] =
+        create_encoder_module(boom_connector_joint);
     read_joint_indexing.push_back(boom_connector_joint);
   }
 
   case Mode::Fixed_connector: {
-    /* Create encoders here */
-    auto encoder_pyj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, planarizer_yaw_joint);
 
-    /* Encoder joint modules */
-    auto encoder_pyj_module = std::make_shared<EncoderJointModule>(
-        planarizer_yaw_joint, encoder_pyj, 1.0, 0.0, false);
-
-    encoders_[planarizer_yaw_joint] = encoder_pyj_module;
+    encoders_[planarizer_yaw_joint] =
+        create_encoder_module(planarizer_yaw_joint);
     read_joint_indexing.push_back(planarizer_yaw_joint);
   }
 
   case Mode::Fixed: {
-    /* Create encoders here */
-    auto encoder_ppj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, planarizer_pitch_joint);
-
-    /* Encoder joint modules */
-    auto encoder_ppj_module = std::make_shared<EncoderJointModule>(
-        planarizer_pitch_joint, encoder_ppj, 1.0, 0.0, false);
-
-    encoders_[planarizer_pitch_joint] = encoder_ppj_module;
+    encoders_[planarizer_pitch_joint] =
+        create_encoder_module(planarizer_pitch_joint);
     read_joint_indexing.push_back(planarizer_pitch_joint);
   }
 
   case Mode::motor_board: {
-    /* create motors here*/
-    auto motor_hip =
-        std::make_shared<monopod_drivers::Motor>(can_bus_board_, hip_joint);
-    auto motor_knee =
-        std::make_shared<monopod_drivers::Motor>(can_bus_board_, knee_joint);
 
-    /* motor joint modules */
-    auto hip_joint_module = std::make_shared<MotorJointModule>(
-        hip_joint, motor_hip, 0.025, 9.0, 0.0, false);
-    auto knee_joint_module = std::make_shared<MotorJointModule>(
-        knee_joint, motor_knee, 0.025, 9.0, 0.0, false);
+    auto motor_hip = create_motor_module(hip_joint);
+    auto motor_knee = create_motor_module(knee_joint);
 
-    encoders_[hip_joint] = hip_joint_module;
-    encoders_[knee_joint] = knee_joint_module;
+    encoders_[hip_joint] = motor_hip;
+    encoders_[knee_joint] = motor_knee;
 
-    motors_[hip_joint] = hip_joint_module;
-    motors_[knee_joint] = knee_joint_module;
+    motors_[hip_joint] = motor_hip;
+    motors_[knee_joint] = motor_knee;
 
-    leg_ = std::make_unique<monopod_drivers::Leg>(hip_joint_module,
-                                                  knee_joint_module);
+    leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
+
     read_joint_indexing.push_back(hip_joint);
     read_joint_indexing.push_back(knee_joint);
     write_joint_indexing.push_back(hip_joint);
@@ -97,35 +66,20 @@ bool Monopod::initialize(Mode monopod_mode) {
   }
 
   case Mode::encoder_board1: {
-    /* Create encoders here */
-    auto encoder_pyj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, planarizer_yaw_joint);
-    auto encoder_ppj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, planarizer_pitch_joint);
+    encoders_[planarizer_pitch_joint] =
+        create_encoder_module(planarizer_pitch_joint);
+    encoders_[planarizer_yaw_joint] =
+        create_encoder_module(planarizer_yaw_joint);
 
-    /* Encoder joint modules */
-    auto encoder_pyj_module = std::make_shared<EncoderJointModule>(
-        planarizer_yaw_joint, encoder_pyj, 1.0, 0.0, false);
-    auto encoder_ppj_module = std::make_shared<EncoderJointModule>(
-        planarizer_pitch_joint, encoder_ppj, 1.0, 0.0, false);
-
-    encoders_[planarizer_yaw_joint] = encoder_pyj_module;
-    encoders_[planarizer_pitch_joint] = encoder_ppj_module;
     read_joint_indexing.push_back(planarizer_pitch_joint);
     read_joint_indexing.push_back(planarizer_yaw_joint);
     break;
   }
 
   case Mode::encoder_board2: {
-    /* Create encoders here */
-    auto encoder_bcj = std::make_shared<monopod_drivers::Encoder>(
-        can_bus_board_, boom_connector_joint);
+    encoders_[boom_connector_joint] =
+        create_encoder_module(boom_connector_joint);
 
-    /* Encoder joint modules */
-    auto encoder_bcj_module = std::make_shared<EncoderJointModule>(
-        boom_connector_joint, encoder_bcj, 1.0, 0.0, false);
-
-    encoders_[boom_connector_joint] = encoder_bcj_module;
     read_joint_indexing.push_back(boom_connector_joint);
     break;
   }

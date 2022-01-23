@@ -311,6 +311,50 @@ private:
     return data;
   }
 
+  std::shared_ptr<EncoderJointModule>
+  create_encoder_module(JointNameIndexing joint_index) {
+    /* Create encoders here */
+    auto encoder =
+        std::make_shared<monopod_drivers::Encoder>(can_bus_board_, joint_index);
+    /* Encoder joint modules */
+    return std::make_shared<EncoderJointModule>(joint_index, encoder, 1.0, 0.0,
+                                                false);
+  }
+
+  std::shared_ptr<MotorJointModule>
+  create_motor_module(JointNameIndexing joint_index) {
+    /* create motors here*/
+    auto motor =
+        std::make_shared<monopod_drivers::Motor>(can_bus_board_, joint_index);
+    /* motor joint modules */
+    return std::make_shared<MotorJointModule>(joint_index, motor, 0.025, 9.0,
+                                              0.0, false);
+  }
+
+  /**
+   * @brief Template helper for getting sign
+   */
+  template <typename T> static int sgn(T val) {
+    return (T(0) < val) - (val < T(0));
+  }
+
+  /**
+   * @brief Template helper checking if vector contains an element.
+   */
+  template <typename T>
+  bool Contains(const std::vector<T> &Vec, const T &Element) const {
+    if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
+      return true;
+    return false;
+  }
+
+  /**
+   * @brief Template helper checking if vector contains an element.
+   */
+  template <typename T> static bool in_range(T value, T min, T max) {
+    return min <= value && value < max;
+  }
+
 public:
   /**
    * @brief Joint names indexed same as enumerator
@@ -352,30 +396,6 @@ public:
     double min;
     double max;
   };
-
-  /**
-   * @brief Template helper for getting sign
-   */
-  template <typename T> static int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
-  }
-
-  /**
-   * @brief Template helper checking if vector contains an element.
-   */
-  template <typename T>
-  bool Contains(const std::vector<T> &Vec, const T &Element) const {
-    if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
-      return true;
-    return false;
-  }
-
-  /**
-   * @brief Template helper checking if vector contains an element.
-   */
-  template <typename T> static bool in_range(T value, T min, T max) {
-    return min <= value && value < max;
-  }
 
 private:
   /**
