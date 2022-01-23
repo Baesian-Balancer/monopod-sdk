@@ -100,6 +100,22 @@ public:
    */
   virtual double get_zero_angle() const;
 
+  /**
+   * @brief Set the limit of the provided meassurement index.
+   *
+   * @param index of the position type to set limit of
+   * @param limit is a struct holding the limit for the specified meassurement.
+   */
+  virtual void set_limit(const MeasurementIndex &index,
+                         const JointLimit &limit);
+
+  /**
+   * @brief Get the limit of the provided meassurement index.
+   *
+   * @param index of the position type to set limit of
+   */
+  virtual JointLimit get_limit(const MeasurementIndex &index) const;
+
 protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.
@@ -131,6 +147,12 @@ protected:
    * @brief This is the pointer to the encoder interface.
    */
   std::shared_ptr<monopod_drivers::EncoderInterface> encoder_;
+
+  /**
+   * @brief This is the map of the limits for each meassurement.
+   */
+  std::unordered_map<MeasurementIndex, JointLimit> limits_ = {
+      {position, {}}, {velocity, {}}, {acceleration, {}}};
 
   /**
    * @brief This correspond to the reduction (\f$ \beta \f$) between the encoder

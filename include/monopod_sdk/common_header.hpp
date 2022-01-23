@@ -90,4 +90,34 @@ enum class Mode {
   encoder_board2
 };
 
+/**
+ * @brief Structure holding the PID values for the joint.
+ */
+struct PID {
+  PID() = default;
+  PID(const double _p, const double _i, const double _d)
+      : p(_p), i(_i), d(_d) {}
+
+  double p = 0;
+  double i = 0;
+  double d = 0;
+};
+/**
+ * @brief Structure holding joint limits
+ */
+struct JointLimit {
+  JointLimit() {
+    constexpr double m = std::numeric_limits<double>::lowest();
+    constexpr double M = std::numeric_limits<double>::max();
+
+    min = m;
+    max = M;
+  }
+
+  JointLimit(const double _min, const double _max) : min(_min), max(_max) {}
+
+  double min;
+  double max;
+};
+
 } // end namespace monopod_drivers

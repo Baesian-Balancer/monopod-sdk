@@ -58,7 +58,6 @@ public:
     joints_[knee_joint]->set_position_control_gains(kp, kd);
 
     // wait until all board are ready and connected
-    board_->wait_until_ready();
     initialized = true;
     return initialized;
   }
@@ -104,11 +103,6 @@ public:
   }
 
 private:
-  /**
-   * @brief Canbus ControlBoards.
-   */
-  std::shared_ptr<ControlBoardsInterface> board_;
-
   /**
    * @brief Hip and knee joint modules for the leg
    */

@@ -24,9 +24,6 @@ namespace monopod_drivers {
 class Monopod {
 
 public:
-  struct PID;
-  struct JointLimit;
-
   /**
    * @brief Construct a new Monopod object.
    *
@@ -100,6 +97,10 @@ public:
   /**
    * @brief Set the torque targets for all joint indexes. Return a bool whether
    * successful.
+   *
+   * @warning  Note: if it fails the behaviour is undefined. For example if
+   * first 3 joints are right but one bad index it will updatethe good ones the
+   * fail on the bad one.
    *
    * @param torque_targets vector of desired torque targets for indexed joints
    * @param joint_indexes names of the joints we want to access
@@ -297,12 +298,12 @@ private:
                          std::function<double(int)> getJointData) {
     // Take the joint index in lambda. Return the data you want.
     const std::vector<int> &jointSerialization =
-        joint_indexes.empty() ? monopod->read_joint_indexing : joint_indexes;
+        joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
 
     std::vector<double> data;
     data.reserve(jointSerialization.size());
     for (auto &joint_index : jointSerialization) {
-      if (is_initialized && Contains(read_joint_indexing, joint_index)) {
+      if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
         data.push_back(getJointData(joint_index));
       } else {
         return std::nullopt;
@@ -329,13 +330,6 @@ private:
     /* motor joint modules */
     return std::make_shared<MotorJointModule>(joint_index, motor, 0.025, 9.0,
                                               0.0, false);
-  }
-
-  /**
-   * @brief Template helper for getting sign
-   */
-  template <typename T> static int sgn(T val) {
-    return (T(0) < val) - (val < T(0));
   }
 
   /**
@@ -366,38 +360,17 @@ public:
       {"planarizer_yaw_joint", planarizer_yaw_joint},
       {"planarizer_pitch_joint", planarizer_pitch_joint}};
 
-  /**
-   * @brief Structure holding the observed state of a joint
-   */
-  struct PID {
-    PID() = default;
-    PID(const double _p, const double _i, const double _d)
-        : p(_p), i(_i), d(_d) {}
-
-    double p = 0;
-    double i = 0;
-    double d = 0;
-  };
-
-  /**
-   * @brief Structure holding joint limits
-   */
-  struct JointLimit {
-    JointLimit() {
-      constexpr double m = std::numeric_limits<double>::lowest();
-      constexpr double M = std::numeric_limits<double>::max();
-
-      min = m;
-      max = M;
-    }
-
-    JointLimit(const double _min, const double _max) : min(_min), max(_max) {}
-
-    double min;
-    double max;
-  };
-
 private:
+  /**
+   * @brief The task mode of the monopod. Either predefined or custom.
+   */
+  Mode monopod_mode_;
+
+  /**
+   * @brief boolen defining if sdk is initialized.
+   */
+  bool is_initialized;
+
   /**
    * @brief Canbus connection.
    */
@@ -415,14 +388,21 @@ private:
   std::unordered_map<int, std::shared_ptr<EncoderJointModule>> encoders_;
 
   /**
+   * @brief Read Joint names indexed same as enumerator for encoders. All valid
+   * joints should be defined here.
+   */
+  std::vector<int> encoder_joint_indexing;
+
+  /**
    * @brief Holds motor joint modules for each active controllable joint.
    */
   std::unordered_map<int, std::shared_ptr<MotorJointModule>> motors_;
 
   /**
-   * @brief The task mode of the monopod. Either predefined or custom.
+   * @brief Write Joint names indexed same as enumerator for actuators.  All
+   * valid controlled joints should be defined here.
    */
-  Mode monopod_mode_;
+  std::vector<int> motor_joint_indexing;
 
   /**
    * @brief robot Leg interface object. This is used for calibration and coupled
@@ -430,42 +410,6 @@ private:
    * it.
    */
   std::unique_ptr<monopod_drivers::Leg> leg_;
-
-  /**
-   * @brief boolen defining if sdk is initialized.
-   */
-  bool is_initialized;
-
-  /**
-   * @brief Write Joint names indexed same as enumerator for actuators.  All
-   * valid controlled joints should be defined here.
-   */
-  std::vector<int> write_joint_indexing;
-
-  /**
-   * @brief Read Joint names indexed same as enumerator for encoders. All valid
-   * joints should be defined here.
-   */
-  std::vector<int> read_joint_indexing;
-
-  /**
-   * @brief Structure holding the observed state of a joint
-   */
-  struct JointSettingState {
-    JointSettingState() = default;
-    JointSettingState(const double _max_torque_target,
-                      const JointLimit _position_limit,
-                      const JointLimit _velocity_limit,
-                      const JointLimit _acceleration_limit)
-        : position_limit(_position_limit), velocity_limit(_velocity_limit),
-          acceleration_limit(_acceleration_limit),
-          max_torque_target(_max_torque_target) {}
-
-    JointLimit position_limit = {};
-    JointLimit velocity_limit = {};
-    JointLimit acceleration_limit = {};
-    double max_torque_target = 0;
-  };
 
 }; // end class Monopod definition
 

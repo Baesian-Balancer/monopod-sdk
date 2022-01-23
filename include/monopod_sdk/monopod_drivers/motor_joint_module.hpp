@@ -115,6 +115,13 @@ public:
   virtual void send_torque();
 
   /**
+   * @brief Set the maximum admissible joint torque that can be applied.
+   *
+   * @return double
+   */
+  virtual void set_max_torque(const double &max_torque);
+
+  /**
    * @brief Get the maximum admissible joint torque that can be applied.
    *
    * @return double
@@ -265,7 +272,7 @@ protected:
 
   /**
    * @brief This is the maximum current we can apply during one experiment.
-   * The program will truncate the input if this is reached.
+   * The program will clip the current if it goes above this value.
    */
   double max_current_;
 

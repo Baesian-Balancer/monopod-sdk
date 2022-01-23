@@ -21,8 +21,14 @@ MotorJointModule::MotorJointModule(
 }
 
 void MotorJointModule::set_torque(const double &desired_torque) {
+
   double desired_current = joint_torque_to_motor_current(desired_torque);
 
+  // limit current to avoid overheating etc ----------------------------------
+  desired_current = std::min(desired_current, max_current_);
+  desired_current = std::max(desired_current, -max_current_);
+
+  // Make sure your max isnt above Global max --------------------------------
   if (std::fabs(desired_current) > MAX_CURRENT) {
     std::cout << "something went wrong, it should never happen"
                  " that desired_current > "
@@ -31,19 +37,11 @@ void MotorJointModule::set_torque(const double &desired_torque) {
     exit(-1);
   }
 
-  // From safe motor...
-
-  /*
-    // limit current to avoid overheating ----------------------------------
-    double safe_current_target = std::min(current_target, max_current_target_);
-    safe_current_target = std::max(safe_current_target, -max_current_target_);
-
-    // limit velocity to avoid breaking the robot --------------------------
-    if (!std::isnan(max_velocity_) && get_measurement(velocity)->length() > 0 &&
-        std::fabs(get_measurement(velocity)->newest_element()) > max_velocity_)
-      safe_current_target = 0;
-
-    */
+  // // limit velocity to avoid breaking the robot --------------------------
+  // if (!std::isnan(max_velocity_) && get_measurement(velocity)->length() > 0
+  // &&
+  //     std::fabs(get_measurement(velocity)->newest_element()) > max_velocity_)
+  //   safe_current_target = 0;
 
   motor_->set_current_target(polarity_ * desired_current);
 }
@@ -51,7 +49,11 @@ void MotorJointModule::set_torque(const double &desired_torque) {
 void MotorJointModule::send_torque() { motor_->send_if_input_changed(); }
 
 double MotorJointModule::get_max_torque() const {
-  return motor_current_to_joint_torque(MAX_CURRENT);
+  return motor_current_to_joint_torque(max_current_);
+}
+
+void MotorJointModule::set_max_torque(const double &max_torque) {
+  max_current_ = motor_current_to_joint_torque(max_torque);
 }
 
 double MotorJointModule::get_sent_torque() const {

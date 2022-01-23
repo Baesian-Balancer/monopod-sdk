@@ -51,9 +51,9 @@ double EncoderJointModule::get_joint_measurement(
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_joint_measurement returns NaN\n");
     return std::numeric_limits<double>::quiet_NaN();
   }
+
   return polarity_ * measurement_history->newest_element();
 }
 
@@ -62,10 +62,18 @@ long int EncoderJointModule::get_joint_measurement_index(
   auto measurement_history = encoder_->get_measurement(measurement_id);
 
   if (measurement_history->length() == 0) {
-    // rt_printf("get_joint_measurement_index returns NaN\n");
     return -1;
   }
+
   return measurement_history->newest_timeindex();
 }
 
+void EncoderJointModule::set_limit(const MeasurementIndex &index,
+                                   const JointLimit &limit) {
+  limits_[index] = limit;
+}
+
+JointLimit EncoderJointModule::get_limit(const MeasurementIndex &index) const {
+  return limits_.at(index);
+}
 } // namespace monopod_drivers
