@@ -19,8 +19,8 @@ Monopod::~Monopod() {
   rt_thread_limits_.join();
 }
 
-// Todo: implement these two methods
 bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
+
 void Monopod::reset() { can_bus_board_->reset_safemode(); }
 
 bool Monopod::initialize(Mode monopod_mode) {
@@ -95,11 +95,25 @@ bool Monopod::initialize(Mode monopod_mode) {
   return initialized();
 }
 
+void Monopod::start_loop() {
+  if (is_initialized) {
+    rt_thread_limits_.create_realtime_thread(&Monopod::loop, this);
+  } else {
+    throw std::runtime_error(
+        "Need to initialize monopod_sdk before starting the realtime loop.");
+  }
+}
+
 void Monopod::calibrate(const double &hip_home_offset_rad,
                         const double &knee_home_offset_rad) {
 
   // todo: Make calibration more robust??
-  leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+  // only calibrate leg if it is active
+  // need to calibrate or zero encoders
+  if (!(monopod_mode_ == Mode::encoder_board1 ||
+        monopod_mode_ == Mode::encoder_board2)) {
+    leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+  }
 }
 
 bool Monopod::initialized() { return is_initialized; }

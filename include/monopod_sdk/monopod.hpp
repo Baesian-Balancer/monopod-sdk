@@ -51,6 +51,12 @@ public:
   bool initialized();
 
   /**
+   * @brief This method is a helper to start the thread loop. Requires the class
+   * to be initialized before the loop can be started.
+   */
+  void start_loop();
+
+  /**
    * @brief Calibrate the Encoders.
    *
    * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
