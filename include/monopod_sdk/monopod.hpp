@@ -1,11 +1,13 @@
 #pragma once
 
+#include <real_time_tools/spinner.hpp>
+#include <real_time_tools/thread.hpp>
+#include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
 #include <algorithm>
 #include <fstream>
 #include <math.h>
-#include <mutex>
 #include <optional>
 #include <tuple>
 #include <unordered_map>
@@ -79,6 +81,20 @@ public:
    * @return bool whether joint is controllable
    */
   bool is_joint_controllable(const int joint_index);
+
+  /**
+   * @brief Is the robot in a valid state?
+   *
+   * @return bool, true if valid otherwise false.
+   */
+  bool valid();
+
+  /**
+   * @brief If the joint module is not valid (safemode after limit reached) the
+   * joint will be reset into a valid state. This means the joint must be set
+   * back into the valid state first otherwise it will trigger the limits again.
+   */
+  void reset();
 
   // ======================================
   // setters
@@ -287,11 +303,28 @@ public:
 
 private:
   /**
+   * @brief this function is just a wrapper around the actual loop function,
+   * such that it can be spawned as a posix thread.
+   */
+  static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer) {
+    ((Monopod *)(instance_pointer))->loop();
+    return THREAD_FUNCTION_RETURN_VALUE;
+  }
+
+  /**
+   * @brief this is a simple control loop which runs at a kilohertz.
+   *
+   * it reads the measurement from the analog sensor, in this case the
+   * slider. then it scales it and sends it as the current target to
+   * the motor.
+   */
+  void loop();
+
+  /**
    * @brief Simple helper method to serialized getting of data.
    *
    * Gets indees on joint index enum
    */
-
   std::optional<Vector<double>>
   getJointDataSerialized(const Monopod *monopod,
                          const Vector<int> &joint_indexes,
@@ -312,6 +345,9 @@ private:
     return data;
   }
 
+  /**
+   * @brief Helper to create a EncoderJointModule.
+   */
   Ptr<EncoderJointModule> create_encoder_module(JointNamesIndex joint_index) {
     /* Create encoders here */
     auto encoder =
@@ -321,6 +357,9 @@ private:
                                                 false);
   }
 
+  /**
+   * @brief Helper to create a MotorJointModule.
+   */
   Ptr<MotorJointModule> create_motor_module(JointNamesIndex joint_index) {
     /* create motors here*/
     auto motor =
@@ -338,13 +377,6 @@ private:
     if (std::find(Vec.begin(), Vec.end(), Element) != Vec.end())
       return true;
     return false;
-  }
-
-  /**
-   * @brief Template helper checking if vector contains an element.
-   */
-  template <typename T> static bool in_range(T value, T min, T max) {
-    return min <= value && value < max;
   }
 
 public:
@@ -369,6 +401,15 @@ private:
    */
   bool is_initialized;
 
+  /**
+   * @brief the realt time thread object.
+   */
+  real_time_tools::RealTimeThread rt_thread_limits_;
+
+  /**
+   * @brief controls execution of loop which checks limits of joints.
+   */
+  bool stop_loop_limits;
   /**
    * @brief Canbus connection.
    */

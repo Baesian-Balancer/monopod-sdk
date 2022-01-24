@@ -106,10 +106,7 @@ void CanBusControlBoards::pause_motors() {
   set_control(0, current_target_1);
   send_newest_controls();
 
-  set_command(
-      ControlBoardsCommand(ControlBoardsCommand::IDs::SET_CAN_RECV_TIMEOUT,
-                           ControlBoardsCommand::Contents::DISABLE));
-  send_newest_command();
+  disable_can_recv_timeout();
 
   motors_are_paused_ = true;
 }
@@ -122,6 +119,11 @@ void CanBusControlBoards::disable_can_recv_timeout() {
 }
 
 void CanBusControlBoards::send_newest_controls() {
+  if (is_safemode_) {
+    // If the robot is currently in safemode maintain zero control.
+    return;
+  }
+
   if (motors_are_paused_) {
     set_command(ControlBoardsCommand(
         ControlBoardsCommand::IDs::SET_CAN_RECV_TIMEOUT, control_timeout_ms_));
@@ -375,6 +377,7 @@ void CanBusControlBoards::loop() {
       BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
+
       status_[encoder_board1]->append(status);
       break;
     }
@@ -383,6 +386,7 @@ void CanBusControlBoards::loop() {
       BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
+
       status_[encoder_board2]->append(status);
       break;
     }

@@ -15,10 +15,6 @@ EncoderJointModule::EncoderJointModule(
   set_zero_angle(zero_angle);
 }
 
-// Todo: implement these two methods
-void EncoderJointModule::valid() {}
-void EncoderJointModule::reset() {}
-
 void EncoderJointModule::set_zero_angle(const double &zero_angle) {
   zero_angle_ = zero_angle;
 }
@@ -70,10 +66,28 @@ long int EncoderJointModule::get_joint_measurement_index(
 
 void EncoderJointModule::set_limit(const Measurements &index,
                                    const JointLimit &limit) {
+  limit_door_.lock();
   limits_[index] = limit;
+  limit_door_.unlock();
 }
 
 JointLimit EncoderJointModule::get_limit(const Measurements &index) const {
+  limit_door_.lock();
   return limits_.at(index);
+  limit_door_.unlock();
+}
+
+bool EncoderJointModule::check_limits() const {
+  limit_door_.lock();
+  bool valid = true;
+  for (const auto &limit_info : limits_) {
+    auto meassurement_id = limit_info.first;
+    auto joint_limit = limit_info.second;
+    double meassurement = get_joint_measurement(meassurement_id);
+    valid = valid &&
+            in_range<double>(meassurement, joint_limit.min, joint_limit.max);
+  }
+  limit_door_.unlock();
+  return valid;
 }
 } // namespace monopod_drivers

@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <math.h>
+#include <mutex>
 #include <stdexcept>
 
 #include <Eigen/Eigen>
@@ -33,18 +34,6 @@ public:
                      std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
                      const double &gear_ratio, const double &zero_angle,
                      const bool &reverse_polarity = false);
-
-  /**
-   * @brief Is the robot in a valid state?
-   */
-  virtual void valid();
-
-  /**
-   * @brief If the joint module is not valid (safemode after limit reached) the
-   * joint will be reset into a valid state. This means the joint must be set
-   * back into the valid state first otherwise it will trigger the limits again.
-   */
-  virtual void reset();
 
   /**
    * @brief Set the zero_angle. The zero_angle is the angle between the
@@ -115,6 +104,12 @@ public:
    */
   virtual JointLimit get_limit(const Measurements &index) const;
 
+  /**
+   * @brief Check all of the limits. True if in range otherwise false
+   *
+   */
+  virtual bool check_limits() const;
+
 protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.
@@ -136,6 +131,13 @@ protected:
    */
   virtual long int
   get_joint_measurement_index(const Measurements &measurement_id) const;
+
+  /**
+   * @brief Template helper checking if vector contains an element.
+   */
+  template <typename T> static bool in_range(T value, T min, T max) {
+    return min <= value && value < max;
+  }
 
   /**
    * @brief This is the joint ID used when initializing the joint.
@@ -169,6 +171,12 @@ protected:
    * @brief This change the encoder rotation direction.
    */
   double polarity_;
+
+  /**
+   * @brief This is the mutex door for the limits_ varible. Allows threadsafe
+   * limit checking.
+   */
+  mutable std::mutex limit_door_;
 };
 
 } // namespace monopod_drivers

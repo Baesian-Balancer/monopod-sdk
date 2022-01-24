@@ -276,12 +276,19 @@ protected:
    */
   double max_current_;
 
-  //! @brief P gain of the position PD controller.
+  /**
+   * @brief P gain of the position PD controller.
+   */
   double position_control_gain_p_;
 
-  //! @brief D gain of the position PD controller.
+  /**
+   * @brief D gain of the position PD controller.
+   */
   double position_control_gain_d_;
 
+  /**
+   * @brief Holds the state of homing during the homing sequence.
+   */
   struct HomingState homing_state_;
 };
 

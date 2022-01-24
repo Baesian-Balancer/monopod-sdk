@@ -8,12 +8,20 @@ namespace monopod_drivers {
 //===================================================================
 
 Monopod::Monopod() {
+  stop_loop_limits = false;
   can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
   can_bus_board_ =
       std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
 }
 
-Monopod::~Monopod() {}
+Monopod::~Monopod() {
+  stop_loop_limits = true;
+  rt_thread_limits_.join();
+}
+
+// Todo: implement these two methods
+bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
+void Monopod::reset() { can_bus_board_->reset_safemode(); }
 
 bool Monopod::initialize(Mode monopod_mode) {
 
@@ -326,6 +334,27 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
   }
 
   return ok;
+}
+
+/**
+ * @brief This is a 100Hz loop that checks the limits of all joints. This is
+ * done to make sure the monopod is not in a vulnerable state. Do not want to
+ * break the robot.
+ */
+void Monopod::loop() {
+  real_time_tools::Spinner spinner;
+  spinner.set_period(0.01); // 100hz loop
+  while (!stop_loop_limits) {
+    bool in_limits = true;
+    for (const auto &joint_index : encoder_joint_indexing) {
+      in_limits = in_limits && encoders_[joint_index]->check_limits();
+    }
+    if (!in_limits) {
+      can_bus_board_->enter_safemode();
+    }
+    // spin the RT loop.
+    spinner.spin();
+  }
 }
 
 } // namespace monopod_drivers

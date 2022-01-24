@@ -89,27 +89,22 @@ enum class Mode {
    * @brief Complete free boom connector (5 joints total)
    */
   Free,
-
   /**
    * @brief Fixed boom connector (4 joints total)
    */
   Fixed_connector,
-
   /**
    * @brief Fixed boom connector and planrizer yaw (3 joints total)
    */
   Fixed,
-
   /**
    * @brief motor board
    */
   motor_board,
-
   /**
    * @brief encoder board 1
    */
   encoder_board1,
-
   /**
    * @brief encoder board 2
    */
@@ -132,10 +127,10 @@ struct PID {
  * @brief Structure holding joint limits
  */
 struct JointLimit {
-  JointLimit() {
-    constexpr double m = std::numeric_limits<double>::lowest();
-    constexpr double M = std::numeric_limits<double>::max();
+  static constexpr double m = std::numeric_limits<double>::lowest();
+  static constexpr double M = std::numeric_limits<double>::max();
 
+  JointLimit() {
     min = m;
     max = M;
   }

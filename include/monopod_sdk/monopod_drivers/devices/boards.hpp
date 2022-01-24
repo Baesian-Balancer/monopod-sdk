@@ -577,6 +577,28 @@ public:
   void pause_motors();
 
   /**
+   * This will cause the control to be forced into a "safemode" where the
+   * control is set to zero then held constant until reset.
+   */
+  void enter_safemode() {
+    set_control(0, current_target_0);
+    set_control(0, current_target_1);
+    send_newest_controls();
+    is_safemode_ = true;
+  }
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode.
+   */
+  void reset_safemode() { is_safemode_ = false; }
+
+  /**
+   * This will return if the control is in "safemode".
+   */
+  bool is_safemode() { return is_safemode_; }
+
+  /**
    * @brief Disable the can reciever timeout.
    */
   void disable_can_recv_timeout();
@@ -761,6 +783,13 @@ private:
    * @TODO update this documentation with the actual behavior
    */
   bool motors_are_paused_;
+
+  /**
+   * @brief Is the system in safemode? This implies the motors were killed and
+   * now being held constant at 0 control magnitude. This is maintained until
+   * reset.
+   */
+  bool is_safemode_;
 
   /**
    * @brief If no control is sent for more than control_timeout_ms_ the board
