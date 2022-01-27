@@ -118,6 +118,17 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
 
 bool Monopod::initialized() { return is_initialized; }
 
+void Monopod::print(const Vector<int> &joint_indexes) const {
+  const Vector<int> &jointSerialization =
+      joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
+
+  for (auto &joint_index : jointSerialization) {
+    if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+      encoders_.at(joint_index)->print();
+    }
+  }
+}
+
 bool Monopod::is_joint_controllable(const int joint_index) {
   return is_initialized && Contains(motor_joint_indexing, joint_index);
 }

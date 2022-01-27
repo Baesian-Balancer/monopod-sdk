@@ -2,6 +2,7 @@
 #include <monopod_sdk/monopod.hpp>
 
 #include <atomic>
+#include <fstream>
 #include <signal.h>
 
 /**
@@ -31,16 +32,20 @@ int main(int, char **) {
   monopod.initialize(monopod_drivers::Mode::motor_board);
   rt_printf("initialized monopod sdk \n");
 
-  while (!StopDemos) {
-    real_time_tools::Timer::sleep_sec(1);
+  real_time_tools::Timer time_logger;
 
-    std::vector<double> poss = monopod.get_positions().value();
-    std::cout << "Joint Positions: ";
-    for (const auto &pos : poss) {
-      std::cout << pos << " ";
-    }
-    std::cout << std::endl << std::endl;
-  }
+  while (!StopDemos) {
+    // measure the time spent.
+    time_logger.tac();
+    // Printings
+    rt_printf("\33[H\33[2J"); // clear screen
+    monopod.print();          // print info
+    time_logger.print_statistics();
+    fflush(stdout);
+
+  } // endwhile
+
+  time_logger.dump_measurements("/tmp/demo_print_sdk");
 
   return 0;
 }

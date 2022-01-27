@@ -55,6 +55,9 @@ public:
    * status history.
    */
   virtual Ptr<const StatusTimeseries> get_status() const = 0;
+
+  /** @brief Print the motor status and state. */
+  virtual void print() const = 0;
 };
 
 /**

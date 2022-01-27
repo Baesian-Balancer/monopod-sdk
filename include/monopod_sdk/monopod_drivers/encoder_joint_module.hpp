@@ -110,6 +110,11 @@ public:
    */
   virtual bool check_limits() const;
 
+  /**
+   * @brief Print the motor status and state.
+   */
+  virtual void print() const;
+
 protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.

@@ -50,6 +50,9 @@ public:
    */
   bool initialized();
 
+  /** @brief Print the motor status and state. */
+  void print(const Vector<int> &joint_indexes = {}) const;
+
   /**
    * @brief This method is a helper to start the thread loop. Requires the class
    * to be initialized before the loop can be started.

@@ -90,4 +90,6 @@ bool EncoderJointModule::check_limits() const {
   limit_door_.unlock();
   return valid;
 }
+
+void EncoderJointModule::print() const { encoder_->print(); }
 } // namespace monopod_drivers

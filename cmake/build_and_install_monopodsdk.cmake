@@ -238,7 +238,7 @@
     endmacro()
 
     add_demo(demo_leg_sine_position)
-    add_demo(demo_print_position_sdk)
+    add_demo(demo_print_sdk)
 
 # ===============================
 # Install
