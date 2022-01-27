@@ -10,12 +10,6 @@
 #include <signal.h>
 
 /**
- * @brief Defines a static Eigen vector type in order to define the
- * interface. Two is for number of joints
- */
-typedef Eigen::Matrix<double, 2, 1> Vector;
-
-/**
  * @brief This boolean is here to kill cleanly the application upon ctrl+c
  */
 std::atomic_bool StopDemos(false);
@@ -43,19 +37,14 @@ int main(int, char **) {
   sigaction(SIGINT, &sigIntHandler, NULL);
   StopDemos = false;
 
-  auto can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-  auto board_ =
-      std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
+  monopod_drivers::sdk_Ptr sdk = std::make_shared<monopod_drivers::Monopod>();
+  sdk->initialize(monopod_drivers::Mode::motor_board);
+  sdk->calibrate(1, 1);
 
-  std::shared_ptr<monopod_drivers::Leg> leg =
-      std::make_shared<monopod_drivers::Leg>(board_);
-  leg->initialize();
-  leg->calibrate(1, 1);
-
-  rt_printf("leg is set up \n");
+  rt_printf("sdk is set up \n");
 
   // construct a simple PD controller.
-  monopod_drivers::SinePositionControl controller(leg);
+  monopod_drivers::SinePositionControl controller(sdk);
 
   rt_printf("controllers are set up \n");
 

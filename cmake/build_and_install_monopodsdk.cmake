@@ -237,7 +237,7 @@
       list(APPEND misc_targets ${demo_name})
     endmacro()
 
-    # add_demo(demo_leg_sine_position)
+    add_demo(demo_leg_sine_position)
     add_demo(demo_print_position_sdk)
 
 # ===============================
