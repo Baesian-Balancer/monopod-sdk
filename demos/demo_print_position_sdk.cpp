@@ -34,10 +34,7 @@ int main(int, char **) {
   while (!StopDemos) {
     real_time_tools::Timer::sleep_sec(1);
 
-    std::vector<double> poss = monopod
-                                   .get_positions({monopod_drivers::hip_joint,
-                                                   monopod_drivers::knee_joint})
-                                   .value();
+    std::vector<double> poss = monopod.get_positions().value();
     std::cout << "Joint Positions: ";
     for (const auto &pos : poss) {
       std::cout << pos << " ";

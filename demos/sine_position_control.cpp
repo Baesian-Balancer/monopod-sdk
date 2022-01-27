@@ -69,7 +69,8 @@ void SinePositionControl::loop() {
     double desired_position =
         amplitude * sin(2 * M_PI * frequence * local_time);
     desired_position_hip = desired_position;
-    desired_position_knee = desired_position;
+    desired_position_knee = -desired_position; // opposite to make the bend
+                                               // create vertical movement.
 
     desired_torque_hip = kp_ * (desired_position_hip - actual_position_hip) +
                          kd_ * (desired_velocity_hip - actual_velocity_hip);
