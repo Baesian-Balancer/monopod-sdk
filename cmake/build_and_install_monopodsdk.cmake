@@ -121,7 +121,6 @@
   # ===============================
   set(MONOPOD_DRIVERS_PUBLIC_HDRS
       include/monopod_sdk/monopod_drivers/leg.hpp
-      include/monopod_sdk/monopod_drivers/planarizer.hpp
       include/monopod_sdk/monopod_drivers/motor_joint_module.hpp
       include/monopod_sdk/monopod_drivers/encoder_joint_module.hpp
   )
@@ -239,9 +238,7 @@
     endmacro()
 
     add_demo(demo_leg_sine_position)
-    add_demo(demo_planarizer)
-    add_demo(demo_print_position_sdk)
-    # add_demo(demo_inference)
+    add_demo(demo_print_sdk)
 
 # ===============================
 # Install

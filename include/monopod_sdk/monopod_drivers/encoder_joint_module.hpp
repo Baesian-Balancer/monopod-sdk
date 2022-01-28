@@ -3,6 +3,7 @@
 #include <array>
 #include <iostream>
 #include <math.h>
+#include <mutex>
 #include <stdexcept>
 
 #include <Eigen/Eigen>
@@ -29,7 +30,8 @@ public:
    * and the zero configuration.
    * @param reverse_polarity
    */
-  EncoderJointModule(std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
+  EncoderJointModule(JointNamesIndex joint_id,
+                     std::shared_ptr<monopod_drivers::EncoderInterface> encoder,
                      const double &gear_ratio, const double &zero_angle,
                      const bool &reverse_polarity = false);
 
@@ -39,21 +41,21 @@ public:
    *
    * @param zero_angle (rad)
    */
-  void set_zero_angle(const double &zero_angle);
+  virtual void set_zero_angle(const double &zero_angle);
 
   /**
    * @brief Define if the encoder should turn clock-wize or counter clock-wize.
    *
    * @param reverse_polarity true:reverse rotation axis, false:do nothing.
    */
-  void set_joint_polarity(const bool &reverse_polarity);
+  virtual void set_joint_polarity(const bool &reverse_polarity);
 
   /**
    * @brief Get the measured angle of the joint.
    *
    * @return double (rad).
    */
-  double get_measured_angle() const;
+  virtual double get_measured_angle() const;
 
   /**
    * @brief Get the measured velocity of the joint. This data is computed on
@@ -61,7 +63,15 @@ public:
    *
    * @return double (rad/s).
    */
-  double get_measured_velocity() const;
+  virtual double get_measured_velocity() const;
+
+  /**
+   * @brief Get the measured acceleration of the joint. This data is computed on
+   * board of the control card.
+   *
+   * @return double (rad/s^2).
+   */
+  virtual double get_measured_acceleration() const;
 
   /**
    * @brief Get the measured index angle. There is one index per encoder
@@ -69,7 +79,7 @@ public:
    *
    * @return double (rad).
    */
-  double get_measured_index_angle() const;
+  virtual double get_measured_index_angle() const;
 
   /**
    * @brief Get the zero_angle_. These are the angle between the starting pose
@@ -77,33 +87,78 @@ public:
    *
    * @return double (rad).
    */
-  double get_zero_angle() const;
+  virtual double get_zero_angle() const;
 
-private:
+  /**
+   * @brief Set the limit of the provided meassurement index.
+   *
+   * @param index of the position type to set limit of
+   * @param limit is a struct holding the limit for the specified meassurement.
+   */
+  virtual void set_limit(const Measurements &index, const JointLimit &limit);
+
+  /**
+   * @brief Get the limit of the provided meassurement index.
+   *
+   * @param index of the position type to set limit of
+   */
+  virtual JointLimit get_limit(const Measurements &index) const;
+
+  /**
+   * @brief Check all of the limits. True if in range otherwise false
+   *
+   */
+  virtual bool check_limits() const;
+
+  /**
+   * @brief Print the motor status and state.
+   */
+  virtual void print() const;
+
+protected:
   /**
    * @brief Get encoder measurements and check if there are data or not.
    *
    * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::EncoderInterface::MeasurementIndex
+   * check: monopod_drivers::Measurements
    * @return double the measurement.
    */
-  double get_joint_measurement(const MeasurementIndex &measurement_id) const;
+  virtual double
+  get_joint_measurement(const Measurements &measurement_id) const;
 
   /**
    * @brief Get the last encoder measurement index for a specific data. If there
    * was no data yet, return NaN
    *
    * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::EncoderInterface::MeasurementIndex
+   * check: monopod_drivers::Measurements
    * @return double the measurement.
    */
-  long int
-  get_joint_measurement_index(const MeasurementIndex &measurement_id) const;
+  virtual long int
+  get_joint_measurement_index(const Measurements &measurement_id) const;
+
+  /**
+   * @brief Template helper checking if vector contains an element.
+   */
+  template <typename T> static bool in_range(T value, T min, T max) {
+    return min <= value && value < max;
+  }
+
+  /**
+   * @brief This is the joint ID used when initializing the joint.
+   */
+  JointNamesIndex joint_id_;
 
   /**
    * @brief This is the pointer to the encoder interface.
    */
   std::shared_ptr<monopod_drivers::EncoderInterface> encoder_;
+
+  /**
+   * @brief This is the map of the limits for each meassurement.
+   */
+  std::unordered_map<Measurements, JointLimit> limits_ = {
+      {position, {}}, {velocity, {}}, {acceleration, {}}};
 
   /**
    * @brief This correspond to the reduction (\f$ \beta \f$) between the encoder
@@ -121,6 +176,12 @@ private:
    * @brief This change the encoder rotation direction.
    */
   double polarity_;
+
+  /**
+   * @brief This is the mutex door for the limits_ varible. Allows threadsafe
+   * limit checking.
+   */
+  mutable std::mutex limit_door_;
 };
 
 } // namespace monopod_drivers

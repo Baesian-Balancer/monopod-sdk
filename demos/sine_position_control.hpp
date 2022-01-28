@@ -5,34 +5,28 @@
  */
 
 #include "monopod_sdk/common_header.hpp"
-#include "monopod_sdk/monopod_drivers/devices/motor.hpp"
-#include "monopod_sdk/monopod_drivers/leg.hpp"
+#include "monopod_sdk/monopod.hpp"
 
 namespace monopod_drivers {
 
 /**
- * @brief Defines a static Eigen vector type in order to define the
- * interface. Two is for number of joints
- */
-typedef Eigen::Matrix<double, 2, 1> Vector;
-
-/**
  * @brief This is a simple shortcut
  */
-typedef std::shared_ptr<Leg> Leg_ptr;
+typedef std::shared_ptr<Monopod> sdk_Ptr;
 
 /**
- * @brief This is a basic PD controller to be used in the demos of this package.
+ * @brief This is a basic PD controller to be used in the demos of this
+ package.
  */
 class SinePositionControl {
 public:
   /**
    * @brief Construct a new SinePositionControl object.
    *
-   * @param leg
+   * @param sdk
    */
-  SinePositionControl(Leg_ptr leg) {
-    leg_ = leg;
+  SinePositionControl(sdk_Ptr sdk) {
+    sdk_ = sdk;
     encoders_.clear();
     velocities_.clear();
     torques_.clear();
@@ -113,9 +107,9 @@ private:
   unsigned memory_buffer_size_;
 
   /**
-   * @brief Pointer to the leg object
+   * @brief Pointer to the sdk object
    */
-  Leg_ptr leg_;
+  sdk_Ptr sdk_;
 
   /**
    * @brief Encoder data

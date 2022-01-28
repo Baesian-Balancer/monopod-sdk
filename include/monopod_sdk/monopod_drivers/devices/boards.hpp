@@ -7,6 +7,7 @@
 #include <real_time_tools/timer.hpp>
 #include <time_series/time_series.hpp>
 
+#include "monopod_sdk/common_header.hpp"
 #include "monopod_sdk/monopod_drivers/devices/can_bus.hpp"
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/monopod_drivers/utils/os_interface.hpp"
@@ -15,8 +16,7 @@ namespace monopod_drivers {
 //==============================================================================
 /**
  * @brief This ControlBoardsCommand class is a data structurs that defines a
- * command to the
- * monopod_drivers::ControlBoardsInterface::BoardIndex::motor_board
+ * command to the monopod_drivers::ControlBoardsInterface::BoardIndex boards.
  */
 class ControlBoardsCommand {
 public:
@@ -219,31 +219,11 @@ public:
   /**
    * @brief A useful shortcut
    */
-  typedef time_series::TimeSeries<double> ScalarTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
-  typedef time_series::Index Index;
-  /**
-   * @brief A useful shortcut
-   */
-  typedef time_series::TimeSeries<Index> IndexTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
   typedef time_series::TimeSeries<BoardStatus> StatusTimeseries;
   /**
    * @brief A useful shortcut
    */
   typedef time_series::TimeSeries<ControlBoardsCommand> CommandTimeseries;
-  /**
-   * @brief A useful shortcut
-   */
-  template <typename Type> using Ptr = std::shared_ptr<Type>;
-  /**
-   * @brief A useful shortcut
-   */
-  template <typename Type> using Vector = std::vector<Type>;
 
   /**
    * @brief This is the list of the measurement we can access.
@@ -407,6 +387,15 @@ public:
    */
 
   /**
+   * @brief Set a board to an active state if it is not already active. This
+   * means the board will now have its status checked for is_ready and if the
+   * board is the motor_board we must send enable the motors etc.
+   *
+   * @param index
+   */
+  virtual void set_active_board(const int &index) = 0;
+
+  /**
    * @brief set_control save the control internally. In order to actaully send
    * the controls to the network please call "send_if_input_changed"
    *
@@ -544,6 +533,15 @@ public:
    */
 
   /**
+   * @brief Set a board to an active state if it is not already active. This
+   * means the board will now have its status checked for is_ready and if the
+   * board is the motor_board we must send enable the motors etc.
+   *
+   * @param index
+   */
+  virtual void set_active_board(const int &index);
+
+  /**
    * @brief Set the controls, see ControlBoardsInterface::set_control
    *
    * @param control
@@ -577,6 +575,28 @@ public:
   /// \todo: this function should go away,
   /// and we should add somewhere a warning in case there is a timeout
   void pause_motors();
+
+  /**
+   * This will cause the control to be forced into a "safemode" where the
+   * control is set to zero then held constant until reset.
+   */
+  void enter_safemode() {
+    set_control(0, current_target_0);
+    set_control(0, current_target_1);
+    send_newest_controls();
+    is_safemode_ = true;
+  }
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode.
+   */
+  void reset_safemode() { is_safemode_ = false; }
+
+  /**
+   * This will return if the control is in "safemode".
+   */
+  bool is_safemode() { return is_safemode_; }
 
   /**
    * @brief Disable the can reciever timeout.
@@ -700,6 +720,10 @@ private:
     BOARD2_ACC = 0x71,
     BOARD3_ACC = 0x72,
   };
+  /**
+   * State Info
+   */
+  std::vector<bool> active_boards_;
 
   /**
    * Outputs
@@ -759,6 +783,13 @@ private:
    * @TODO update this documentation with the actual behavior
    */
   bool motors_are_paused_;
+
+  /**
+   * @brief Is the system in safemode? This implies the motors were killed and
+   * now being held constant at 0 control magnitude. This is maintained until
+   * reset.
+   */
+  bool is_safemode_;
 
   /**
    * @brief If no control is sent for more than control_timeout_ms_ the board

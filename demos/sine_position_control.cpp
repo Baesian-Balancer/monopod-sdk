@@ -52,21 +52,25 @@ void SinePositionControl::loop() {
     time_logger.tic();
     local_time = count * control_period;
 
-    auto data = leg_->get_measurements();
+    std::vector<double> data =
+        sdk_->get_positions({hip_joint, knee_joint}).value();
     // compute the control
-    actual_position_hip = data[hip_joint][monopod_drivers::position];
-    actual_position_knee = data[knee_joint][monopod_drivers::position];
+    actual_position_hip = data[0];
+    actual_position_knee = data[1];
 
-    actual_velocity_hip = data[hip_joint][monopod_drivers::velocity];
-    actual_velocity_knee = data[knee_joint][monopod_drivers::velocity];
+    data = sdk_->get_velocities({hip_joint, knee_joint}).value();
+    actual_velocity_hip = data[0];
+    actual_velocity_knee = data[1];
 
-    actual_torque_hip = data[hip_joint][monopod_drivers::torque];
-    actual_torque_knee = data[knee_joint][monopod_drivers::torque];
+    data = sdk_->get_torque_targets({hip_joint, knee_joint}).value();
+    actual_torque_hip = data[0];
+    actual_torque_knee = data[1];
 
     double desired_position =
         amplitude * sin(2 * M_PI * frequence * local_time);
     desired_position_hip = desired_position;
-    desired_position_knee = desired_position;
+    desired_position_knee = -desired_position; // opposite to make the bend
+                                               // create vertical movement.
 
     desired_torque_hip = kp_ * (desired_position_hip - actual_position_hip) +
                          kd_ * (desired_velocity_hip - actual_velocity_hip);
@@ -74,8 +78,8 @@ void SinePositionControl::loop() {
     desired_torque_knee = kp_ * (desired_position_knee - actual_position_knee) +
                           kd_ * (desired_velocity_knee - actual_velocity_knee);
 
-    leg_->set_target_torques({desired_torque_hip, desired_torque_knee});
-    leg_->send_target_torques();
+    sdk_->set_torque_targets({desired_torque_hip, desired_torque_knee},
+                             {hip_joint, knee_joint});
 
     encoders_[0].push_back(actual_position_hip);
     velocities_[0].push_back(actual_velocity_hip);
@@ -99,7 +103,7 @@ void SinePositionControl::loop() {
         rt_printf("des_pose: %8f ; ", desired_position);
         rt_printf("des_torque_hip: %8f ; ", desired_torque_hip);
         rt_printf("des_torque_knee: %8f ; ", desired_torque_knee);
-        // leg_->motors_[i]->print();
+        // sdk_->motors_[i]->print();
       }
       time_logger.print_statistics();
       fflush(stdout);

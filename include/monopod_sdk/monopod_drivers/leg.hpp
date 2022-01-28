@@ -7,6 +7,7 @@
 
 #include <time_series/time_series.hpp>
 
+#include "monopod_sdk/monopod_drivers/devices/boards.hpp"
 #include "monopod_sdk/monopod_drivers/devices/device_interface.hpp"
 #include "monopod_sdk/monopod_drivers/devices/motor.hpp"
 #include "monopod_sdk/monopod_drivers/motor_joint_module.hpp"
@@ -30,9 +31,12 @@ public:
   /**
    * @brief Construct the LegInterface object
    */
-  Leg(std::shared_ptr<ControlBoardsInterface> board,
-      double motor_max_current = 5.0)
-      : board_(board), motor_max_current_(motor_max_current) {}
+  Leg(const std::shared_ptr<MotorJointModule> &hip_joint_module,
+      const std::shared_ptr<MotorJointModule> &knee_joint_module) {
+
+    joints_[hip_joint] = hip_joint_module;
+    joints_[knee_joint] = knee_joint_module;
+  }
 
   /**
    * @brief Destroy the LegInterface object
@@ -40,30 +44,10 @@ public:
   ~Leg() {}
 
   /**
-   * @brief Initialize canbus connecion, esablish connection to the motors, and
-   * set motor constants.
+   * @brief Initialize canbus connecion, esablish connection to the motors,
+   * and set motor constants.
    */
   bool initialize() {
-
-    auto motor_hip_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, hip_joint, motor_max_current_);
-
-    auto motor_knee_joint = std::make_shared<monopod_drivers::SafeMotor>(
-        board_, knee_joint, motor_max_current_);
-
-    joints_[hip_joint] =
-        std::make_shared<MotorJointModule>(motor_hip_joint,
-                                           0.025, // motor_constants[i],
-                                           9.0,   // gear_ratios[i],
-                                           0.0,   // zero_angles[i],
-                                           false);
-
-    joints_[knee_joint] =
-        std::make_shared<MotorJointModule>(motor_knee_joint,
-                                           0.025, // motor_constants[i],
-                                           9.0,   // gear_ratios[i],
-                                           0.0,   // zero_angles[i],
-                                           false);
 
     // The the control gains in order to perform the calibration
     double kp, kd;
@@ -74,7 +58,6 @@ public:
     joints_[knee_joint]->set_position_control_gains(kp, kd);
 
     // wait until all board are ready and connected
-    board_->wait_until_ready();
     initialized = true;
     return initialized;
   }
@@ -84,114 +67,26 @@ public:
   // =========================================================================
 
   /**
-   * @brief Get all meassurements of the leg. This includes Position, Velocity,
-   * Torque, and In the future Acceleration.
+   * @brief Get all meassurements of the leg. This includes Position,
+   * Velocity, Torque, and In the future Acceleration.
    *
    * @return unordered map of LVector measurements. Indexed with the
    * meassurement type enum.
    */
-  ObservationMap get_measurements() const {
+  double get_measured_torque(const JointNamesIndex &joint_index) const {
     throw_if_not_init();
 
-    ObservationMap data = {};
-
-    for (const auto &pair : joints_) {
-      data[pair.first][position] = pair.second->get_measured_angle();
-      data[pair.first][velocity] = pair.second->get_measured_velocity();
-      data[pair.first][torque] = pair.second->get_measured_torque();
-    }
-
-    return data;
+    return joints_.at(joint_index)->get_measured_torque();
   }
 
+private:
   /**
-   * @brief Get the zero_angles. These are the joint angles between the
-   * starting pose and the zero theoretical pose of the urdf.
-   *
-   * @return std::vector<double> (rad)
+   * @brief Defines a static sized Eigen vector type to store data for the leg.
+   * Data is one of pos, vel, torque
    */
-  std::vector<double> get_zero_angles() const {
-    throw_if_not_init();
+  typedef Eigen::Matrix<double, 2, 1> LVector;
 
-    std::vector<double> positions;
-    positions.reserve(NUMBER_LEG_JOINTS);
-
-    for (const auto &pair : joints_) {
-      positions.push_back(pair.second->get_zero_angle());
-    }
-    return positions;
-  }
-
-  // =========================================================================
-  //  SETTERS
-  // =========================================================================
-
-  /**
-   * @brief Set the torque targets for each joint.
-   *
-   * @param torque_targets are the torque to achieve on the motor card. the data
-   * format is {hip, knee}
-   * @param joint_index is the motor to control.
-   */
-  void set_target_torques(const std::vector<double> &torque_targets) {
-    throw_if_not_init();
-    if (torque_targets.size() != NUMBER_LEG_JOINTS)
-      throw std::runtime_error("need same number of elements as number joints. "
-                               "(monopod_drivers::Leg)");
-
-    joints_[hip_joint]->set_torque(torque_targets[0]);
-    joints_[knee_joint]->set_torque(torque_targets[1]);
-  }
-
-  /**
-   * @brief Send the set torque
-   */
-  void send_target_torques() {
-    throw_if_not_init();
-    joints_[hip_joint]->send_torque();
-    joints_[knee_joint]->send_torque();
-  }
-
-  /**
-   * @brief Set the zero_angles. These are the joint angles between the
-   * starting pose and the zero theoretical pose of the urdf.
-   *
-   * @param zero_angles (rad)
-   */
-  void set_zero_angles(const std::vector<double> &zero_angles) {
-    throw_if_not_init();
-    if (zero_angles.size() != NUMBER_LEG_JOINTS)
-      throw std::runtime_error("need same number of elements as number joints. "
-                               "(monopod_drivers::Leg)");
-
-    size_t i = 0;
-    for (const auto &pair : joints_) {
-
-      pair.second->set_zero_angle(zero_angles[i]);
-      i++;
-    }
-  }
-
-  /**
-   * @brief Set the polarities of the joints
-   * (see BlmcJointModule::set_joint_polarity)
-   *
-   * @param reverse_polarity
-   */
-  void set_joint_polarities(std::vector<bool> reverse_polarities) {
-    throw_if_not_init();
-    if (reverse_polarities.size() != NUMBER_LEG_JOINTS)
-      throw std::runtime_error("need same number of elements as number joints. "
-                               "(monopod_drivers::Leg)");
-
-    size_t i = 0;
-    for (const auto &pair : joints_) {
-
-      pair.second->set_joint_polarity(reverse_polarities[i]);
-      i++;
-    }
-  }
-
+public:
   /**
    * @brief Calibrate the leg. See motor_joint_module.hpp for explanation of
    * parameters and logic.
@@ -209,21 +104,10 @@ public:
 
 private:
   /**
-   * @brief Canbus ControlBoards.
-   */
-  std::shared_ptr<monopod_drivers::ControlBoardsInterface> board_;
-
-  /**
    * @brief Hip and knee joint modules for the leg
    */
-  std::unordered_map<JointNameIndexing,
-                     std::shared_ptr<monopod_drivers::MotorJointModule>>
+  std::unordered_map<JointNamesIndex, std::shared_ptr<MotorJointModule>>
       joints_;
-
-  /**
-   * @brief Max allowable current for the joint.
-   */
-  double motor_max_current_;
 
   /**
    * @brief is Initialized.
@@ -262,10 +146,10 @@ private:
                                   double profile_step_size_rad = 0.001) {
     // Initialise homing for all joints
 
-    joints_[hip_joint]->init_homing((int)hip_joint, search_distance_limit_rad,
+    joints_[hip_joint]->init_homing(search_distance_limit_rad,
                                     home_offset_rad[0], profile_step_size_rad);
 
-    joints_[knee_joint]->init_homing((int)knee_joint, search_distance_limit_rad,
+    joints_[knee_joint]->init_homing(search_distance_limit_rad,
                                      home_offset_rad[1], profile_step_size_rad);
 
     // run homing for all joints until all of them are done

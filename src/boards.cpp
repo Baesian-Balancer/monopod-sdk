@@ -4,8 +4,8 @@ namespace monopod_drivers {
 CanBusControlBoards::CanBusControlBoards(
     std::shared_ptr<CanBusInterface> can_bus, const size_t &history_length,
     const int &control_timeout_ms)
-    : can_bus_(can_bus), motors_are_paused_(false),
-      control_timeout_ms_(control_timeout_ms) {
+    : can_bus_(can_bus), active_boards_(board_count, false),
+      motors_are_paused_(false), control_timeout_ms_(control_timeout_ms) {
 
   measurement_ = create_vector_of_pointers<ScalarTimeseries>(measurement_count,
                                                              history_length);
@@ -33,6 +33,16 @@ CanBusControlBoards::~CanBusControlBoards() {
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_SYS,
                                    ControlBoardsCommand::Contents::DISABLE));
   send_newest_command();
+}
+
+void CanBusControlBoards::set_active_board(const int &index) {
+  switch (index) {
+  case motor_board:
+  case encoder_board1:
+  case encoder_board2:
+    active_boards_[index] = true;
+    break;
+  }
 }
 
 void CanBusControlBoards::send_if_input_changed() {
@@ -65,15 +75,30 @@ void CanBusControlBoards::wait_until_ready() {
 // Fixme: Make it so you can select the board options here. add additional
 // function to enable / disable boards
 bool CanBusControlBoards::is_ready() {
-  if (status_[motor_board]->length() == 0 ||
-      status_[encoder_board1]->length() == 0 ||
-      status_[encoder_board2]->length() == 0) {
+  bool ready = false;
+  // if any of the boards have no status messages despite the board being active
+  // then we are not ready. If the board is not active then we ignore it.
+  if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
     return false;
-  } else {
-    return status_[motor_board]->newest_element().is_ready() &&
-           status_[encoder_board1]->newest_element().is_ready() &&
-           status_[encoder_board2]->newest_element().is_ready();
+  } else if (active_boards_[motor_board]) {
+    ready = ready && status_[motor_board]->newest_element().is_ready();
   }
+
+  if (status_[encoder_board1]->length() == 0 &&
+      active_boards_[encoder_board1]) {
+    return false;
+  } else if (active_boards_[encoder_board1]) {
+    ready = ready && status_[encoder_board1]->newest_element().is_ready();
+  }
+
+  if (status_[encoder_board2]->length() == 0 &&
+      active_boards_[encoder_board2]) {
+    return false;
+  } else if (active_boards_[encoder_board2]) {
+    ready = ready && status_[encoder_board2]->newest_element().is_ready();
+  }
+
+  return ready;
 }
 
 void CanBusControlBoards::pause_motors() {
@@ -81,10 +106,7 @@ void CanBusControlBoards::pause_motors() {
   set_control(0, current_target_1);
   send_newest_controls();
 
-  set_command(
-      ControlBoardsCommand(ControlBoardsCommand::IDs::SET_CAN_RECV_TIMEOUT,
-                           ControlBoardsCommand::Contents::DISABLE));
-  send_newest_command();
+  disable_can_recv_timeout();
 
   motors_are_paused_ = true;
 }
@@ -97,6 +119,11 @@ void CanBusControlBoards::disable_can_recv_timeout() {
 }
 
 void CanBusControlBoards::send_newest_controls() {
+  if (is_safemode_) {
+    // If the robot is currently in safemode maintain zero control.
+    return;
+  }
+
   if (motors_are_paused_) {
     set_command(ControlBoardsCommand(
         ControlBoardsCommand::IDs::SET_CAN_RECV_TIMEOUT, control_timeout_ms_));
@@ -205,7 +232,6 @@ void CanBusControlBoards::loop() {
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
                                    ControlBoardsCommand::Contents::ENABLE));
   send_newest_command();
-
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
                                    ControlBoardsCommand::Contents::ENABLE));
   send_newest_command();
@@ -344,11 +370,6 @@ void CanBusControlBoards::loop() {
       status.error_code = data >> 5;
 
       status_[motor_board]->append(status);
-
-      // Todo: Remove this when board options are fixed.
-      status_[encoder_board1]->append(status);
-      status_[encoder_board2]->append(status);
-
       break;
     }
 
@@ -356,6 +377,7 @@ void CanBusControlBoards::loop() {
       BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
+
       status_[encoder_board1]->append(status);
       break;
     }
@@ -364,6 +386,7 @@ void CanBusControlBoards::loop() {
       BoardStatus status;
       uint8_t data = 00000000;
       status.error_code = data >> 5;
+
       status_[encoder_board2]->append(status);
       break;
     }

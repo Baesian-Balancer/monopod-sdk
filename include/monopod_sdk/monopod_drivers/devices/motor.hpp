@@ -81,7 +81,7 @@ public:
    * @param board is the ControlBoards to be used.
    * @param motor_id is the id of the motor on the on-board card
    */
-  Motor(Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id);
+  Motor(Ptr<ControlBoardsInterface> board, JointNamesIndex motor_id);
 
   /**
    * @brief Destroy the Motor object
@@ -107,7 +107,7 @@ public:
    * measurement history.
    */
   virtual Ptr<const ScalarTimeseries>
-  get_measurement(const MeasurementIndex &index) const;
+  get_measurement(const Measurements &index) const;
 
   /**
    * @brief Get the status.
@@ -166,89 +166,7 @@ protected:
   /**
    * @brief The id of the motor on the ControlBoards.
    */
-  JointNameIndexing motor_id_;
-};
-
-/**
- * @brief This class is a safe implementation of the Motor class.
- * It contains utilities to bound the control input.
- * It could also contains some velocity limits at the motor level and why not
- * some temperature management.
- *
- * \todo the velocity limit should be implemented in a smoother way,
- * and the parameters should be passed in the constructor.
- */
-class SafeMotor : public Motor {
-public:
-  /**
-   * @brief Construct a new SafeMotor object
-   *
-   * @param board
-   * @param motor_id
-   * @param max_current_target
-   * @param history_length
-   */
-  SafeMotor(
-      Ptr<ControlBoardsInterface> board, JointNameIndexing motor_id,
-      const double &max_current_target = 2.0,
-      const size_t &history_length = 1000,
-      const double &max_velocity = std::numeric_limits<double>::quiet_NaN());
-
-  /**
-   * Getters
-   */
-
-  /**
-   * @brief Get the _current_target object
-   *
-   * @return Ptr<const ScalarTimeseries>
-   */
-  virtual Ptr<const ScalarTimeseries> get_current_target() const {
-    return current_target_;
-  }
-
-  /**
-   * Setters
-   */
-
-  /**
-   * @brief Set the current target (Ampere)
-   *
-   * @param current_target
-   */
-  virtual void set_current_target(const double &current_target);
-
-  /**
-   * @brief Set the max_current_target_ object
-   *
-   * @param max_current_target
-   */
-  void set_max_current(double max_current_target) {
-    max_current_target_ = max_current_target;
-  }
-
-  /**
-   * @brief Set the max_velocity_ constant.
-   *
-   * @param max_velocity
-   */
-  void set_max_velocity(double max_velocity) { max_velocity_ = max_velocity; }
-
-private:
-  /**
-   * @brief max_current_target_ is the limit of the current.
-   */
-  double max_current_target_;
-
-  /**
-   * @brief max_velocity_ limits the motor velocity.
-   */
-  double max_velocity_;
-
-  /**
-   * @brief History of the target current sent.
-   */
-  Ptr<ScalarTimeseries> current_target_;
+  JointNamesIndex motor_id_;
 };
 
 } // namespace monopod_drivers

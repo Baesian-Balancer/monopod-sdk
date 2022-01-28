@@ -1,26 +1,43 @@
 #pragma once
+#include "monopod_sdk/mode.hpp"
 #include <time_series/time_series.hpp>
 
 namespace monopod_drivers {
 
-/** Definitions of constants for robot
+/**
+ * ================================================
+ * Definitions of constants for robot
+ * ================================================
  */
 
-/** Max current before the robot gets kill in amps (A).
+/**
+ * Max current before the robot gets kill in amps (A).
  */
 #define MAX_CURRENT 20.0
+
+/**
+ * Number of joints in a monopod_drivers::Leg.
+ */
 #define NUMBER_LEG_JOINTS 2
 
 /**
- * @brief Defines a static sized Eigen vector type to store data for the leg.
- * Data is one of pos, vel, torque
+ * ================================================
+ * Type defs
+ * ================================================
  */
-typedef Eigen::Matrix<double, 2, 1> LVector;
 
 /**
- * @brief This is a useful alias.
+ * @brief A useful shortcut
  */
 typedef time_series::TimeSeries<double> ScalarTimeseries;
+/**
+ * @brief A useful shortcut
+ */
+typedef time_series::Index Index;
+/**
+ * @brief A useful shortcut
+ */
+typedef time_series::TimeSeries<Index> IndexTimeseries;
 
 /**
  * @brief This is a shortcut for creating shared pointer in a simpler
@@ -30,12 +47,17 @@ typedef time_series::TimeSeries<double> ScalarTimeseries;
  */
 template <typename Type> using Ptr = std::shared_ptr<Type>;
 
+/**
+ * @brief A useful shortcut
+ */
+template <typename Type> using Vector = std::vector<Type>;
+
 // ====================================================================================
 
 /**
  * @brief Enumerates the joint names for indexing
  */
-enum JointNameIndexing {
+enum JointNamesIndex {
   hip_joint,
   knee_joint,
   boom_connector_joint,
@@ -47,7 +69,7 @@ enum JointNameIndexing {
  * @brief Here is a list of the different measurement available on the
  * blmc card.
  */
-enum MeasurementIndex {
+enum Measurements {
   position,
   velocity,
   acceleration,
@@ -55,12 +77,36 @@ enum MeasurementIndex {
   encoder_index,
   measurement_count, // Meassurement count is the 'length' of the meassurement
                      // vector in motor board.
-  torque             // this is only used for monopodsdk
 };
 
-typedef std::unordered_map<MeasurementIndex, double> map_inner;
-typedef std::unordered_map<JointNameIndexing, map_inner> ObservationMap;
+/**
+ * @brief Structure holding the PID values for the joint.
+ */
+struct PID {
+  PID() = default;
+  PID(const double _p, const double _i, const double _d)
+      : p(_p), i(_i), d(_d) {}
 
-typedef std::unordered_map<JointNameIndexing, double> ActionMap;
+  double p = 0;
+  double i = 0;
+  double d = 0;
+};
+/**
+ * @brief Structure holding joint limits
+ */
+struct JointLimit {
+  static constexpr double m = std::numeric_limits<double>::lowest();
+  static constexpr double M = std::numeric_limits<double>::max();
+
+  JointLimit() {
+    min = m;
+    max = M;
+  }
+
+  JointLimit(const double _min, const double _max) : min(_min), max(_max) {}
+
+  double min;
+  double max;
+};
 
 } // end namespace monopod_drivers
