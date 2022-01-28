@@ -177,6 +177,7 @@
   set(MONOPOD_SDK_CORE_PUBLIC_HDRS
     include/monopod_sdk/monopod.hpp
     include/monopod_sdk/common_header.hpp
+    include/monopod_sdk/mode.hpp
   )
 
   add_library(MonopodSdk
