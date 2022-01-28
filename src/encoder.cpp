@@ -96,7 +96,6 @@ Ptr<const Encoder::StatusTimeseries> Encoder::get_status() const {
     return board_->get_status(ControlBoardsInterface::encoder_board1);
   case boom_connector_joint:
     return board_->get_status(ControlBoardsInterface::encoder_board2);
-    break;
   }
   throw std::invalid_argument(
       "index needs to match one of the boards in control board interface");
@@ -107,17 +106,19 @@ void Encoder::set_board_active() const {
   case hip_joint:
   case knee_joint:
     board_->set_active_board(ControlBoardsInterface::motor_board);
-    break;
+    return;
   case planarizer_pitch_joint:
   case planarizer_yaw_joint:
     board_->set_active_board(ControlBoardsInterface::encoder_board1);
-    break;
+    return;
   case boom_connector_joint:
     board_->set_active_board(ControlBoardsInterface::encoder_board2);
-    break;
+    return;
   }
-  throw std::invalid_argument("encoder_id needs to match one of the joints in "
-                              "the JointNamesIndex enum.");
+  throw std::invalid_argument(
+      "encoder_id needs to match one of the joints in "
+      "the JointNamesIndex enum. The provided value was, " +
+      std::to_string(encoder_id_));
 }
 
 void Encoder::print() const {

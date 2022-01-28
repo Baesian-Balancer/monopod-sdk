@@ -117,7 +117,8 @@ private:
 private:
   void throw_if_not_init() const {
     if (!initialized)
-      throw std::runtime_error("Need to initialize the planarizer before use.");
+      throw std::runtime_error(
+          "Need to initialize the monopod_drivers::Leg before use.");
   }
   /**
    * @brief Perform homing for all joints.
