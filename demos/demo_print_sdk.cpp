@@ -42,6 +42,7 @@ int main(int, char **) {
     monopod.print();          // print info
     time_logger.print_statistics();
     fflush(stdout);
+    real_time_tools::Timer::sleep_sec(0.5);
 
   } // endwhile
 

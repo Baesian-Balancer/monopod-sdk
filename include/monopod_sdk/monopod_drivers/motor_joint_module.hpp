@@ -274,7 +274,7 @@ protected:
    * @brief This is the maximum current we can apply during one experiment.
    * The program will clip the current if it goes above this value.
    */
-  double max_current_;
+  double max_current_ = MAX_CURRENT;
 
   /**
    * @brief P gain of the position PD controller.

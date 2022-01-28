@@ -115,7 +115,7 @@ double MotorJointModule::execute_position_controller(
                           position_control_gain_d_ * get_measured_velocity();
 
   // clamp torque
-  const double max_torque = motor_current_to_joint_torque(MAX_CURRENT) * 0.9;
+  const double max_torque = motor_current_to_joint_torque(max_current_) * 0.9;
   if (desired_torque > max_torque) {
     desired_torque = max_torque;
   } else if (desired_torque < -max_torque) {

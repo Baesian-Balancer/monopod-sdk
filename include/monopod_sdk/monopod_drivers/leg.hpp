@@ -51,7 +51,7 @@ public:
 
     // The the control gains in order to perform the calibration
     double kp, kd;
-    kp = 3.0;
+    kp = 5.0;
     kd = 0.05;
 
     joints_[hip_joint]->set_position_control_gains(kp, kd);

@@ -13,7 +13,7 @@ namespace monopod_drivers {
 /**
  * Max current before the robot gets kill in amps (A).
  */
-#define MAX_CURRENT 20.0
+#define MAX_CURRENT 10.0
 
 /**
  * Number of joints in a monopod_drivers::Leg.

@@ -103,7 +103,7 @@ void SinePositionControl::loop() {
         rt_printf("des_pose: %8f ; ", desired_position);
         rt_printf("des_torque_hip: %8f ; ", desired_torque_hip);
         rt_printf("des_torque_knee: %8f ; ", desired_torque_knee);
-        // sdk_->motors_[i]->print();
+        sdk_->print();
       }
       time_logger.print_statistics();
       fflush(stdout);
