@@ -39,7 +39,7 @@ int main(int, char **) {
 
   monopod_drivers::sdk_Ptr sdk = std::make_shared<monopod_drivers::Monopod>();
   sdk->initialize(monopod_drivers::Mode::motor_board);
-  sdk->calibrate(1, 1);
+  // sdk->calibrate(1, 1);
 
   rt_printf("sdk is set up \n");
 

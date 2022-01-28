@@ -93,6 +93,7 @@ void Motor::print() const {
     rt_printf("enabled: %d ", motor_board_status.motor2_enabled);
     rt_printf("ready: %d ", motor_board_status.motor2_ready);
   }
+  rt_printf("\n");
 
   rt_printf("motor measurements: ");
   rt_printf("current: %8f ", motor_current);
