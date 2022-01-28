@@ -121,7 +121,6 @@
   # ===============================
   set(MONOPOD_DRIVERS_PUBLIC_HDRS
       include/monopod_sdk/monopod_drivers/leg.hpp
-      include/monopod_sdk/monopod_drivers/planarizer.hpp
       include/monopod_sdk/monopod_drivers/motor_joint_module.hpp
       include/monopod_sdk/monopod_drivers/encoder_joint_module.hpp
   )
@@ -217,84 +216,82 @@
 # Demos
 # ===============================
 
-set(misc_targets)
-list(APPEND misc_targets)
-macro(add_demo demo_name)
-  add_executable(
-    ${demo_name}
-    demos/sine_position_control.cpp
-    demos/${demo_name}.cpp)
-  target_include_directories(${demo_name} PUBLIC
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
-    $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
-    $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>
-  )
-  target_link_libraries(${demo_name}
-    MonopodDrivers
-    MonopodSdk
-    utils
-    devices
-  )
-  list(APPEND misc_targets ${demo_name})
-endmacro()
+    set(misc_targets)
+    list(APPEND misc_targets)
+    macro(add_demo demo_name)
+      add_executable(
+        ${demo_name}
+        demos/sine_position_control.cpp
+        demos/${demo_name}.cpp)
+      target_include_directories(${demo_name} PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/demos>
+        $<INSTALL_INTERFACE:${MONOPODSDK_INSTALL_INCLUDEDIR}>
+      )
+      target_link_libraries(${demo_name}
+        MonopodDrivers
+        MonopodSdk
+        utils
+        devices
+      )
+      list(APPEND misc_targets ${demo_name})
+    endmacro()
 
-add_demo(demo_leg_sine_position)
-add_demo(demo_planarizer)
-add_demo(demo_print_position_sdk)
-# add_demo(demo_inference)
+    add_demo(demo_leg_sine_position)
+    add_demo(demo_print_sdk)
 
 # ===============================
 # Install
 # ===============================
 
-install(
-  TARGETS
-  MonopodSdk ${misc_targets}
-  EXPORT MonopodSdkExport
-  LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-  ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-  RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-  PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk
-)
+    install(
+      TARGETS
+      MonopodSdk ${misc_targets}
+      EXPORT MonopodSdkExport
+      LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+      ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+      RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
+      PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk
+    )
 
-install(
-    TARGETS
-    MonopodDrivers
-    EXPORT MonopodSdkExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers
-  )
+    install(
+        TARGETS
+        MonopodDrivers
+        EXPORT MonopodSdkExport
+        LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
+        PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers
+      )
 
-install(
-    TARGETS
-    utils
-    EXPORT MonopodSdkExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers/utils
-  )
+    install(
+        TARGETS
+        utils
+        EXPORT MonopodSdkExport
+        LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
+        PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers/utils
+      )
 
-install(
-    TARGETS
-    devices
-    EXPORT MonopodSdkExport
-    LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
-    RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
-    PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers/devices
-  )
+    install(
+        TARGETS
+        devices
+        EXPORT MonopodSdkExport
+        LIBRARY DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        ARCHIVE DESTINATION ${MONOPODSDK_INSTALL_LIBDIR}
+        RUNTIME DESTINATION ${MONOPODSDK_INSTALL_BINDIR}
+        PUBLIC_HEADER DESTINATION ${MONOPODSDK_INSTALL_INCLUDEDIR}/monopod_sdk/monopod_drivers/devices
+      )
 
-install_basic_package_files(MonopodSdk
-    COMPONENT MonopodSdk
-    VERSION ${PROJECT_VERSION}
-    COMPATIBILITY AnyNewerVersion
-    EXPORT MonopodSdkExport
-    DEPENDENCIES real_time_tools time_series
-    NAMESPACE MonopodSdk::
-    NO_CHECK_REQUIRED_COMPONENTS_MACRO
-    INSTALL_DESTINATION
-    ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSdk
-  )
+    install_basic_package_files(MonopodSdk
+        COMPONENT MonopodSdk
+        VERSION ${PROJECT_VERSION}
+        COMPATIBILITY AnyNewerVersion
+        EXPORT MonopodSdkExport
+        DEPENDENCIES real_time_tools time_series
+        NAMESPACE MonopodSdk::
+        NO_CHECK_REQUIRED_COMPONENTS_MACRO
+        INSTALL_DESTINATION
+        ${MONOPODSDK_INSTALL_LIBDIR}/cmake/MonopodSdk
+      )

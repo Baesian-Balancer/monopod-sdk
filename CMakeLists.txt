@@ -1,6 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 project(monopod_sdk VERSION 0.0.1)
 
+set(CMAKE_EXPORT_COMPILE_COMMANDS TRUE)
+
 # Add custom functions / macros
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_SOURCE_DIR}/cmake)
 
@@ -123,7 +125,13 @@ include(InstallBasicPackageFiles)
 # Monopod SDK
 # =========
 
-include(build_and_install.cmake)
+include(build_and_install_monopodsdk)
+
+execute_process(
+    COMMAND ln -s "${PROJECT_BINARY_DIR}/compile_commands.json" "${PROJECT_SOURCE_DIR}/compile_commands.json"
+    ERROR_QUIET
+)
+message(STATUS "Create compile commands.")
 
 # # ========
 # # DOCS

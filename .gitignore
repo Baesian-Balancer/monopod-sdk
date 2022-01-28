@@ -12,5 +12,9 @@ _deps
 build
 .vscode
 
+.ccls-cache
+.cache
 .tags
 .tags1
+
+compile_commands.json
