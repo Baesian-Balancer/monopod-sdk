@@ -584,6 +584,7 @@ public:
     set_control(0, current_target_0);
     set_control(0, current_target_1);
     send_newest_controls();
+    pause_motors();
     is_safemode_ = true;
   }
 

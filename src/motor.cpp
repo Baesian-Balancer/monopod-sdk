@@ -54,6 +54,7 @@ void Motor::print() const {
   double motor_current = std::nan("");
   double motor_position = std::nan("");
   double motor_velocity = std::nan("");
+  double motor_acceleration = std::nan("");
   double motor_encoder_index = std::nan("");
   double motor_sent_current_target = std::nan("");
 
@@ -71,6 +72,10 @@ void Motor::print() const {
 
   if (get_measurement(velocity)->length() != 0) {
     motor_velocity = get_measurement(velocity)->newest_element();
+  }
+
+  if (get_measurement(acceleration)->length() != 0) {
+    motor_acceleration = get_measurement(acceleration)->newest_element();
   }
 
   if (get_measurement(encoder_index)->length() != 0) {
@@ -101,6 +106,7 @@ void Motor::print() const {
   rt_printf("current: %8f ", motor_current);
   rt_printf("raw position: %8f ", motor_position);
   rt_printf("raw velocity: %8f ", motor_velocity);
+  rt_printf("raw acceleration: %8f ", motor_acceleration);
   rt_printf("raw encoder index: %8f ", motor_encoder_index);
   rt_printf("target current: %8f ", motor_sent_current_target);
   rt_printf("\n");

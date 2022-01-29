@@ -37,6 +37,12 @@ CanBusControlBoards::~CanBusControlBoards() {
 void CanBusControlBoards::set_active_board(const int &index) {
   switch (index) {
   case motor_board:
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
   case encoder_board1:
   case encoder_board2:
     active_boards_[index] = true;
@@ -71,8 +77,6 @@ void CanBusControlBoards::wait_until_ready() {
   rt_printf("board and motors are ready \n");
 }
 
-// Fixme: Make it so you can select the board options here. add additional
-// function to enable / disable boards
 bool CanBusControlBoards::is_ready() {
   bool ready = true;
   // if any of the boards have no status messages despite the board being active
@@ -226,13 +230,6 @@ void CanBusControlBoards::loop() {
   send_newest_command();
 
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
                                    ControlBoardsCommand::Contents::ENABLE));
   send_newest_command();
 
