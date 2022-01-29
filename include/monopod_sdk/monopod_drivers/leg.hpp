@@ -51,7 +51,7 @@ public:
 
     // The the control gains in order to perform the calibration
     double kp, kd;
-    kp = 5.0;
+    kp = 4.0;
     kd = 0.05;
 
     joints_[hip_joint]->set_position_control_gains(kp, kd);
@@ -169,7 +169,6 @@ private:
         if (joint_result == HomingReturnCode::NOT_INITIALIZED ||
             joint_result == HomingReturnCode::FAILED) {
           homing_status = joint_result;
-          // abort homing
           break;
         }
 

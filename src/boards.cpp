@@ -6,7 +6,6 @@ CanBusControlBoards::CanBusControlBoards(
     const int &control_timeout_ms)
     : can_bus_(can_bus), active_boards_(board_count, false),
       motors_are_paused_(false), control_timeout_ms_(control_timeout_ms) {
-
   measurement_ = create_vector_of_pointers<ScalarTimeseries>(measurement_count,
                                                              history_length);
 
@@ -75,7 +74,7 @@ void CanBusControlBoards::wait_until_ready() {
 // Fixme: Make it so you can select the board options here. add additional
 // function to enable / disable boards
 bool CanBusControlBoards::is_ready() {
-  bool ready = false;
+  bool ready = true;
   // if any of the boards have no status messages despite the board being active
   // then we are not ready. If the board is not active then we ignore it.
   if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
@@ -121,6 +120,7 @@ void CanBusControlBoards::disable_can_recv_timeout() {
 void CanBusControlBoards::send_newest_controls() {
   if (is_safemode_) {
     // If the robot is currently in safemode maintain zero control.
+    rt_printf("Robot is in safemode. Can not run set control.\n");
     return;
   }
 

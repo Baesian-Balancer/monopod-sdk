@@ -24,6 +24,7 @@ bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
 void Monopod::reset() { can_bus_board_->reset_safemode(); }
 
 bool Monopod::initialize(Mode monopod_mode) {
+  reset();
 
   encoder_joint_indexing = {};
   motor_joint_indexing = {};
@@ -90,7 +91,7 @@ bool Monopod::initialize(Mode monopod_mode) {
     encoder_joint_indexing.push_back(boom_connector_joint);
     break;
   }
-
+  can_bus_board_->wait_until_ready();
   is_initialized = true;
   return initialized();
 }
@@ -210,7 +211,7 @@ Monopod::get_torque_targets(const Vector<int> &joint_indexes) {
 
 std::optional<double> Monopod::get_position(const int &joint_index) {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_measured_index_angle();
+    return encoders_[joint_index]->get_measured_angle();
   }
   return std::nullopt;
 }
@@ -232,7 +233,7 @@ std::optional<double> Monopod::get_acceleration(const int &joint_index) {
 std::optional<Vector<double>>
 Monopod::get_positions(const Vector<int> &joint_indexes) {
   auto lambda = [this](int joint_index) -> double {
-    return encoders_[joint_index]->get_measured_index_angle();
+    return encoders_[joint_index]->get_measured_angle();
   };
 
   return getJointDataSerialized(this, joint_indexes, lambda);

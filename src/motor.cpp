@@ -82,6 +82,7 @@ void Motor::print() const {
   }
 
   rt_printf("motor board status: ");
+  rt_printf("joint index %d; ", motor_id_);
   rt_printf("enabled: %d ", motor_board_status.system_enabled);
   rt_printf("error_code: %d ", motor_board_status.error_code);
   rt_printf("motor status: ");
@@ -96,10 +97,11 @@ void Motor::print() const {
   rt_printf("\n");
 
   rt_printf("motor measurements: ");
+  rt_printf("joint index %d; ", motor_id_);
   rt_printf("current: %8f ", motor_current);
-  rt_printf("position: %8f ", motor_position);
-  rt_printf("velocity: %8f ", motor_velocity);
-  rt_printf("encoder index: %8f ", motor_encoder_index);
+  rt_printf("raw position: %8f ", motor_position);
+  rt_printf("raw velocity: %8f ", motor_velocity);
+  rt_printf("raw encoder index: %8f ", motor_encoder_index);
   rt_printf("target current: %8f ", motor_sent_current_target);
   rt_printf("\n");
 }

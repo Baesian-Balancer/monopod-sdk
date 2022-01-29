@@ -239,25 +239,26 @@ protected:
    */
   double motor_current_to_joint_torque(double current) const;
 
-  /**
-   * @brief Get motor measurements and check if there are data or not.
-   *
-   * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::Measurements
-   * @return double the measurement.
-   */
-  double get_joint_measurement(const Measurements &measurement_id) const;
-
-  /**
-   * @brief Get the last motor measurement index for a specific data. If there
-   * was no data yet, return NaN
-   *
-   * @param measurement_id is the id of the measurement you want to get.
-   * check: monopod_drivers::Measurements
-   * @return double the measurement.
-   */
-  long int
-  get_joint_measurement_index(const Measurements &measurement_id) const;
+  // /**
+  //  * @brief Get motor measurements and check if there are data or not.
+  //  *
+  //  * @param measurement_id is the id of the measurement you want to get.
+  //  * check: monopod_drivers::Measurements
+  //  * @return double the measurement.
+  //  */
+  // double get_joint_measurement(const Measurements &measurement_id) const;
+  //
+  // /**
+  //  * @brief Get the last motor measurement index for a specific data. If
+  //  there
+  //  * was no data yet, return NaN
+  //  *
+  //  * @param measurement_id is the id of the measurement you want to get.
+  //  * check: monopod_drivers::Measurements
+  //  * @return double the measurement.
+  //  */
+  // long int
+  // get_joint_measurement_index(const Measurements &measurement_id) const;
 
   /**
    * @brief This is the pointer to the motor interface.

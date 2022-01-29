@@ -723,7 +723,7 @@ private:
   /**
    * State Info
    */
-  std::vector<bool> active_boards_;
+  Vector<int> active_boards_;
 
   /**
    * Outputs
@@ -789,7 +789,7 @@ private:
    * now being held constant at 0 control magnitude. This is maintained until
    * reset.
    */
-  bool is_safemode_;
+  bool is_safemode_ = false;
 
   /**
    * @brief If no control is sent for more than control_timeout_ms_ the board

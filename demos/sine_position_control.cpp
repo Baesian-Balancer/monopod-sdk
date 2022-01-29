@@ -40,7 +40,7 @@ void SinePositionControl::loop() {
   double desired_velocity_knee = 0.0;
 
   double kp, kd;
-  kp = 1.0;
+  kp = 5.0;
   kd = 0;
   set_gains(kp, kd);
 
@@ -69,8 +69,8 @@ void SinePositionControl::loop() {
     double desired_position =
         amplitude * sin(2 * M_PI * frequence * local_time);
     desired_position_hip = desired_position;
-    desired_position_knee = -desired_position; // opposite to make the bend
-                                               // create vertical movement.
+    desired_position_knee = desired_position; // opposite to make the bend
+                                              // create vertical movement.
 
     desired_torque_hip = kp_ * (desired_position_hip - actual_position_hip) +
                          kd_ * (desired_velocity_hip - actual_velocity_hip);
@@ -98,13 +98,18 @@ void SinePositionControl::loop() {
 
     // Printings
     if ((count % (int)(0.2 / control_period)) == 0) {
+      std::vector<double> actual_position = {actual_position_hip,
+                                             actual_position_knee};
       rt_printf("\33[H\33[2J"); // clear screen
-      for (unsigned int i = 0; i < NUMBER_LEG_JOINTS; ++i) {
-        rt_printf("des_pose: %8f ; ", desired_position);
-        rt_printf("des_torque_hip: %8f ; ", desired_torque_hip);
-        rt_printf("des_torque_knee: %8f ; ", desired_torque_knee);
-        sdk_->print();
-      }
+      rt_printf("des_pose: %8f ; ", desired_position);
+      rt_printf("act_pose_hip: %8f ; ", actual_position_hip);
+      rt_printf("act_pose_knee: %8f ; ", actual_position_knee);
+      rt_printf("des_torque_hip: %8f ; ", desired_torque_hip);
+      rt_printf("des_torque_knee: %8f ; ", desired_torque_knee);
+      rt_printf("\n");
+
+      sdk_->print();
+
       time_logger.print_statistics();
       fflush(stdout);
     }

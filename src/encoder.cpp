@@ -144,13 +144,15 @@ void Encoder::print() const {
   }
 
   rt_printf("Encoder board status: ");
+  rt_printf("joint index %d; ", encoder_id_);
   rt_printf("error_code: %d ", encoder_board_status.get_error_code());
 
   rt_printf("Encoder status: ");
+  rt_printf("joint index %d; ", encoder_id_);
   rt_printf("Encoder measurements: ");
-  rt_printf("position: %8f ", encoder_position);
-  rt_printf("velocity: %8f ", encoder_velocity);
-  rt_printf("encoder index: %8f ", encoder_encoder_index);
+  rt_printf("raw position: %8f ", encoder_position);
+  rt_printf("raw velocity: %8f ", encoder_velocity);
+  rt_printf("raw encoder index: %8f ", encoder_encoder_index);
   rt_printf("\n");
 }
 
