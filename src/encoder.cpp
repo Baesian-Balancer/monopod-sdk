@@ -126,7 +126,6 @@ void Encoder::print() const {
   double encoder_position = std::nan("");
   double encoder_velocity = std::nan("");
   double encoder_acceleration = std::nan("");
-  double encoder_encoder_index = std::nan("");
 
   if (get_status()->length() != 0) {
     encoder_board_status = get_status()->newest_element();
@@ -140,10 +139,6 @@ void Encoder::print() const {
     encoder_velocity = get_measurement(velocity)->newest_element();
   }
 
-  if (get_measurement(encoder_index)->length() != 0) {
-    encoder_encoder_index = get_measurement(encoder_index)->newest_element();
-  }
-
   if (get_measurement(acceleration)->length() != 0) {
     encoder_acceleration = get_measurement(acceleration)->newest_element();
   }
@@ -151,6 +146,7 @@ void Encoder::print() const {
   rt_printf("Encoder board status: ");
   rt_printf("joint index %d; ", encoder_id_);
   rt_printf("error_code: %d ", encoder_board_status.get_error_code());
+  rt_printf("\n");
 
   rt_printf("Encoder status: ");
   rt_printf("joint index %d; ", encoder_id_);
@@ -158,7 +154,6 @@ void Encoder::print() const {
   rt_printf("raw position: %8f ", encoder_position);
   rt_printf("raw velocity: %8f ", encoder_velocity);
   rt_printf("raw acceleration: %8f ", encoder_acceleration);
-  rt_printf("raw encoder index: %8f ", encoder_encoder_index);
   rt_printf("\n");
 }
 

@@ -121,7 +121,7 @@ bool Monopod::initialized() { return is_initialized; }
 
 void Monopod::print(const Vector<int> &joint_indexes) const {
   const Vector<int> &jointSerialization =
-      joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
+      joint_indexes.empty() ? encoder_joint_indexing : joint_indexes;
 
   for (auto &joint_index : jointSerialization) {
     if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {

@@ -43,6 +43,7 @@ void CanBusControlBoards::set_active_board(const int &index) {
     set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
                                      ControlBoardsCommand::Contents::ENABLE));
     send_newest_command();
+    [[fallthrough]];
   case encoder_board1:
   case encoder_board2:
     active_boards_[index] = true;
@@ -81,6 +82,9 @@ bool CanBusControlBoards::is_ready() {
   bool ready = true;
   // if any of the boards have no status messages despite the board being active
   // then we are not ready. If the board is not active then we ignore it.
+
+  // rt_printf("%d, %d, %d \n", active_boards_[0], active_boards_[1],
+  //           active_boards_[2]);
   if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
     return false;
   } else if (active_boards_[motor_board]) {
@@ -90,6 +94,7 @@ bool CanBusControlBoards::is_ready() {
   if (status_[encoder_board1]->length() == 0 &&
       active_boards_[encoder_board1]) {
     return false;
+    // ready = ready && true;
   } else if (active_boards_[encoder_board1]) {
     ready = ready && status_[encoder_board1]->newest_element().is_ready();
   }
@@ -97,6 +102,7 @@ bool CanBusControlBoards::is_ready() {
   if (status_[encoder_board2]->length() == 0 &&
       active_boards_[encoder_board2]) {
     return false;
+    // ready = ready && true;
   } else if (active_boards_[encoder_board2]) {
     ready = ready && status_[encoder_board2]->newest_element().is_ready();
   }
@@ -307,7 +313,6 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD1_ACC:
       // TODO: check that the conversion here is proper for acceleration.
-
       // Convert the acceleration unit from the blmc card
       // (kilo-rotations-per-minutes squared) into rad/s^2.
       measurement_[acceleration_0]->append(measurement_0 * 2 * M_PI *
@@ -372,8 +377,12 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD2_STATUSMSG: {
       BoardStatus status;
-      uint8_t data = 00000000;
-      status.error_code = data >> 5;
+      status.system_enabled = 1;
+      status.motor1_enabled = 1;
+      status.motor1_ready = 1;
+      status.motor2_enabled = 1;
+      status.motor2_ready = 1;
+      status.error_code = 0;
 
       status_[encoder_board1]->append(status);
       break;
@@ -381,8 +390,12 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD3_STATUSMSG: {
       BoardStatus status;
-      uint8_t data = 00000000;
-      status.error_code = data >> 5;
+      status.system_enabled = 1;
+      status.motor1_enabled = 1;
+      status.motor1_ready = 1;
+      status.motor2_enabled = 1;
+      status.motor2_ready = 1;
+      status.error_code = 0;
 
       status_[encoder_board2]->append(status);
       break;

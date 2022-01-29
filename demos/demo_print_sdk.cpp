@@ -29,7 +29,7 @@ int main(int, char **) {
   monopod_drivers::Monopod monopod;
   rt_printf("controllers are set up \n");
 
-  monopod.initialize(monopod_drivers::Mode::encoder_board1);
+  monopod.initialize(monopod_drivers::Mode::Fixed_connector);
   rt_printf("initialized monopod sdk \n");
 
   real_time_tools::Timer time_logger;
