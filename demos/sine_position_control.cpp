@@ -26,7 +26,7 @@ void SinePositionControl::loop() {
   double control_period = 0.001;
 
   // sine torque params
-  double amplitude = 0 /*3.1415*/;
+  double amplitude = 0.75 /*3.1415*/;
   double frequence = 0.5;
 
   // here is the control in torque (NM)
@@ -40,7 +40,7 @@ void SinePositionControl::loop() {
   double desired_velocity_knee = 0.0;
 
   double kp, kd;
-  kp = 2.0;
+  kp = 5.0;
   kd = 0;
   set_gains(kp, kd);
 
