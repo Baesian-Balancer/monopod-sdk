@@ -6,7 +6,6 @@ CanBusControlBoards::CanBusControlBoards(
     const int &control_timeout_ms)
     : can_bus_(can_bus), active_boards_(board_count, false),
       motors_are_paused_(false), control_timeout_ms_(control_timeout_ms) {
-
   measurement_ = create_vector_of_pointers<ScalarTimeseries>(measurement_count,
                                                              history_length);
 
@@ -38,6 +37,14 @@ CanBusControlBoards::~CanBusControlBoards() {
 void CanBusControlBoards::set_active_board(const int &index) {
   switch (index) {
   case motor_board:
+    rt_printf("Enabling Motors\n");
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
+    [[fallthrough]];
   case encoder_board1:
   case encoder_board2:
     active_boards_[index] = true;
@@ -72,12 +79,13 @@ void CanBusControlBoards::wait_until_ready() {
   rt_printf("board and motors are ready \n");
 }
 
-// Fixme: Make it so you can select the board options here. add additional
-// function to enable / disable boards
 bool CanBusControlBoards::is_ready() {
-  bool ready = false;
+  bool ready = true;
   // if any of the boards have no status messages despite the board being active
   // then we are not ready. If the board is not active then we ignore it.
+
+  // rt_printf("%d, %d, %d \n", active_boards_[0], active_boards_[1],
+  //           active_boards_[2]);
   if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
     return false;
   } else if (active_boards_[motor_board]) {
@@ -87,6 +95,7 @@ bool CanBusControlBoards::is_ready() {
   if (status_[encoder_board1]->length() == 0 &&
       active_boards_[encoder_board1]) {
     return false;
+    // ready = ready && true;
   } else if (active_boards_[encoder_board1]) {
     ready = ready && status_[encoder_board1]->newest_element().is_ready();
   }
@@ -94,6 +103,7 @@ bool CanBusControlBoards::is_ready() {
   if (status_[encoder_board2]->length() == 0 &&
       active_boards_[encoder_board2]) {
     return false;
+    // ready = ready && true;
   } else if (active_boards_[encoder_board2]) {
     ready = ready && status_[encoder_board2]->newest_element().is_ready();
   }
@@ -121,6 +131,7 @@ void CanBusControlBoards::disable_can_recv_timeout() {
 void CanBusControlBoards::send_newest_controls() {
   if (is_safemode_) {
     // If the robot is currently in safemode maintain zero control.
+    rt_printf("Robot is in safemode. Can not run set control.\n");
     return;
   }
 
@@ -227,14 +238,6 @@ void CanBusControlBoards::loop() {
 
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
                                    ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
 
   // receive data from board in a loop ---------------------------------------
   long int timeindex = can_bus_->get_output_frame()->newest_timeindex();
@@ -310,7 +313,6 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD1_ACC:
       // TODO: check that the conversion here is proper for acceleration.
-
       // Convert the acceleration unit from the blmc card
       // (kilo-rotations-per-minutes squared) into rad/s^2.
       measurement_[acceleration_0]->append(measurement_0 * 2 * M_PI *
@@ -375,8 +377,12 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD2_STATUSMSG: {
       BoardStatus status;
-      uint8_t data = 00000000;
-      status.error_code = data >> 5;
+      status.system_enabled = 1;
+      status.motor1_enabled = 1;
+      status.motor1_ready = 1;
+      status.motor2_enabled = 1;
+      status.motor2_ready = 1;
+      status.error_code = 0;
 
       status_[encoder_board1]->append(status);
       break;
@@ -384,8 +390,12 @@ void CanBusControlBoards::loop() {
 
     case CanframeIDs::BOARD3_STATUSMSG: {
       BoardStatus status;
-      uint8_t data = 00000000;
-      status.error_code = data >> 5;
+      status.system_enabled = 1;
+      status.motor1_enabled = 1;
+      status.motor1_ready = 1;
+      status.motor2_enabled = 1;
+      status.motor2_ready = 1;
+      status.error_code = 0;
 
       status_[encoder_board2]->append(status);
       break;
