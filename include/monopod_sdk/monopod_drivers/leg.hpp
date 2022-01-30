@@ -36,18 +36,6 @@ public:
 
     joints_[hip_joint] = hip_joint_module;
     joints_[knee_joint] = knee_joint_module;
-  }
-
-  /**
-   * @brief Destroy the LegInterface object
-   */
-  ~Leg() {}
-
-  /**
-   * @brief Initialize canbus connecion, esablish connection to the motors,
-   * and set motor constants.
-   */
-  bool initialize() {
 
     // The the control gains in order to perform the calibration
     double kp, kd;
@@ -57,10 +45,13 @@ public:
     joints_[hip_joint]->set_position_control_gains(kp, kd);
     joints_[knee_joint]->set_position_control_gains(kp, kd);
 
-    // wait until all board are ready and connected
     initialized = true;
-    return initialized;
   }
+
+  /**
+   * @brief Destroy the LegInterface object
+   */
+  ~Leg() {}
 
   // =========================================================================
   //  GETTERS
@@ -74,7 +65,6 @@ public:
    * meassurement type enum.
    */
   double get_measured_torque(const JointNamesIndex &joint_index) const {
-    throw_if_not_init();
 
     return joints_.at(joint_index)->get_measured_torque();
   }
@@ -93,7 +83,6 @@ public:
    */
   bool calibrate(const double &hip_home_offset_rad,
                  const double &knee_home_offset_rad) {
-    throw_if_not_init();
     double search_distance_limit_rad = 2 * M_PI;
     LVector home_offset_rad = {hip_home_offset_rad, knee_home_offset_rad};
     execute_homing(search_distance_limit_rad, home_offset_rad);
@@ -115,11 +104,6 @@ private:
   bool initialized = false;
 
 private:
-  void throw_if_not_init() const {
-    if (!initialized)
-      throw std::runtime_error(
-          "Need to initialize the monopod_drivers::Leg before use.");
-  }
   /**
    * @brief Perform homing for all joints.
    *

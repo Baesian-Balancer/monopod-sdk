@@ -65,7 +65,6 @@ bool Monopod::initialize(Mode monopod_mode) {
     motors_[knee_joint] = motor_knee;
 
     leg_ = std::make_unique<monopod_drivers::Leg>(motor_hip, motor_knee);
-    leg_->initialize();
 
     encoder_joint_indexing.push_back(hip_joint);
     encoder_joint_indexing.push_back(knee_joint);
