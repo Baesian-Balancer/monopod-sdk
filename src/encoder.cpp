@@ -116,7 +116,7 @@ void Encoder::set_board_active() const {
     return;
   }
   throw std::invalid_argument(
-      "encoder_id needs to match one of the joints in "
+      "When activating board, encoder_id needs to match one of the joints in "
       "the JointNamesIndex enum. The provided value was, " +
       std::to_string(encoder_id_));
 }
