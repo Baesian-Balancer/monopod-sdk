@@ -37,13 +37,14 @@ CanBusControlBoards::~CanBusControlBoards() {
 void CanBusControlBoards::set_active_board(const int &index) {
   switch (index) {
   case motor_board:
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
-    [[fallthrough]];
+    // rt_printf("Enabling Motors\n");
+    // set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+    //                                  ControlBoardsCommand::Contents::ENABLE));
+    // send_newest_command();
+    // set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
+    //                                  ControlBoardsCommand::Contents::ENABLE));
+    // send_newest_command();
+    // [[fallthrough]];
   case encoder_board1:
   case encoder_board2:
     active_boards_[index] = true;
@@ -236,6 +237,14 @@ void CanBusControlBoards::loop() {
   send_newest_command();
 
   set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
+  rt_printf("Enabling Motors\n");
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
                                    ControlBoardsCommand::Contents::ENABLE));
   send_newest_command();
 

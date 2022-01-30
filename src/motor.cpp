@@ -103,12 +103,12 @@ void Motor::print() const {
 
   rt_printf("motor measurements: ");
   rt_printf("joint index %d; ", motor_id_);
-  rt_printf("current: %8f ", motor_current);
   rt_printf("raw position: %8f ", motor_position);
   rt_printf("raw velocity: %8f ", motor_velocity);
   rt_printf("raw acceleration: %8f ", motor_acceleration);
   rt_printf("raw encoder index: %8f ", motor_encoder_index);
-  rt_printf("target current: %8f ", motor_sent_current_target);
+  rt_printf("current / target current: %8f / %8f", motor_current,
+            motor_sent_current_target);
   rt_printf("\n");
 }
 
