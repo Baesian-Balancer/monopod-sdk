@@ -141,6 +141,10 @@ protected:
    * @brief Template helper checking if vector contains an element.
    */
   template <typename T> static bool in_range(T value, T min, T max) {
+    // Todo: fix dumbness here check if nan. ignore if it is.
+    if (std::isnan(value)) {
+      return true;
+    }
     return min <= value && value < max;
   }
 
