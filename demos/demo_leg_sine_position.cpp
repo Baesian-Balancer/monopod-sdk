@@ -39,15 +39,16 @@ int main(int, char **) {
 
   monopod_drivers::sdk_Ptr sdk = std::make_shared<monopod_drivers::Monopod>();
   sdk->initialize(monopod_drivers::Mode::motor_board);
-  sdk->set_max_torque_target(5, monopod_drivers::hip_joint);
-  sdk->set_max_torque_target(5, monopod_drivers::knee_joint);
+  sdk->set_max_torque_target(15, monopod_drivers::hip_joint);
+  sdk->set_max_torque_target(15, monopod_drivers::knee_joint);
   sdk->start_loop();
-  sdk->calibrate();
+  // sdk->calibrate();
 
   rt_printf("sdk is set up \n");
 
   // construct a simple PD controller.
   monopod_drivers::SinePositionControl controller(sdk);
+  controller.set_gains(3, 0.25);
 
   rt_printf("controllers are set up \n");
 

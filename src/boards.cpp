@@ -22,6 +22,17 @@ CanBusControlBoards::CanBusControlBoards(
 
   sent_command_ = std::make_shared<CommandTimeseries>(history_length, 0, false);
 
+  pause_motors();
+
+  // initialize board --------------------------------------------------------
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_SYS,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
   is_loop_active_ = true;
   rt_thread_.create_realtime_thread(&CanBusControlBoards::loop, this);
 }
@@ -38,12 +49,14 @@ void CanBusControlBoards::set_active_board(const int &index) {
   switch (index) {
   case motor_board:
     rt_printf("Enabling Motors\n");
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
-    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
-                                     ControlBoardsCommand::Contents::ENABLE));
-    send_newest_command();
+    if (!active_boards_[motor_board]) {
+      set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                       ControlBoardsCommand::Contents::ENABLE));
+      send_newest_command();
+      set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
+                                       ControlBoardsCommand::Contents::ENABLE));
+      send_newest_command();
+    }
     [[fallthrough]];
   case encoder_board1:
   case encoder_board2:
@@ -229,15 +242,6 @@ void CanBusControlBoards::send_newest_command() {
 }
 
 void CanBusControlBoards::loop() {
-  pause_motors();
-
-  // initialize board --------------------------------------------------------
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_SYS,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
-                                   ControlBoardsCommand::Contents::ENABLE));
 
   // receive data from board in a loop ---------------------------------------
   long int timeindex = can_bus_->get_output_frame()->newest_timeindex();
