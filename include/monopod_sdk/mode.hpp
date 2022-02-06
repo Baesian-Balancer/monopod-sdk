@@ -13,27 +13,27 @@ enum class Mode {
   /**
    * @brief Complete free boom connector (5 joints total)
    */
-  Free,
+  FREE,
   /**
    * @brief Fixed boom connector (4 joints total)
    */
-  Fixed_connector,
+  FIXED_CONNECTOR,
   /**
    * @brief Fixed boom connector and planrizer yaw (3 joints total)
    */
-  Fixed,
+  FIXED,
   /**
    * @brief motor board
    */
-  motor_board,
+  MOTOR_BOARD,
   /**
    * @brief encoder board 1
    */
-  encoder_board1,
+  ENCODER_BOARD1,
   /**
    * @brief encoder board 2
    */
-  encoder_board2
+  ENCODER_BOARD2
 };
 
 } // end namespace monopod_drivers

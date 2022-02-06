@@ -38,7 +38,7 @@ int main(int, char **) {
   StopDemos = false;
 
   monopod_drivers::sdk_Ptr sdk = std::make_shared<monopod_drivers::Monopod>();
-  sdk->initialize(monopod_drivers::Mode::motor_board);
+  sdk->initialize(monopod_drivers::Mode::MOTOR_BOARD);
   sdk->set_max_torque_target(5, monopod_drivers::hip_joint);
   sdk->set_max_torque_target(5, monopod_drivers::knee_joint);
   sdk->start_loop();
