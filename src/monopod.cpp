@@ -35,25 +35,25 @@ bool Monopod::initialize(Mode monopod_mode) {
    * connector. etc */
   switch (monopod_mode) {
 
-  case Mode::Free:
+  case Mode::FREE:
     encoders_[boom_connector_joint] =
         create_encoder_module(boom_connector_joint);
     encoder_joint_indexing.push_back(boom_connector_joint);
     [[fallthrough]];
 
-  case Mode::Fixed_connector:
+  case Mode::FIXED_CONNECTOR:
     encoders_[planarizer_yaw_joint] =
         create_encoder_module(planarizer_yaw_joint);
     encoder_joint_indexing.push_back(planarizer_yaw_joint);
     [[fallthrough]];
 
-  case Mode::Fixed:
+  case Mode::FIXED:
     encoders_[planarizer_pitch_joint] =
         create_encoder_module(planarizer_pitch_joint);
     encoder_joint_indexing.push_back(planarizer_pitch_joint);
     [[fallthrough]];
 
-  case Mode::motor_board: {
+  case Mode::MOTOR_BOARD: {
 
     auto motor_hip = create_motor_module(hip_joint);
     auto motor_knee = create_motor_module(knee_joint);
@@ -73,7 +73,7 @@ bool Monopod::initialize(Mode monopod_mode) {
     break;
   }
 
-  case Mode::encoder_board1:
+  case Mode::ENCODER_BOARD1:
     encoders_[planarizer_pitch_joint] =
         create_encoder_module(planarizer_pitch_joint);
     encoders_[planarizer_yaw_joint] =
@@ -83,7 +83,7 @@ bool Monopod::initialize(Mode monopod_mode) {
     encoder_joint_indexing.push_back(planarizer_yaw_joint);
     break;
 
-  case Mode::encoder_board2:
+  case Mode::ENCODER_BOARD2:
     encoders_[boom_connector_joint] =
         create_encoder_module(boom_connector_joint);
 
@@ -110,8 +110,8 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
   // todo: Make calibration more robust??
   // only calibrate leg if it is active
   // need to calibrate or zero encoders
-  if (!(monopod_mode_ == Mode::encoder_board1 ||
-        monopod_mode_ == Mode::encoder_board2)) {
+  if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
+        monopod_mode_ == Mode::ENCODER_BOARD2)) {
     leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
   }
 }
