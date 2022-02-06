@@ -84,8 +84,10 @@ bool EncoderJointModule::check_limits() const {
     auto meassurement_id = limit_info.first;
     auto joint_limit = limit_info.second;
     double meassurement = get_joint_measurement(meassurement_id);
-    valid = valid &&
-            in_range<double>(meassurement, joint_limit.min, joint_limit.max);
+    if (!(std::isnan(meassurement) &&
+          meassurement_id == Measurements::acceleration))
+      valid = valid &&
+              in_range<double>(meassurement, joint_limit.min, joint_limit.max);
   }
   limit_door_.unlock();
   return valid;
