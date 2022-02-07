@@ -43,7 +43,7 @@ public:
    * @param monopod_mode defines the task mode of the monopod. Can also specify
    * individual boards.
    */
-  bool initialize(Mode monopod_mode);
+  bool initialize(Mode monopod_mode, bool dummy_mode = false);
 
   /**
    * @brief is the monopod sdk Initialized?.
@@ -419,6 +419,13 @@ private:
    * @brief controls execution of loop which checks limits of joints.
    */
   bool stop_loop_limits;
+
+  /**
+   * @brief Determines if the joint is in dummy mode. (no connection to real
+   * robot)
+   */
+  bool dummy_mode_;
+
   /**
    * @brief Canbus connection.
    */
@@ -426,9 +433,10 @@ private:
 
   /**
    * @brief Canbus ControlBoards. This maintains connection with the canbus and
-   * holds meassurement and write buffers.
+   * holds meassurement and write buffers. This could also be a dummy
+   * controlboard.
    */
-  Ptr<monopod_drivers::CanBusControlBoards> can_bus_board_;
+  Ptr<monopod_drivers::ControlBoardsInterface> can_bus_board_;
 
   /**
    * @brief Holds encoder joint modules for each active joint.

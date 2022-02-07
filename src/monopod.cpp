@@ -7,12 +7,7 @@ namespace monopod_drivers {
 // Public methods
 //===================================================================
 
-Monopod::Monopod() {
-  stop_loop_limits = false;
-  can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-  can_bus_board_ =
-      std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
-}
+Monopod::Monopod() { stop_loop_limits = false; }
 
 Monopod::~Monopod() {
   stop_loop_limits = true;
@@ -23,8 +18,16 @@ bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
 
 void Monopod::reset() { can_bus_board_->reset_safemode(); }
 
-bool Monopod::initialize(Mode monopod_mode) {
-  reset();
+bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
+  dummy_mode_ = dummy_mode;
+  if (!dummy_mode) {
+    can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
+    can_bus_board_ =
+        std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
+    reset();
+  } else {
+    can_bus_board_ = std::make_shared<monopod_drivers::DummyControlBoards>();
+  }
 
   encoder_joint_indexing = {};
   motor_joint_indexing = {};

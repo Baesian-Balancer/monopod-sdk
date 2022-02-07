@@ -34,6 +34,7 @@ CanBusControlBoards::CanBusControlBoards(
   send_newest_command();
 
   is_loop_active_ = true;
+  is_safemode_ = false;
   rt_thread_.create_realtime_thread(&CanBusControlBoards::loop, this);
 }
 
@@ -155,7 +156,7 @@ void CanBusControlBoards::send_newest_controls() {
     motors_are_paused_ = false;
   }
 
-  std::array<double, 2> controls;
+  std::array<double, control_count> controls;
   for (size_t i = 0; i < control_.size(); i++) {
     if (control_[i]->length() == 0) {
       rt_printf("you tried to send control but no control has been set\n");

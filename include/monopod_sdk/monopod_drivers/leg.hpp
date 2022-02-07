@@ -65,7 +65,6 @@ public:
    * meassurement type enum.
    */
   double get_measured_torque(const JointNamesIndex &joint_index) const {
-
     return joints_.at(joint_index)->get_measured_torque();
   }
 
