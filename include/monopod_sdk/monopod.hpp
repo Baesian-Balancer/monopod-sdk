@@ -206,21 +206,15 @@ public:
    *
    * @return The joint PID parameters.
    */
-  std::optional<PID> get_pid(const int &joint_index);
+  std::optional<PID> get_pid(const int &joint_index) const;
 
   /**
    * Get the position limits of the joint.
    *
    * @return The position limits of the joint.
    */
-  std::optional<JointLimit> get_joint_position_limit(const int &joint_index);
-
-  /**
-   * Get the velocity limits of the joint.
-   *
-   * @return The velocity limits of the joint.
-   */
-  std::optional<JointLimit> get_joint_velocity_limit(const int &joint_index);
+  std::optional<JointLimit>
+  get_joint_position_limit(const int &joint_index) const;
 
   /**
    * Get the velocity limits of the joint.
@@ -228,7 +222,15 @@ public:
    * @return The velocity limits of the joint.
    */
   std::optional<JointLimit>
-  get_joint_acceleration_limit(const int &joint_index);
+  get_joint_velocity_limit(const int &joint_index) const;
+
+  /**
+   * Get the velocity limits of the joint.
+   *
+   * @return The velocity limits of the joint.
+   */
+  std::optional<JointLimit>
+  get_joint_acceleration_limit(const int &joint_index) const;
 
   /**
    * @brief Get the max torque
@@ -236,7 +238,7 @@ public:
    * @param joint_index
    * @return std::optional<double> containing the max torque if success
    */
-  std::optional<double> get_max_torque_target(const int &joint_index);
+  std::optional<double> get_max_torque_target(const int &joint_index) const;
 
   /**
    * @brief Get the torque
@@ -244,7 +246,7 @@ public:
    * @param joint_index
    * @return std::optional<double> containing the torque if success
    */
-  std::optional<double> get_torque_target(const int &joint_index);
+  std::optional<double> get_torque_target(const int &joint_index) const;
 
   /**
    * @brief Get the torques of indexed joints
@@ -253,7 +255,7 @@ public:
    * @return std::optional<double> containing the torque if success
    */
   std::optional<Vector<double>>
-  get_torque_targets(const Vector<int> &joint_indexes = {});
+  get_torque_targets(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the position of joint
@@ -262,7 +264,7 @@ public:
    * @return std::optional<double> containing the position if success
    * value of the position (NULL if not valid)
    */
-  std::optional<double> get_position(const int &joint_index);
+  std::optional<double> get_position(const int &joint_index) const;
 
   /**
    * @brief Get the velocity of the joint
@@ -270,7 +272,7 @@ public:
    * @param joint_index name of the joint we want to access
    * @return std::optional<double> containing the velocity if success
    */
-  std::optional<double> get_velocity(const int &joint_index);
+  std::optional<double> get_velocity(const int &joint_index) const;
 
   /**
    * @brief Get the acceleration of the joint
@@ -278,7 +280,7 @@ public:
    * @param joint_index name of the joint we want to access
    * @return std::optional<double> containing the acceleration if success
    */
-  std::optional<double> get_acceleration(const int &joint_index);
+  std::optional<double> get_acceleration(const int &joint_index) const;
 
   /**
    * @brief Get the position of the joint indexes
@@ -288,7 +290,7 @@ public:
    * success
    */
   std::optional<Vector<double>>
-  get_positions(const Vector<int> &joint_indexes = {});
+  get_positions(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the velocity of the joint indexes
@@ -298,7 +300,7 @@ public:
    * if success
    */
   std::optional<Vector<double>>
-  get_velocities(const Vector<int> &joint_indexes = {});
+  get_velocities(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the acceleration of the joint indexes
@@ -308,7 +310,7 @@ public:
    * accelerations if success
    */
   std::optional<Vector<double>>
-  get_accelerations(const Vector<int> &joint_indexes = {});
+  get_accelerations(const Vector<int> &joint_indexes = {}) const;
 
 private:
   /**
@@ -337,7 +339,7 @@ private:
   std::optional<Vector<double>>
   getJointDataSerialized(const Monopod *monopod,
                          const Vector<int> &joint_indexes,
-                         std::function<double(int)> getJointData) {
+                         std::function<double(int)> getJointData) const {
     // Take the joint index in lambda. Return the data you want.
     const Vector<int> &jointSerialization =
         joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;

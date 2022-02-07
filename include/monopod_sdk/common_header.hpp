@@ -15,7 +15,7 @@ namespace monopod_drivers {
  */
 #define MAX_CURRENT 10.0
 
-#define VERBOSE true
+// #define VERBOSE true
 
 /**
  * Number of joints in a monopod_drivers::Leg.
