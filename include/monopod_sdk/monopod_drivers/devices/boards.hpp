@@ -886,8 +886,9 @@ public:
 
     sent_control_[current_target_0]->append(0);
     sent_control_[current_target_1]->append(0);
-    sent_control_[current_target_0]->append(0);
-    sent_control_[current_target_1]->append(0);
+
+    control_[current_target_0]->append(0);
+    control_[current_target_1]->append(0);
   }
 
   /**
