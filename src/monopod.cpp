@@ -16,7 +16,16 @@ Monopod::~Monopod() {
 
 bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
 
-void Monopod::reset() { can_bus_board_->reset_safemode(); }
+void Monopod::reset(const bool &move_to_zero) {
+  // Make sure we are in a reset state before going to zero.
+  can_bus_board_->reset();
+
+  if (move_to_zero && !motor_joint_indexing.empty()) {
+    leg_->goto_position();
+  }
+  // Reset here pauses the motors.
+  can_bus_board_->reset();
+}
 
 bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
   dummy_mode_ = dummy_mode;
@@ -25,6 +34,7 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
     can_bus_board_ =
         std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
     reset();
+
   } else {
     can_bus_board_ = std::make_shared<monopod_drivers::DummyControlBoards>();
   }
@@ -100,10 +110,13 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
 
 void Monopod::start_loop() {
   if (is_initialized) {
-    rt_thread_limits_.create_realtime_thread(&Monopod::loop, this);
+    rt_printf("Starting realtime loot to check physical limits of robot. \n");
+    rt_thread_limits_.create_realtime_thread(&Monopod::loop_limits, this);
   } else {
-    throw std::runtime_error(
-        "Need to initialize monopod_sdk before starting the realtime loop.");
+    std::cerr << "Monopod::start_loop(): Need to initialize monopod_sdk before "
+                 "starting the realtime loop_limits."
+              << std::endl;
+    exit(-1);
   }
 }
 
@@ -111,11 +124,19 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
                         const double &knee_home_offset_rad) {
 
   // todo: Make calibration more robust??
+  // todo: Update zero for none motor joints. Right now we can just use reset
+  // button to get new zero when in physical spot.
+  //
   // only calibrate leg if it is active
-  // need to calibrate or zero encoders
   if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
         monopod_mode_ == Mode::ENCODER_BOARD2)) {
-    leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+    bool status = leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+    // If status fail cout a error or warning.
+    if (!status) {
+      std::cerr
+          << "Monopod::calibrate(): Failed to reach desired final location."
+          << std::endl;
+    }
   }
 }
 
@@ -154,7 +175,7 @@ std::unordered_map<std::string, int> Monopod::get_joint_names() const {
   return joint_names_;
 }
 
-std::optional<PID> Monopod::get_pid(const int &joint_index) {
+std::optional<PID> Monopod::get_pid(const int &joint_index) const {
   if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
     // todo Implement PID read/write
   }
@@ -162,38 +183,38 @@ std::optional<PID> Monopod::get_pid(const int &joint_index) {
 }
 
 std::optional<JointLimit>
-Monopod::get_joint_position_limit(const int &joint_index) {
+Monopod::get_joint_position_limit(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_limit(position);
+    return encoders_.at(joint_index)->get_limit(position);
   }
   return std::nullopt;
 }
 
 std::optional<JointLimit>
-Monopod::get_joint_velocity_limit(const int &joint_index) {
+Monopod::get_joint_velocity_limit(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_limit(velocity);
+    return encoders_.at(joint_index)->get_limit(velocity);
   }
   return std::nullopt;
 }
 
 std::optional<JointLimit>
-Monopod::get_joint_acceleration_limit(const int &joint_index) {
+Monopod::get_joint_acceleration_limit(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_limit(acceleration);
+    return encoders_.at(joint_index)->get_limit(acceleration);
   }
   return std::nullopt;
 }
 
-std::optional<double> Monopod::get_torque_target(const int &joint_index) {
+std::optional<double> Monopod::get_torque_target(const int &joint_index) const {
   if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
-    return motors_[joint_index]->get_measured_torque();
+    return motors_.at(joint_index)->get_measured_torque();
   }
   return std::nullopt;
 }
 
 std::optional<Vector<double>>
-Monopod::get_torque_targets(const Vector<int> &joint_indexes) {
+Monopod::get_torque_targets(const Vector<int> &joint_indexes) const {
   const Vector<int> &jointSerialization =
       joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
@@ -202,7 +223,7 @@ Monopod::get_torque_targets(const Vector<int> &joint_indexes) {
   for (auto &joint_index : jointSerialization) {
     if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
       // note: maybe we cna call the single version here.
-      data.push_back(motors_[joint_index]->get_measured_torque());
+      data.push_back(motors_.at(joint_index)->get_measured_torque());
       continue;
     } else {
       return std::nullopt;
@@ -211,58 +232,59 @@ Monopod::get_torque_targets(const Vector<int> &joint_indexes) {
   return data;
 }
 
-std::optional<double> Monopod::get_position(const int &joint_index) {
+std::optional<double> Monopod::get_position(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_measured_angle();
+    return encoders_.at(joint_index)->get_measured_angle();
   }
   return std::nullopt;
 }
 
-std::optional<double> Monopod::get_velocity(const int &joint_index) {
+std::optional<double> Monopod::get_velocity(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_measured_velocity();
+    return encoders_.at(joint_index)->get_measured_velocity();
   }
   return std::nullopt;
 }
 
-std::optional<double> Monopod::get_acceleration(const int &joint_index) {
+std::optional<double> Monopod::get_acceleration(const int &joint_index) const {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-    return encoders_[joint_index]->get_measured_acceleration();
+    return encoders_.at(joint_index)->get_measured_acceleration();
   }
   return std::nullopt;
 }
 
 std::optional<Vector<double>>
-Monopod::get_positions(const Vector<int> &joint_indexes) {
+Monopod::get_positions(const Vector<int> &joint_indexes) const {
   auto lambda = [this](int joint_index) -> double {
-    return encoders_[joint_index]->get_measured_angle();
+    return encoders_.at(joint_index)->get_measured_angle();
   };
 
   return getJointDataSerialized(this, joint_indexes, lambda);
 }
 
 std::optional<Vector<double>>
-Monopod::get_velocities(const Vector<int> &joint_indexes) {
+Monopod::get_velocities(const Vector<int> &joint_indexes) const {
   auto lambda = [this](int joint_index) -> double {
-    return encoders_[joint_index]->get_measured_velocity();
+    return encoders_.at(joint_index)->get_measured_velocity();
   };
 
   return getJointDataSerialized(this, joint_indexes, lambda);
 }
 
 std::optional<Vector<double>>
-Monopod::get_accelerations(const Vector<int> &joint_indexes) {
+Monopod::get_accelerations(const Vector<int> &joint_indexes) const {
   auto lambda = [this](int joint_index) -> double {
-    return encoders_[joint_index]->get_measured_acceleration();
+    return encoders_.at(joint_index)->get_measured_acceleration();
   };
 
   return getJointDataSerialized(this, joint_indexes, lambda);
 }
 
-std::optional<double> Monopod::get_max_torque_target(const int &joint_index) {
+std::optional<double>
+Monopod::get_max_torque_target(const int &joint_index) const {
 
   if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
-    return motors_[joint_index]->get_max_torque();
+    return motors_.at(joint_index)->get_max_torque();
   }
   // Todo: make sure there isnt any issue with returning null optional for max
   // torque on a read only joint...
@@ -288,7 +310,7 @@ bool Monopod::set_joint_position_limit(const double &max, const double &min,
                                        const int &joint_index) {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
-    encoders_[joint_index]->set_limit(position, limit);
+    encoders_.at(joint_index)->set_limit(position, limit);
     return true;
   }
   return false;
@@ -298,7 +320,7 @@ bool Monopod::set_joint_velocity_limit(const double &max, const double &min,
                                        const int &joint_index) {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
-    encoders_[joint_index]->set_limit(velocity, limit);
+    encoders_.at(joint_index)->set_limit(velocity, limit);
     return true;
   }
   return false;
@@ -308,7 +330,7 @@ bool Monopod::set_joint_acceleration_limit(const double &max, const double &min,
                                            const int &joint_index) {
   if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
-    encoders_[joint_index]->set_limit(acceleration, limit);
+    encoders_.at(joint_index)->set_limit(acceleration, limit);
     return true;
   }
   return false;
@@ -317,7 +339,7 @@ bool Monopod::set_joint_acceleration_limit(const double &max, const double &min,
 bool Monopod::set_max_torque_target(const double &max_torque_target,
                                     const int &joint_index) {
   if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
-    motors_[joint_index]->set_max_torque(max_torque_target);
+    motors_.at(joint_index)->set_max_torque(max_torque_target);
     return true;
   } else if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
     return true;
@@ -329,8 +351,8 @@ bool Monopod::set_torque_target(const double &torque_target,
                                 const int joint_index) {
   if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
     /* automatically clip torque to max in joint module */
-    motors_[joint_index]->set_torque(torque_target);
-    motors_[joint_index]->send_torque();
+    motors_.at(joint_index)->set_torque(torque_target);
+    motors_.at(joint_index)->send_torque();
 
     return true;
   }
@@ -352,8 +374,8 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
     if (is_initialized &&
         Contains(motor_joint_indexing, jointSerialization[i])) {
 
-      motors_[jointSerialization[i]]->set_torque(torque_targets[i]);
-      motors_[jointSerialization[i]]->send_torque();
+      motors_.at(jointSerialization[i])->set_torque(torque_targets[i]);
+      motors_.at(jointSerialization[i])->send_torque();
 
       ok = ok && true;
     } else {
@@ -365,22 +387,28 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
 }
 
 /**
- * @brief This is a 100Hz loop that checks the limits of all joints. This is
- * done to make sure the monopod is not in a vulnerable state. Do not want to
+ * @brief This is a 100Hz loop_limits that checks the limits of all joints. This
+ * is done to make sure the monopod is not in a vulnerable state. Do not want to
  * break the robot.
  */
-void Monopod::loop() {
+void Monopod::loop_limits() {
+
   real_time_tools::Spinner spinner;
-  spinner.set_period(0.01); // 100hz loop
+  // Check limits at 100hz
+  spinner.set_period(0.01);
+
   while (!stop_loop_limits) {
     bool in_limits = true;
     for (const auto &joint_index : encoder_joint_indexing) {
-      in_limits = in_limits && encoders_[joint_index]->check_limits();
+      in_limits = in_limits && encoders_.at(joint_index)->check_limits();
     }
     if (!in_limits) {
+      rt_printf("Monopod::loop_limits(): Robot entered safe mode because a "
+                "physical limit was reached. Robot must be reset before it is "
+                "valid. \n");
       can_bus_board_->enter_safemode();
     }
-    // spin the RT loop.
+    // spin the RT loop_limits.
     spinner.spin();
   }
 }

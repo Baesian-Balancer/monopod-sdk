@@ -53,21 +53,6 @@ public:
    */
   ~Leg() {}
 
-  // =========================================================================
-  //  GETTERS
-  // =========================================================================
-
-  /**
-   * @brief Get all meassurements of the leg. This includes Position,
-   * Velocity, Torque, and In the future Acceleration.
-   *
-   * @return unordered map of LVector measurements. Indexed with the
-   * meassurement type enum.
-   */
-  double get_measured_torque(const JointNamesIndex &joint_index) const {
-    return joints_.at(joint_index)->get_measured_torque();
-  }
-
 private:
   /**
    * @brief Defines a static sized Eigen vector type to store data for the leg.
@@ -84,10 +69,30 @@ public:
                  const double &knee_home_offset_rad) {
     double search_distance_limit_rad = 2 * M_PI;
     LVector home_offset_rad = {hip_home_offset_rad, knee_home_offset_rad};
-    execute_homing(search_distance_limit_rad, home_offset_rad);
+
+    bool status = true;
+
+    status =
+        status && execute_homing(search_distance_limit_rad, home_offset_rad) ==
+                      HomingReturnCode::SUCCEEDED;
     LVector zero_pose = LVector::Zero();
-    go_to(zero_pose);
+    status = status && go_to(zero_pose) == GoToReturnCode::SUCCEEDED;
     return true;
+  }
+
+  /**
+   * @brief Allow the robot to go to a desired pose. Once the control done
+   * 0 torques is sent. By default this function will home.
+   *
+   * @param hip_home_position (rad) Final desired hip position
+   * @param knee_home_position (rad) Final desired knee position
+   *
+   * @return true if successfully went to location otherwise false.
+   */
+  bool goto_position(const double &hip_home_position = 0,
+                     const double &knee_home_position = 0) {
+    LVector pose = {hip_home_position, knee_home_position};
+    return go_to(pose) == GoToReturnCode::SUCCEEDED;
   }
 
 private:

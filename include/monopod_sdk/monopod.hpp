@@ -54,8 +54,8 @@ public:
   void print(const Vector<int> &joint_indexes = {}) const;
 
   /**
-   * @brief This method is a helper to start the thread loop. Requires the class
-   * to be initialized before the loop can be started.
+   * @brief This method is a helper to start the thread loop_limits. Requires
+   * the class to be initialized before the loop_limits can be started.
    */
   void start_loop();
 
@@ -100,10 +100,16 @@ public:
 
   /**
    * @brief If the joint module is not valid (safemode after limit reached) the
-   * joint will be reset into a valid state. This means the joint must be set
-   * back into the valid state first otherwise it will trigger the limits again.
+   * joint will be reset into a valid state (The joint must be set
+   * back into the valid state first otherwise it will trigger the limits
+   * again). Additionally by default the reset function will attempt to control
+   * the robot leg to ther zero pose. Regardless of status of the zero pose
+   * movement the robot reset will pause the motors to avoid a timeout.
+   *
+   * @param move_to_zero True if you want the monopod to move into zero
+   * position, otherwise false.
    */
-  void reset();
+  void reset(const bool &move_to_zero = true);
 
   // ======================================
   // setters
@@ -206,21 +212,15 @@ public:
    *
    * @return The joint PID parameters.
    */
-  std::optional<PID> get_pid(const int &joint_index);
+  std::optional<PID> get_pid(const int &joint_index) const;
 
   /**
    * Get the position limits of the joint.
    *
    * @return The position limits of the joint.
    */
-  std::optional<JointLimit> get_joint_position_limit(const int &joint_index);
-
-  /**
-   * Get the velocity limits of the joint.
-   *
-   * @return The velocity limits of the joint.
-   */
-  std::optional<JointLimit> get_joint_velocity_limit(const int &joint_index);
+  std::optional<JointLimit>
+  get_joint_position_limit(const int &joint_index) const;
 
   /**
    * Get the velocity limits of the joint.
@@ -228,7 +228,15 @@ public:
    * @return The velocity limits of the joint.
    */
   std::optional<JointLimit>
-  get_joint_acceleration_limit(const int &joint_index);
+  get_joint_velocity_limit(const int &joint_index) const;
+
+  /**
+   * Get the velocity limits of the joint.
+   *
+   * @return The velocity limits of the joint.
+   */
+  std::optional<JointLimit>
+  get_joint_acceleration_limit(const int &joint_index) const;
 
   /**
    * @brief Get the max torque
@@ -236,7 +244,7 @@ public:
    * @param joint_index
    * @return std::optional<double> containing the max torque if success
    */
-  std::optional<double> get_max_torque_target(const int &joint_index);
+  std::optional<double> get_max_torque_target(const int &joint_index) const;
 
   /**
    * @brief Get the torque
@@ -244,7 +252,7 @@ public:
    * @param joint_index
    * @return std::optional<double> containing the torque if success
    */
-  std::optional<double> get_torque_target(const int &joint_index);
+  std::optional<double> get_torque_target(const int &joint_index) const;
 
   /**
    * @brief Get the torques of indexed joints
@@ -253,7 +261,7 @@ public:
    * @return std::optional<double> containing the torque if success
    */
   std::optional<Vector<double>>
-  get_torque_targets(const Vector<int> &joint_indexes = {});
+  get_torque_targets(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the position of joint
@@ -262,7 +270,7 @@ public:
    * @return std::optional<double> containing the position if success
    * value of the position (NULL if not valid)
    */
-  std::optional<double> get_position(const int &joint_index);
+  std::optional<double> get_position(const int &joint_index) const;
 
   /**
    * @brief Get the velocity of the joint
@@ -270,7 +278,7 @@ public:
    * @param joint_index name of the joint we want to access
    * @return std::optional<double> containing the velocity if success
    */
-  std::optional<double> get_velocity(const int &joint_index);
+  std::optional<double> get_velocity(const int &joint_index) const;
 
   /**
    * @brief Get the acceleration of the joint
@@ -278,7 +286,7 @@ public:
    * @param joint_index name of the joint we want to access
    * @return std::optional<double> containing the acceleration if success
    */
-  std::optional<double> get_acceleration(const int &joint_index);
+  std::optional<double> get_acceleration(const int &joint_index) const;
 
   /**
    * @brief Get the position of the joint indexes
@@ -288,7 +296,7 @@ public:
    * success
    */
   std::optional<Vector<double>>
-  get_positions(const Vector<int> &joint_indexes = {});
+  get_positions(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the velocity of the joint indexes
@@ -298,7 +306,7 @@ public:
    * if success
    */
   std::optional<Vector<double>>
-  get_velocities(const Vector<int> &joint_indexes = {});
+  get_velocities(const Vector<int> &joint_indexes = {}) const;
 
   /**
    * @brief Get the acceleration of the joint indexes
@@ -308,26 +316,26 @@ public:
    * accelerations if success
    */
   std::optional<Vector<double>>
-  get_accelerations(const Vector<int> &joint_indexes = {});
+  get_accelerations(const Vector<int> &joint_indexes = {}) const;
 
 private:
   /**
-   * @brief this function is just a wrapper around the actual loop function,
-   * such that it can be spawned as a posix thread.
+   * @brief this function is just a wrapper around the actual loop_limits
+   * function, such that it can be spawned as a posix thread.
    */
-  static THREAD_FUNCTION_RETURN_TYPE loop(void *instance_pointer) {
-    ((Monopod *)(instance_pointer))->loop();
+  static THREAD_FUNCTION_RETURN_TYPE loop_limits(void *instance_pointer) {
+    ((Monopod *)(instance_pointer))->loop_limits();
     return THREAD_FUNCTION_RETURN_VALUE;
   }
 
   /**
-   * @brief this is a simple control loop which runs at a kilohertz.
+   * @brief this is a simple control loop_limits which runs at a kilohertz.
    *
    * it reads the measurement from the analog sensor, in this case the
    * slider. then it scales it and sends it as the current target to
    * the motor.
    */
-  void loop();
+  void loop_limits();
 
   /**
    * @brief Simple helper method to serialized getting of data.
@@ -337,7 +345,7 @@ private:
   std::optional<Vector<double>>
   getJointDataSerialized(const Monopod *monopod,
                          const Vector<int> &joint_indexes,
-                         std::function<double(int)> getJointData) {
+                         std::function<double(int)> getJointData) const {
     // Take the joint index in lambda. Return the data you want.
     const Vector<int> &jointSerialization =
         joint_indexes.empty() ? monopod->encoder_joint_indexing : joint_indexes;
@@ -416,7 +424,7 @@ private:
   real_time_tools::RealTimeThread rt_thread_limits_;
 
   /**
-   * @brief controls execution of loop which checks limits of joints.
+   * @brief controls execution of loop_limits which checks limits of joints.
    */
   bool stop_loop_limits;
 
