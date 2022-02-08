@@ -53,21 +53,6 @@ public:
    */
   ~Leg() {}
 
-  // =========================================================================
-  //  GETTERS
-  // =========================================================================
-
-  /**
-   * @brief Get all meassurements of the leg. This includes Position,
-   * Velocity, Torque, and In the future Acceleration.
-   *
-   * @return unordered map of LVector measurements. Indexed with the
-   * meassurement type enum.
-   */
-  double get_measured_torque(const JointNamesIndex &joint_index) const {
-    return joints_.at(joint_index)->get_measured_torque();
-  }
-
 private:
   /**
    * @brief Defines a static sized Eigen vector type to store data for the leg.
@@ -88,6 +73,21 @@ public:
     LVector zero_pose = LVector::Zero();
     go_to(zero_pose);
     return true;
+  }
+
+  /**
+   * @brief Allow the robot to go to a desired pose. Once the control done
+   * 0 torques is sent. By default this function will home.
+   *
+   * @param hip_home_position (rad) Final desired hip position
+   * @param knee_home_position (rad) Final desired knee position
+   *
+   * @return GoToReturnCode
+   */
+  GoToReturnCode goto_position(const double &hip_home_position = 0,
+                               const double &knee_home_position = 0) {
+    LVector pose = {hip_home_position, knee_home_position};
+    return go_to(pose);
   }
 
 private:

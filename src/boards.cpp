@@ -22,19 +22,10 @@ CanBusControlBoards::CanBusControlBoards(
 
   sent_command_ = std::make_shared<CommandTimeseries>(history_length, 0, false);
 
-  pause_motors();
-
   // initialize board --------------------------------------------------------
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_SYS,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
-
-  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
-                                   ControlBoardsCommand::Contents::ENABLE));
-  send_newest_command();
+  reset();
 
   is_loop_active_ = true;
-  is_safemode_ = false;
   rt_thread_.create_realtime_thread(&CanBusControlBoards::loop, this);
 }
 
@@ -63,6 +54,36 @@ void CanBusControlBoards::set_active_board(const int &index) {
   case encoder_board2:
     active_boards_[index] = true;
     break;
+  }
+}
+
+void CanBusControlBoards::reset() {
+
+  is_safemode_ = false;
+  pause_motors();
+
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_SYS,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
+  set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::SEND_ALL,
+                                   ControlBoardsCommand::Contents::ENABLE));
+  send_newest_command();
+
+  pause_motors();
+
+  // This follows the steps to renable a timedout communication. Behaviour of
+  // Can defined at botom of this page
+  // https://open-dynamic-robot-initiative.github.io/mw_dual_motor_torque_ctrl/can_interface.html#command-codes
+
+  // If motor board is active send command to enable motors. when reseting.
+  if (active_boards_[motor_board]) {
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR1,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
+    set_command(ControlBoardsCommand(ControlBoardsCommand::IDs::ENABLE_MTR2,
+                                     ControlBoardsCommand::Contents::ENABLE));
+    send_newest_command();
   }
 }
 
@@ -97,9 +118,6 @@ bool CanBusControlBoards::is_ready() {
   bool ready = true;
   // if any of the boards have no status messages despite the board being active
   // then we are not ready. If the board is not active then we ignore it.
-
-  // rt_printf("%d, %d, %d \n", active_boards_[0], active_boards_[1],
-  //           active_boards_[2]);
   if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
     return false;
   } else if (active_boards_[motor_board]) {
@@ -427,24 +445,6 @@ void CanBusControlBoards::print_status() {
     status_[encoder_board1]->newest_element().print();
   if (status_[encoder_board2]->length() > 0)
     status_[encoder_board2]->newest_element().print();
-
-  //        rt_printf("inputs ======================================\n");
-
-  //        for(size_t i = 0; i < control_names.size(); i++)
-  //        {
-  //            rt_printf("%s: ---------------------------------\n",
-  //                                 control_names[i].c_str());
-  //            if(control_.at(control_names[i])->length() > 0)
-  //            {
-  //                double control =
-  //                        control_.at(control_names[i])->newest_element();
-  //                rt_printf("value %f:\n", control);
-  //            }
-  //        }
-
-  //        rt_printf("command: ---------------------------------\n");
-  //        if(command_[command]->length() > 0)
-  //            command_[command]->newest_element().print();
 }
 
 } // namespace monopod_drivers

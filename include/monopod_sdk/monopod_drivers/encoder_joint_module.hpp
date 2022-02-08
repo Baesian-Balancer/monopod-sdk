@@ -105,7 +105,7 @@ public:
   virtual JointLimit get_limit(const Measurements &index) const;
 
   /**
-   * @brief Check all of the limits. True if in range otherwise false
+   * @brief Check all of the joint limits. True if in range otherwise false.
    *
    */
   virtual bool check_limits() const;

@@ -430,15 +430,17 @@ public:
   virtual void enter_safemode() = 0;
 
   /**
-   * This will cause the control to reset the "safemode" if the control is
-   * currently in safemode.
-   */
-  virtual void reset_safemode() = 0;
-
-  /**
    * This will return if the control is in "safemode".
    */
   virtual bool is_safemode() = 0;
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the motors will be paused and The
+   * control boards will be reset such that any timed out connection will be
+   * reestablished.
+   */
+  virtual void reset() = 0;
 };
 
 /**
@@ -589,32 +591,40 @@ public:
   virtual void wait_until_ready();
 
   /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the motors will be paused and The
+   * control boards will be reset such that any timed out connection will be
+   * reestablished.
+   */
+  virtual void reset();
+
+  /**
    * This will cause the control to be forced into a "safemode" where the
    * control is set to zero then held constant until reset.
    */
   virtual void enter_safemode() {
-    set_control(0, current_target_0);
-    set_control(0, current_target_1);
-    send_newest_controls();
+    // Ensure we are not in safe mode for the pause motors to be able to send
+    // control.
+    is_safemode_ = false;
     pause_motors();
     is_safemode_ = true;
   }
-
-  /**
-   * This will cause the control to reset the "safemode" if the control is
-   * currently in safemode.
-   */
-  virtual void reset_safemode() { is_safemode_ = false; }
 
   /**
    * This will return if the control is in "safemode".
    */
   virtual bool is_safemode() { return is_safemode_; }
 
+  /**
+   * @brief True if all active boards have established at least one status
+   * message from the board that does not include any error.
+   */
   bool is_ready();
 
-  /// \todo: this function should go away,
-  /// and we should add somewhere a warning in case there is a timeout
+  /**
+   * @brief Sets motors to Idle and sets the canbus control recieve timeout on
+   * board to none until next action is sent.
+   */
   void pause_motors();
 
   /**
@@ -798,8 +808,10 @@ private:
   bool is_loop_active_;
 
   /**
-   * @brief Are motor in idle mode = 0 torques?
-   * @TODO update this documentation with the actual behavior
+   * @brief This variables if true means two things: Are motor in idle mode = 0
+   * torques?, and is the timeout duration for a control signal zero on the TI
+   * board? When a new control is sent the motors will enter into their normal
+   * state where they are active with the proper timeout duration.
    */
   bool motors_are_paused_;
 
@@ -808,7 +820,7 @@ private:
    * now being held constant at 0 control magnitude. This is maintained until
    * reset.
    */
-  bool is_safemode_ = false;
+  bool is_safemode_;
 
   /**
    * @brief If no control is sent for more than control_timeout_ms_ the board
@@ -835,7 +847,7 @@ public:
    *
    */
   DummyControlBoards() {
-    int history_length = 10;
+    int history_length = 1000;
 
     measurement_ = create_vector_of_pointers<ScalarTimeseries>(
         measurement_count, history_length);
@@ -1015,19 +1027,20 @@ public:
   /**
    * @brief returns only once board and motors are ready.
    */
-  virtual void wait_until_ready() {}
+  virtual void wait_until_ready(){};
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the system will be set to idle with no
+   * timeout on communication.
+   */
+  virtual void reset() { is_safemode_ = false; };
 
   /**
    * This will cause the control to be forced into a "safemode" where the
    * control is set to zero then held constant until reset.
    */
   virtual void enter_safemode() { is_safemode_ = true; };
-
-  /**
-   * This will cause the control to reset the "safemode" if the control is
-   * currently in safemode.
-   */
-  virtual void reset_safemode() { is_safemode_ = false; };
 
   /**
    * This will return if the control is in "safemode".

@@ -16,11 +16,15 @@ Monopod::~Monopod() {
 
 bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
 
-void Monopod::reset() {
-  can_bus_board_->reset_safemode();
-  // Ensure torques after reset are zero regardless of safemode or not.
-  std::vector<double> zero_torques(motor_joint_indexing.size(), 0);
-  set_torque_targets(zero_torques);
+void Monopod::reset(const bool &move_to_zero) {
+  // Make sure we are in a reset state before going to zero.
+  can_bus_board_->reset();
+
+  if (move_to_zero && !motor_joint_indexing.empty()) {
+    leg_->goto_position();
+  }
+  // Reset here pauses the motors.
+  can_bus_board_->reset();
 }
 
 bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
@@ -105,10 +109,13 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
 
 void Monopod::start_loop() {
   if (is_initialized) {
-    rt_thread_limits_.create_realtime_thread(&Monopod::loop, this);
+    rt_printf("Starting realtime loot to check physical limits of robot. \n");
+    rt_thread_limits_.create_realtime_thread(&Monopod::loop_limits, this);
   } else {
-    throw std::runtime_error(
-        "Need to initialize monopod_sdk before starting the realtime loop.");
+    std::cerr << "Need to initialize monopod_sdk before starting the realtime "
+                 "loop_limits."
+              << std::endl;
+    exit(-1);
   }
 }
 
@@ -371,22 +378,27 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
 }
 
 /**
- * @brief This is a 100Hz loop that checks the limits of all joints. This is
- * done to make sure the monopod is not in a vulnerable state. Do not want to
+ * @brief This is a 100Hz loop_limits that checks the limits of all joints. This
+ * is done to make sure the monopod is not in a vulnerable state. Do not want to
  * break the robot.
  */
-void Monopod::loop() {
+void Monopod::loop_limits() {
+
   real_time_tools::Spinner spinner;
-  spinner.set_period(0.01); // 100hz loop
+  // Check limits at 100hz
+  spinner.set_period(0.01);
+
   while (!stop_loop_limits) {
     bool in_limits = true;
     for (const auto &joint_index : encoder_joint_indexing) {
       in_limits = in_limits && encoders_.at(joint_index)->check_limits();
     }
     if (!in_limits) {
+      rt_printf("Robot entered safe mode because a physical limit was reached. "
+                "Robot must be reset before it is valid. \n");
       can_bus_board_->enter_safemode();
     }
-    // spin the RT loop.
+    // spin the RT loop_limits.
     spinner.spin();
   }
 }
