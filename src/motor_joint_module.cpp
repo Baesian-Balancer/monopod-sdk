@@ -30,7 +30,7 @@ void MotorJointModule::set_torque(const double &desired_torque) {
 
   // Make sure your max isnt above Global max --------------------------------
   if (std::fabs(desired_current) > MAX_CURRENT) {
-    std::cout << "something went wrong, it should never happen"
+    std::cerr << "something went wrong, it should never happen"
                  " that desired_current > "
               << MAX_CURRENT << ". desired_current: " << desired_current
               << std::endl;
@@ -72,28 +72,6 @@ double MotorJointModule::joint_torque_to_motor_current(double torque) const {
 double MotorJointModule::motor_current_to_joint_torque(double current) const {
   return current * gear_ratio_ * motor_constant_;
 }
-
-// double MotorJointModule::get_joint_measurement(
-//     const Measurements &measurement_id) const {
-//   auto measurement_history = motor_->get_measurement(measurement_id);
-//
-//   if (measurement_history->length() == 0) {
-//     // rt_printf("get_joint_measurement returns NaN\n");
-//     return std::numeric_limits<double>::quiet_NaN();
-//   }
-//   return polarity_ * measurement_history->newest_element();
-// }
-//
-// long int MotorJointModule::get_joint_measurement_index(
-//     const Measurements &measurement_id) const {
-//   auto measurement_history = motor_->get_measurement(measurement_id);
-//
-//   if (measurement_history->length() == 0) {
-//     // rt_printf("get_joint_measurement_index returns NaN\n");
-//     return -1;
-//   }
-//   return measurement_history->newest_timeindex();
-// }
 
 void MotorJointModule::set_position_control_gains(double kp, double kd) {
   position_control_gain_p_ = kp;

@@ -69,9 +69,14 @@ public:
                  const double &knee_home_offset_rad) {
     double search_distance_limit_rad = 2 * M_PI;
     LVector home_offset_rad = {hip_home_offset_rad, knee_home_offset_rad};
-    execute_homing(search_distance_limit_rad, home_offset_rad);
+
+    bool status = true;
+
+    status =
+        status && execute_homing(search_distance_limit_rad, home_offset_rad) ==
+                      HomingReturnCode::SUCCEEDED;
     LVector zero_pose = LVector::Zero();
-    go_to(zero_pose);
+    status = status && go_to(zero_pose) == GoToReturnCode::SUCCEEDED;
     return true;
   }
 
@@ -82,12 +87,12 @@ public:
    * @param hip_home_position (rad) Final desired hip position
    * @param knee_home_position (rad) Final desired knee position
    *
-   * @return GoToReturnCode
+   * @return true if successfully went to location otherwise false.
    */
-  GoToReturnCode goto_position(const double &hip_home_position = 0,
-                               const double &knee_home_position = 0) {
+  bool goto_position(const double &hip_home_position = 0,
+                     const double &knee_home_position = 0) {
     LVector pose = {hip_home_position, knee_home_position};
-    return go_to(pose);
+    return go_to(pose) == GoToReturnCode::SUCCEEDED;
   }
 
 private:

@@ -34,6 +34,7 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
     can_bus_board_ =
         std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
     reset();
+
   } else {
     can_bus_board_ = std::make_shared<monopod_drivers::DummyControlBoards>();
   }
@@ -112,8 +113,8 @@ void Monopod::start_loop() {
     rt_printf("Starting realtime loot to check physical limits of robot. \n");
     rt_thread_limits_.create_realtime_thread(&Monopod::loop_limits, this);
   } else {
-    std::cerr << "Need to initialize monopod_sdk before starting the realtime "
-                 "loop_limits."
+    std::cerr << "Monopod::start_loop(): Need to initialize monopod_sdk before "
+                 "starting the realtime loop_limits."
               << std::endl;
     exit(-1);
   }
@@ -123,11 +124,19 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
                         const double &knee_home_offset_rad) {
 
   // todo: Make calibration more robust??
+  // todo: Update zero for none motor joints. Right now we can just use reset
+  // button to get new zero when in physical spot.
+  //
   // only calibrate leg if it is active
-  // need to calibrate or zero encoders
   if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
         monopod_mode_ == Mode::ENCODER_BOARD2)) {
-    leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+    bool status = leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+    // If status fail cout a error or warning.
+    if (!status) {
+      std::cerr
+          << "Monopod::calibrate(): Failed to reach desired final location."
+          << std::endl;
+    }
   }
 }
 
@@ -394,8 +403,9 @@ void Monopod::loop_limits() {
       in_limits = in_limits && encoders_.at(joint_index)->check_limits();
     }
     if (!in_limits) {
-      rt_printf("Robot entered safe mode because a physical limit was reached. "
-                "Robot must be reset before it is valid. \n");
+      rt_printf("Monopod::loop_limits(): Robot entered safe mode because a "
+                "physical limit was reached. Robot must be reset before it is "
+                "valid. \n");
       can_bus_board_->enter_safemode();
     }
     // spin the RT loop_limits.
