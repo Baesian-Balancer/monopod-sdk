@@ -432,7 +432,7 @@ private:
   /**
    * @brief the realt time thread object.
    */
-  real_time_tools::RealTimeThread rt_thread_limits_;
+  real_time_tools::RealTimeThread rt_thread_safety_;
 
   /**
    * @brief controls execution of safety_loop which checks limits of joints.
@@ -442,7 +442,7 @@ private:
   /**
    * @brief controls execution of safety_loop which checks limits of joints.
    */
-  bool is_safety_loop_active;
+  bool pause_safety_loop;
 
   /**
    * @brief Determines if the joint is in dummy mode. (no connection to real
