@@ -143,6 +143,7 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
 }
 
 void Monopod::start_loop() {
+  // todo: make this function only execute at most 1 time.
   if (is_initialized) {
     if (pause_safety_loop) {
       rt_printf("Monopod::start_loop(): Safety loop is already active, nothing "

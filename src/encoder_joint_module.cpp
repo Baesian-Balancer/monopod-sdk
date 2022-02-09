@@ -84,6 +84,8 @@ bool EncoderJointModule::check_limits() const {
     auto meassurement_id = limit_info.first;
     auto joint_limit = limit_info.second;
 
+    // Todo: maybe clean up how this is formatted. dont like this case
+    // statement.
     double meassurement;
     switch (meassurement_id) {
     case position:
