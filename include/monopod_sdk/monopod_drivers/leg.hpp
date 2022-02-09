@@ -132,7 +132,7 @@ private:
    */
   HomingReturnCode execute_homing(double search_distance_limit_rad,
                                   LVector home_offset_rad,
-                                  double profile_step_size_rad = 0.001) {
+                                  double profile_step_size_rad = 0.0001) {
     // Initialise homing for all joints
 
     joints_[hip_joint]->init_homing(search_distance_limit_rad,

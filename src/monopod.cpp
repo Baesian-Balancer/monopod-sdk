@@ -20,11 +20,41 @@ void Monopod::reset(const bool &move_to_zero) {
   // Make sure we are in a reset state before going to zero.
   can_bus_board_->reset();
 
-  if (move_to_zero && !motor_joint_indexing.empty()) {
-    leg_->goto_position();
+  if (move_to_zero) {
+    // by default moves to home.
+    goto_position();
   }
-  // Reset here pauses the motors.
-  can_bus_board_->reset();
+}
+
+void Monopod::goto_position(const double &hip_home_position,
+                            const double &knee_home_position) {
+  if (is_initialized) {
+    if (!motor_joint_indexing.empty()) {
+      // Disable limits to avoid triggering the safemode.
+      stop_loop_limits = true;
+
+      // Make sure we are in a reset state before going to zero.
+      can_bus_board_->reset();
+      leg_->goto_position(hip_home_position, knee_home_position);
+
+      // Reset here pauses the motors again.
+      can_bus_board_->reset();
+
+      // start limit loop again because we always want it active.
+      stop_loop_limits = false;
+      start_loop();
+    } else {
+      std::cerr << "Monopod::goto_position(): Tried going to a position when "
+                   "no motors are active. "
+                << std::endl;
+    }
+  } else {
+    std::cerr
+        << "Monopod::goto_position(): Need to initialize monopod_sdk before "
+           "going to some positin."
+        << std::endl;
+    exit(-1);
+  }
 }
 
 bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {

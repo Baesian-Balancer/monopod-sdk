@@ -40,6 +40,14 @@ int main(int, char **) {
     // Printings
     rt_printf("\33[H\33[2J"); // clear screen
     monopod.print();          // print info
+
+    auto input_data = monopod.get_positions().value();
+    std::cout << "Positions from SDK: ";
+    for (auto data : input_data) {
+      std::cout << data << ", ";
+    }
+    std::cout << std::endl;
+
     time_logger.print_statistics();
     fflush(stdout);
     real_time_tools::Timer::sleep_sec(0.5);

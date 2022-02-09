@@ -60,10 +60,21 @@ public:
   void start_loop();
 
   /**
+   * @brief This method is a helper class to goto some position for the leg.
+   * This requires the board to be initialized in any mode which has active
+   * motors. Additionally this function will pause the limit checks and will
+   * reset the board before executing the position control. This is to allow
+   * homing from outside the limits.
+   */
+  void goto_position(const double &hip_home_position = 0,
+                     const double &knee_home_position = 0);
+
+  /**
    * @brief Calibrate the Encoders.
    *
    * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
-   * @param knee_home_offset_rad knee offset from found encoder index 0 (rad)
+   * @param knee_home_offset_rad knee offset from found encoder index 0
+   * (rad)
    */
   void calibrate(const double &hip_home_offset_rad = 0,
                  const double &knee_home_offset_rad = 0);
