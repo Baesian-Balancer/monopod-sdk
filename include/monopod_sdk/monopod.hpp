@@ -54,8 +54,8 @@ public:
   void print(const Vector<int> &joint_indexes = {}) const;
 
   /**
-   * @brief This method is a helper to start the thread loop_limits. Requires
-   * the class to be initialized before the loop_limits can be started.
+   * @brief This method is a helper to start the thread safety_loop. Requires
+   * the class to be initialized before the safety_loop can be started.
    */
   void start_loop();
 
@@ -331,22 +331,22 @@ public:
 
 private:
   /**
-   * @brief this function is just a wrapper around the actual loop_limits
+   * @brief this function is just a wrapper around the actual safety_loop
    * function, such that it can be spawned as a posix thread.
    */
-  static THREAD_FUNCTION_RETURN_TYPE loop_limits(void *instance_pointer) {
-    ((Monopod *)(instance_pointer))->loop_limits();
+  static THREAD_FUNCTION_RETURN_TYPE safety_loop(void *instance_pointer) {
+    ((Monopod *)(instance_pointer))->safety_loop();
     return THREAD_FUNCTION_RETURN_VALUE;
   }
 
   /**
-   * @brief this is a simple control loop_limits which runs at a kilohertz.
+   * @brief this is a simple control safety_loop which runs at a kilohertz.
    *
    * it reads the measurement from the analog sensor, in this case the
    * slider. then it scales it and sends it as the current target to
    * the motor.
    */
-  void loop_limits();
+  void safety_loop();
 
   /**
    * @brief Simple helper method to serialized getting of data.
@@ -435,9 +435,14 @@ private:
   real_time_tools::RealTimeThread rt_thread_limits_;
 
   /**
-   * @brief controls execution of loop_limits which checks limits of joints.
+   * @brief controls execution of safety_loop which checks limits of joints.
    */
-  bool stop_loop_limits;
+  bool stop_safety_loop;
+
+  /**
+   * @brief controls execution of safety_loop which checks limits of joints.
+   */
+  bool is_safety_loop_active;
 
   /**
    * @brief Determines if the joint is in dummy mode. (no connection to real

@@ -7,10 +7,11 @@ namespace monopod_drivers {
 // Public methods
 //===================================================================
 
-Monopod::Monopod() { stop_loop_limits = false; }
+Monopod::Monopod() { stop_safety_loop = false; }
 
 Monopod::~Monopod() {
-  stop_loop_limits = true;
+  stop_safety_loop = true;
+  is_safety_loop_active = false;
   rt_thread_limits_.join();
 }
 
@@ -28,10 +29,12 @@ void Monopod::reset(const bool &move_to_zero) {
 
 void Monopod::goto_position(const double &hip_home_position,
                             const double &knee_home_position) {
+  // Save state of loop prior to shuting loop down for the action
+  bool is_safety_loop_active_tmp = is_safety_loop_active;
   if (is_initialized) {
     if (!motor_joint_indexing.empty()) {
       // Disable limits to avoid triggering the safemode.
-      stop_loop_limits = true;
+      stop_safety_loop = true;
 
       // Make sure we are in a reset state before going to zero.
       can_bus_board_->reset();
@@ -41,7 +44,8 @@ void Monopod::goto_position(const double &hip_home_position,
       can_bus_board_->reset();
 
       // start limit loop again because we always want it active.
-      stop_loop_limits = false;
+      stop_safety_loop = false;
+      is_safety_loop_active = is_safety_loop_active_tmp;
       start_loop();
     } else {
       std::cerr << "Monopod::goto_position(): Tried going to a position when "
@@ -140,11 +144,17 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
 
 void Monopod::start_loop() {
   if (is_initialized) {
+    if (is_safety_loop_active) {
+      rt_printf("Monopod::start_loop(): Safety loop is already active, did "
+                "nothing. \n");
+      return;
+    }
+    is_safety_loop_active = true;
     rt_printf("Starting realtime loot to check physical limits of robot. \n");
-    rt_thread_limits_.create_realtime_thread(&Monopod::loop_limits, this);
+    rt_thread_limits_.create_realtime_thread(&Monopod::safety_loop, this);
   } else {
     std::cerr << "Monopod::start_loop(): Need to initialize monopod_sdk before "
-                 "starting the realtime loop_limits."
+                 "starting the realtime safety_loop."
               << std::endl;
     exit(-1);
   }
@@ -158,15 +168,45 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
   // button to get new zero when in physical spot.
   //
   // only calibrate leg if it is active
-  if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
-        monopod_mode_ == Mode::ENCODER_BOARD2)) {
-    bool status = leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
-    // If status fail cout a error or warning.
-    if (!status) {
-      std::cerr
-          << "Monopod::calibrate(): Failed to reach desired final location."
-          << std::endl;
+  // Save state of loop prior to shuting loop down for the action
+  bool is_safety_loop_active_tmp = is_safety_loop_active;
+  if (is_initialized) {
+    if (!motor_joint_indexing.empty()) {
+      // Disable limits to avoid triggering the safemode.
+      stop_safety_loop = true;
+
+      // Make sure we are in a reset state before going to zero.
+      can_bus_board_->reset();
+
+      if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
+            monopod_mode_ == Mode::ENCODER_BOARD2)) {
+        bool status =
+            leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+        // If status fail cout a error or warning.
+        if (!status) {
+          std::cerr << "Monopod::calibrate(): Failed to reach desired final "
+                       "location during calibration."
+                    << std::endl;
+        }
+      }
+
+      // Reset here pauses the motors again.
+      can_bus_board_->reset();
+
+      // start limit loop again because we always want it active.
+      stop_safety_loop = false;
+      is_safety_loop_active = is_safety_loop_active_tmp;
+      start_loop();
+    } else {
+      std::cerr << "Monopod::calibrate(): Tried to calibrate when "
+                   "no motors are active. "
+                << std::endl;
     }
+  } else {
+    std::cerr << "Monopod::calibrate(): Need to initialize monopod_sdk before "
+                 "calibration."
+              << std::endl;
+    exit(-1);
   }
 }
 
@@ -417,30 +457,32 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
 }
 
 /**
- * @brief This is a 100Hz loop_limits that checks the limits of all joints. This
+ * @brief This is a 100Hz safety_loop that checks the limits of all joints. This
  * is done to make sure the monopod is not in a vulnerable state. Do not want to
  * break the robot.
  */
-void Monopod::loop_limits() {
+void Monopod::safety_loop() {
 
   real_time_tools::Spinner spinner;
   // Check limits at 100hz
   spinner.set_period(0.01);
 
-  while (!stop_loop_limits) {
+  while (!stop_safety_loop) {
     bool in_limits = true;
     for (const auto &joint_index : encoder_joint_indexing) {
       in_limits = in_limits && encoders_.at(joint_index)->check_limits();
     }
     if (!in_limits) {
-      rt_printf("Monopod::loop_limits(): Robot entered safe mode because a "
+      rt_printf("Monopod::safety_loop(): Robot entered safe mode because a "
                 "physical limit was reached. Robot must be reset before it is "
                 "valid. \n");
       can_bus_board_->enter_safemode();
     }
-    // spin the RT loop_limits.
+    // spin the RT safety_loop.
     spinner.spin();
   }
+
+  is_safety_loop_active = false;
 }
 
 } // namespace monopod_drivers
