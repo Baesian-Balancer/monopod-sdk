@@ -43,10 +43,11 @@ void Monopod::goto_position(const double &hip_home_position,
       // Reset here pauses the motors again.
       can_bus_board_->reset();
 
-      // start limit loop again because we always want it active.
+      // start limit loop again if it was active before
       stop_safety_loop = false;
-      is_safety_loop_active = is_safety_loop_active_tmp;
-      start_loop();
+      if (is_safety_loop_active_tmp) {
+        start_loop();
+      }
     } else {
       std::cerr << "Monopod::goto_position(): Tried going to a position when "
                    "no motors are active. "
@@ -193,10 +194,11 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
       // Reset here pauses the motors again.
       can_bus_board_->reset();
 
-      // start limit loop again because we always want it active.
+      // start limit loop again if it was active before
       stop_safety_loop = false;
-      is_safety_loop_active = is_safety_loop_active_tmp;
-      start_loop();
+      if (is_safety_loop_active_tmp) {
+        start_loop();
+      }
     } else {
       std::cerr << "Monopod::calibrate(): Tried to calibrate when "
                    "no motors are active. "
