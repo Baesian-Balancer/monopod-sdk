@@ -41,7 +41,9 @@ int main(int, char **) {
   sdk->initialize(monopod_drivers::Mode::MOTOR_BOARD);
   sdk->set_max_torque_target(15, monopod_drivers::hip_joint);
   sdk->set_max_torque_target(15, monopod_drivers::knee_joint);
-  sdk->start_loop();
+  // Dont need start loop here now.
+  sdk->start_safety_loop();
+
   sdk->calibrate();
 
   rt_printf("sdk is set up \n");

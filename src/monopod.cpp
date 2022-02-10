@@ -1,5 +1,9 @@
 #include "monopod_sdk/monopod.hpp"
+#include <cassert>
 #include <stdexcept>
+
+// Use (void) to silent unused warnings.
+#define assertm(exp, msg) assert(((void)msg, exp))
 
 namespace monopod_drivers {
 
@@ -8,69 +12,27 @@ namespace monopod_drivers {
 //===================================================================
 
 Monopod::Monopod() {
-  stop_safety_loop = false;
+  safety_loop_running = false;
   pause_safety_loop = false;
+  current_state_ = MonopodState::NOT_INITIALIZED;
 }
 
 Monopod::~Monopod() {
-  stop_safety_loop = true;
+  safety_loop_running = false;
   pause_safety_loop = false;
   rt_thread_safety_.join();
-}
-
-bool Monopod::valid() { return !can_bus_board_->is_safemode(); }
-
-void Monopod::reset(const bool &move_to_zero) {
-  // Make sure we are in a reset state before going to zero.
-  can_bus_board_->reset();
-
-  if (move_to_zero) {
-    // by default moves to home.
-    goto_position();
-  }
-}
-
-void Monopod::goto_position(const double &hip_home_position,
-                            const double &knee_home_position) {
-  // Save state of loop prior to shuting loop down for the action
-  if (is_initialized) {
-    if (!motor_joint_indexing.empty()) {
-      // Disable limits to avoid triggering the safemode.
-      pause_safety_loop = true;
-
-      // Make sure we are in a reset state before going to zero.
-      can_bus_board_->reset();
-      leg_->goto_position(hip_home_position, knee_home_position);
-
-      // Reset here pauses the motors again.
-      can_bus_board_->reset();
-
-      // start limit loop again if it was active before
-      pause_safety_loop = false;
-    } else {
-      std::cerr << "Monopod::goto_position(): Tried going to a position when "
-                   "no motors are active. "
-                << std::endl;
-    }
-  } else {
-    std::cerr
-        << "Monopod::goto_position(): Need to initialize monopod_sdk before "
-           "going to some positin."
-        << std::endl;
-    exit(-1);
-  }
+  reset(false);
 }
 
 bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
   dummy_mode_ = dummy_mode;
   if (!dummy_mode) {
     can_bus_ = std::make_shared<monopod_drivers::CanBus>("can0");
-    can_bus_board_ =
-        std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
-    can_bus_board_->reset();
+    board_ = std::make_shared<monopod_drivers::CanBusControlBoards>(can_bus_);
+    board_->reset();
 
   } else {
-    can_bus_board_ = std::make_shared<monopod_drivers::DummyControlBoards>();
+    board_ = std::make_shared<monopod_drivers::DummyControlBoards>();
   }
 
   encoder_joint_indexing = {};
@@ -137,27 +99,121 @@ bool Monopod::initialize(Mode monopod_mode, bool dummy_mode) {
     encoder_joint_indexing.push_back(boom_connector_joint);
     break;
   }
-  can_bus_board_->wait_until_ready();
-  is_initialized = true;
+  board_->wait_until_ready();
+
+  current_state_ = motor_joint_indexing.empty() ? MonopodState::READ_ONLY
+                                                : MonopodState::RUNNING;
+  start_safety_loop();
+
   return initialized();
 }
 
-void Monopod::start_loop() {
-  // todo: make this function only execute at most 1 time.
-  if (is_initialized) {
-    if (pause_safety_loop) {
-      rt_printf("Monopod::start_loop(): Safety loop is already active, nothing "
-                "was updated. \n");
-      return;
+bool Monopod::initialized() const {
+  return current_state_ != MonopodState::NOT_INITIALIZED;
+}
+
+// Monopod::ERROR_CODE Monopod::error_code(int method_type){}
+
+bool Monopod::valid() {
+  // invalid if it is in safemode or holding
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  return !(board_->is_safemode() || current_state_ == MonopodState::HOLDING);
+}
+
+void Monopod::print(const Vector<int> &joint_indexes) const {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  const Vector<int> &jointSerialization =
+      joint_indexes.empty() ? encoder_joint_indexing : joint_indexes;
+
+  for (auto &joint_index : jointSerialization) {
+    if (Contains(encoder_joint_indexing, joint_index)) {
+      encoders_.at(joint_index)->print();
     }
-    rt_printf("Starting realtime loop to check physical limits of robot. \n");
-    rt_thread_safety_.create_realtime_thread(&Monopod::safety_loop, this);
-  } else {
-    std::cerr << "Monopod::start_loop(): Need to initialize monopod_sdk before "
-                 "starting the realtime safety_loop."
-              << std::endl;
-    exit(-1);
   }
+}
+
+void Monopod::reset(const bool &move_to_zero) {
+  // Make sure we are in a reset state before going to zero.
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (current_state_ == MonopodState::HOLDING) {
+    stop_hold_position();
+  }
+  board_->reset();
+  if (move_to_zero) {
+    // by default moves to home
+    goto_position();
+  }
+  current_state_ = MonopodState::RUNNING;
+}
+
+void Monopod::goto_position(const double &hip_home_position,
+                            const double &knee_home_position) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (current_state_ != MonopodState::RUNNING) {
+    std::cerr << "Monopod::goto_position(): Tried to goto_position when "
+                 "not in [MonopodState::RUNNING]. This means the "
+                 "robot is HOLDING or in READ_ONLY mode with no active motors."
+              << std::endl;
+    return;
+  }
+
+  // Disable limits to avoid triggering the safemode.
+  pause_safety_loop = true;
+  // Make sure we are in a reset state before going to zero.
+  board_->reset();
+  leg_->goto_position(hip_home_position, knee_home_position);
+  // Reset here pauses the motors again.
+  board_->reset();
+  // start limit loop again if it was active before
+  pause_safety_loop = false;
+}
+void Monopod::hold_position() {
+
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  assertm(current_state_ == MonopodState::RUNNING,
+          "Monopod must be in the state [MonopodState::RUNNING] before holding "
+          "current position.");
+
+  // Disable limits to avoid triggering the safemode.
+  pause_safety_loop = true;
+  // Make sure we are in a reset state before going to zero.
+  board_->reset();
+  leg_->start_holding_loop();
+  // Reset here pauses the motors again.
+  board_->reset();
+  // start limit loop again if it was active before
+  pause_safety_loop = false;
+}
+
+bool Monopod::is_hold_position() {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  return motor_joint_indexing.empty() ? false : leg_->is_hold_current_pos();
+}
+
+void Monopod::stop_hold_position() {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+
+  if (current_state_ != MonopodState::HOLDING) {
+    // Nothing to stop
+    return;
+  }
+
+  leg_->stop_hold_current_pos();
+  current_state_ = MonopodState::RUNNING;
+}
+
+void Monopod::start_safety_loop() {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+
+  if (safety_loop_running) {
+    std::cerr << "Monopod::start_safety_loop(): Safety loop is already active, "
+                 "nothing was updated."
+              << std::endl;
+    return;
+  }
+  rt_printf("Starting realtime safety loop to ensure physical limits of robot "
+            "stay within a safety margin. \n");
+  rt_thread_safety_.create_realtime_thread(&Monopod::safety_loop, this);
 }
 
 void Monopod::calibrate(const double &hip_home_offset_rad,
@@ -166,62 +222,34 @@ void Monopod::calibrate(const double &hip_home_offset_rad,
   // todo: Make calibration more robust??
   // todo: Update zero for none motor joints. Right now we can just use reset
   // button to get new zero when in physical spot.
-  //
-  // only calibrate leg if it is active
-  // Save state of loop prior to shuting loop down for the action
-  if (is_initialized) {
-    if (!motor_joint_indexing.empty()) {
-      // Disable limits to avoid triggering the safemode.
-      pause_safety_loop = true;
 
-      // Make sure we are in a reset state before going to zero.
-      can_bus_board_->reset();
+  // Check to make sure that the sdk is initialized.
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  // todo: make sure this is worth terminating for.
+  assertm(current_state_ == MonopodState::RUNNING,
+          "Not in state [MonopodState::RUNNING]. This could mean the robot is "
+          "HOLDING or in READ_ONLY mode with no active motors.");
 
-      if (!(monopod_mode_ == Mode::ENCODER_BOARD1 ||
-            monopod_mode_ == Mode::ENCODER_BOARD2)) {
-        bool status =
-            leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
-        // If status fail cout a error or warning.
-        if (!status) {
-          std::cerr << "Monopod::calibrate(): Failed to reach desired final "
-                       "location during calibration."
-                    << std::endl;
-        }
-      }
-
-      // Reset here pauses the motors again.
-      can_bus_board_->reset();
-
-      // start limit loop again if it was active before
-      pause_safety_loop = false;
-    } else {
-      std::cerr << "Monopod::calibrate(): Tried to calibrate when "
-                   "no motors are active. "
-                << std::endl;
-    }
-  } else {
-    std::cerr << "Monopod::calibrate(): Need to initialize monopod_sdk before "
-                 "calibration."
+  // Disable limits to avoid triggering the safemode.
+  pause_safety_loop = true;
+  // Make sure we are in a reset state before going to zero.
+  board_->reset();
+  bool status = leg_->calibrate(hip_home_offset_rad, knee_home_offset_rad);
+  // If status fail cout a error or warning.
+  if (!status) {
+    std::cerr << "Monopod::calibrate(): [Warn] Failed to reach desired final "
+                 "location during calibration."
               << std::endl;
-    exit(-1);
   }
-}
-
-bool Monopod::initialized() { return is_initialized; }
-
-void Monopod::print(const Vector<int> &joint_indexes) const {
-  const Vector<int> &jointSerialization =
-      joint_indexes.empty() ? encoder_joint_indexing : joint_indexes;
-
-  for (auto &joint_index : jointSerialization) {
-    if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-      encoders_.at(joint_index)->print();
-    }
-  }
+  // Reset here pauses the motors again.
+  board_->reset();
+  // start limit loop again if it was active before
+  pause_safety_loop = false;
 }
 
 bool Monopod::is_joint_controllable(const int joint_index) {
-  return is_initialized && Contains(motor_joint_indexing, joint_index);
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  return Contains(motor_joint_indexing, joint_index);
 }
 
 // ========================================
@@ -231,27 +259,35 @@ bool Monopod::is_joint_controllable(const int joint_index) {
 std::string Monopod::get_model_name() const { return "monopod"; }
 
 std::unordered_map<std::string, int> Monopod::get_joint_names() const {
-  std::unordered_map<std::string, int> joint_names_;
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
 
+  std::unordered_map<std::string, int> joint_names_;
   for (auto const &pair : joint_names) {
     if (Contains(encoder_joint_indexing, pair.second) ||
         Contains(motor_joint_indexing, pair.second)) {
       joint_names_[pair.first] = pair.second;
     }
   }
+
   return joint_names_;
 }
 
 std::optional<PID> Monopod::get_pid(const int &joint_index) const {
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+
+  assertm(false, "NotImplementedError.");
+
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     // todo Implement PID read/write
   }
+
   return std::nullopt;
 }
 
 std::optional<JointLimit>
 Monopod::get_joint_position_limit(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_limit(position);
   }
   return std::nullopt;
@@ -259,7 +295,8 @@ Monopod::get_joint_position_limit(const int &joint_index) const {
 
 std::optional<JointLimit>
 Monopod::get_joint_velocity_limit(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_limit(velocity);
   }
   return std::nullopt;
@@ -267,14 +304,16 @@ Monopod::get_joint_velocity_limit(const int &joint_index) const {
 
 std::optional<JointLimit>
 Monopod::get_joint_acceleration_limit(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_limit(acceleration);
   }
   return std::nullopt;
 }
 
 std::optional<double> Monopod::get_torque_target(const int &joint_index) const {
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     return motors_.at(joint_index)->get_measured_torque();
   }
   return std::nullopt;
@@ -282,13 +321,16 @@ std::optional<double> Monopod::get_torque_target(const int &joint_index) const {
 
 std::optional<Vector<double>>
 Monopod::get_torque_targets(const Vector<int> &joint_indexes) const {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  assertm(current_state_ != MonopodState::READ_ONLY,
+          "No torque target set in READ_ONLY mode (no active motors).");
   const Vector<int> &jointSerialization =
       joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
   Vector<double> data;
   data.reserve(jointSerialization.size());
   for (auto &joint_index : jointSerialization) {
-    if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+    if (Contains(motor_joint_indexing, joint_index)) {
       // note: maybe we cna call the single version here.
       data.push_back(motors_.at(joint_index)->get_measured_torque());
       continue;
@@ -300,21 +342,24 @@ Monopod::get_torque_targets(const Vector<int> &joint_indexes) const {
 }
 
 std::optional<double> Monopod::get_position(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_measured_angle();
   }
   return std::nullopt;
 }
 
 std::optional<double> Monopod::get_velocity(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_measured_velocity();
   }
   return std::nullopt;
 }
 
 std::optional<double> Monopod::get_acceleration(const int &joint_index) const {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     return encoders_.at(joint_index)->get_measured_acceleration();
   }
   return std::nullopt;
@@ -322,6 +367,7 @@ std::optional<double> Monopod::get_acceleration(const int &joint_index) const {
 
 std::optional<Vector<double>>
 Monopod::get_positions(const Vector<int> &joint_indexes) const {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
   auto lambda = [this](int joint_index) -> double {
     return encoders_.at(joint_index)->get_measured_angle();
   };
@@ -331,6 +377,7 @@ Monopod::get_positions(const Vector<int> &joint_indexes) const {
 
 std::optional<Vector<double>>
 Monopod::get_velocities(const Vector<int> &joint_indexes) const {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
   auto lambda = [this](int joint_index) -> double {
     return encoders_.at(joint_index)->get_measured_velocity();
   };
@@ -340,6 +387,7 @@ Monopod::get_velocities(const Vector<int> &joint_indexes) const {
 
 std::optional<Vector<double>>
 Monopod::get_accelerations(const Vector<int> &joint_indexes) const {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
   auto lambda = [this](int joint_index) -> double {
     return encoders_.at(joint_index)->get_measured_acceleration();
   };
@@ -349,8 +397,8 @@ Monopod::get_accelerations(const Vector<int> &joint_indexes) const {
 
 std::optional<double>
 Monopod::get_max_torque_target(const int &joint_index) const {
-
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     return motors_.at(joint_index)->get_max_torque();
   }
   // Todo: make sure there isnt any issue with returning null optional for max
@@ -364,18 +412,23 @@ Monopod::get_max_torque_target(const int &joint_index) const {
 
 bool Monopod::set_pid(const int &p, const int &i, const int &d,
                       const int &joint_index) {
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+  assertm(false, "NotImplementedError");
+
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     // todo Implement PID read/write
     PID pid(p, i, d);
     // motor_->set_pid(pid);
     return true;
   }
+
   return false;
 }
 
 bool Monopod::set_joint_position_limit(const double &max, const double &min,
                                        const int &joint_index) {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
     encoders_.at(joint_index)->set_limit(position, limit);
     return true;
@@ -385,7 +438,8 @@ bool Monopod::set_joint_position_limit(const double &max, const double &min,
 
 bool Monopod::set_joint_velocity_limit(const double &max, const double &min,
                                        const int &joint_index) {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
     encoders_.at(joint_index)->set_limit(velocity, limit);
     return true;
@@ -395,7 +449,8 @@ bool Monopod::set_joint_velocity_limit(const double &max, const double &min,
 
 bool Monopod::set_joint_acceleration_limit(const double &max, const double &min,
                                            const int &joint_index) {
-  if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(encoder_joint_indexing, joint_index)) {
     JointLimit limit(min, max);
     encoders_.at(joint_index)->set_limit(acceleration, limit);
     return true;
@@ -405,10 +460,14 @@ bool Monopod::set_joint_acceleration_limit(const double &max, const double &min,
 
 bool Monopod::set_max_torque_target(const double &max_torque_target,
                                     const int &joint_index) {
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     motors_.at(joint_index)->set_max_torque(max_torque_target);
     return true;
-  } else if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+  } else if (Contains(encoder_joint_indexing, joint_index)) {
+    std::cerr << "Monopod::set_max_torque_target(): [Warn] Attempted to set "
+                 "max torque on an encoder joint."
+              << std::endl;
     return true;
   }
   return false;
@@ -416,7 +475,12 @@ bool Monopod::set_max_torque_target(const double &max_torque_target,
 
 bool Monopod::set_torque_target(const double &torque_target,
                                 const int joint_index) {
-  if (is_initialized && Contains(motor_joint_indexing, joint_index)) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  assertm(current_state_ == MonopodState::RUNNING,
+          "Can not set torque target when not in state "
+          "[MonopodState::RUNNING]. This could mean the robot is HOLDING or in "
+          "READ_ONLY mode with no active motors.");
+  if (Contains(motor_joint_indexing, joint_index)) {
     /* automatically clip torque to max in joint module */
     motors_.at(joint_index)->set_torque(torque_target);
     motors_.at(joint_index)->send_torque();
@@ -428,18 +492,23 @@ bool Monopod::set_torque_target(const double &torque_target,
 
 bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
                                  const Vector<int> &joint_indexes) {
+  assertm(initialized(), "Requires monopod_sdk is initialized.");
+  assertm(current_state_ == MonopodState::RUNNING,
+          "Can not set torque target when not in state "
+          "[MonopodState::RUNNING]. This could mean the robot is HOLDING or in "
+          "READ_ONLY mode with no active motors.");
 
   const Vector<int> &jointSerialization =
       joint_indexes.empty() ? motor_joint_indexing : joint_indexes;
 
-  if (torque_targets.size() != jointSerialization.size())
-    return false;
+  assertm(
+      torque_targets.size() != jointSerialization.size(),
+      "Size of torque targets did not match the number of specified joints.");
 
   bool ok = true;
 
   for (size_t i = 0; i != torque_targets.size(); i++) {
-    if (is_initialized &&
-        Contains(motor_joint_indexing, jointSerialization[i])) {
+    if (Contains(motor_joint_indexing, jointSerialization[i])) {
 
       motors_.at(jointSerialization[i])->set_torque(torque_targets[i]);
       motors_.at(jointSerialization[i])->send_torque();
@@ -459,11 +528,12 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
  * break the robot.
  */
 void Monopod::safety_loop() {
+  safety_loop_running = true;
   real_time_tools::Spinner spinner;
   // Check limits at 100hz
   spinner.set_period(0.01);
 
-  while (!stop_safety_loop) {
+  while (safety_loop_running) {
     while (pause_safety_loop) {
       spinner.spin();
     }
@@ -479,7 +549,7 @@ void Monopod::safety_loop() {
             "physical limit was reached. Robot must be reset before it is "
             "valid. \n");
       }
-      can_bus_board_->enter_safemode();
+      board_->enter_safemode();
     }
     // spin the RT safety_loop.
     spinner.spin();

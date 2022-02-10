@@ -190,6 +190,8 @@ HomingReturnCode MotorJointModule::update_homing() {
     if (actual_index_time > homing_state_.last_encoder_index_time_index) {
       // -- FINISHED
       const double index_angle = get_measured_index_angle();
+      rt_printf("joint [%d] found encoder index at position [%f]",
+                homing_state_.joint_id, index_angle);
 
       // Store the end position of the homing so it can be used to
       // determine the travelled distance.
