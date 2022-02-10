@@ -52,21 +52,18 @@ void SinePositionControl::loop() {
     time_logger.tic();
     local_time = count * control_period;
 
-    rt_printf("0\n");
     std::vector<double> data =
         sdk_->get_positions({hip_joint, knee_joint}).value();
-    rt_printf("1\n");
+
     // compute the control
     actual_position_hip = data[0];
     actual_position_knee = data[1];
 
     data = sdk_->get_velocities({hip_joint, knee_joint}).value();
-    rt_printf("2\n");
     actual_velocity_hip = data[0];
     actual_velocity_knee = data[1];
 
     data = sdk_->get_torque_targets({hip_joint, knee_joint}).value();
-    rt_printf("3\n");
     actual_torque_hip = data[0];
     actual_torque_knee = data[1];
 
