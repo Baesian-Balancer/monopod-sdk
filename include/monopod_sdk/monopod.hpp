@@ -398,9 +398,7 @@ private:
     Vector<double> data;
     data.reserve(jointSerialization.size());
     for (auto &joint_index : jointSerialization) {
-      if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
-        rt_printf("print value  in data serialization: %f \n",
-                  getJointData(joint_index));
+      if (Contains(encoder_joint_indexing, joint_index)) {
         data.push_back(getJointData(joint_index));
       } else {
         return std::nullopt;
