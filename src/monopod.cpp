@@ -211,6 +211,7 @@ void Monopod::start_safety_loop() {
               << std::endl;
     return;
   }
+  safety_loop_running = true;
   rt_printf("Starting realtime safety loop to ensure physical limits of robot "
             "stay within a safety margin. \n");
   rt_thread_safety_.create_realtime_thread(&Monopod::safety_loop, this);
@@ -528,7 +529,6 @@ bool Monopod::set_torque_targets(const Vector<double> &torque_targets,
  * break the robot.
  */
 void Monopod::safety_loop() {
-  safety_loop_running = true;
   real_time_tools::Spinner spinner;
   // Check limits at 100hz
   spinner.set_period(0.01);
