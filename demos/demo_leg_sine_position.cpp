@@ -1,9 +1,3 @@
-/**
- * @file demo_sine_position_1_motor.cpp
- * @copyright Copyright (c) 2018-2020, New York University and Max Planck
- * Gesellschaft, License BSD-3-Clause
- */
-
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 #include "sine_position_control.hpp"
 #include <atomic>
@@ -50,7 +44,7 @@ int main(int, char **) {
 
   // construct a simple PD controller.
   monopod_drivers::SinePositionControl controller(sdk);
-  controller.set_gains(3, 0.25);
+  controller.set_gains(0.3, 0.05);
 
   rt_printf("controllers are set up \n");
 
