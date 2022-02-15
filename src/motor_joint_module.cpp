@@ -23,8 +23,6 @@ MotorJointModule::MotorJointModule(
 void MotorJointModule::set_torque(const double &desired_torque) {
 
   double desired_current = joint_torque_to_motor_current(desired_torque);
-  rt_printf("Desired Torque: %.3f, Desired Current: %.3f", desired_torque,
-            desired_current);
   // limit current to avoid overheating etc
   // ----------------------------------
   desired_current = std::min(desired_current, max_current_);
