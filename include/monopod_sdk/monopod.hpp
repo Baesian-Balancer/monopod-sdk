@@ -48,22 +48,51 @@ public:
   /**
    * @brief is the monopod sdk Initialized?.
    */
-  bool initialized();
+  bool initialized() const;
 
   /** @brief Print the motor status and state. */
   void print(const Vector<int> &joint_indexes = {}) const;
 
   /**
-   * @brief This method is a helper to start the thread loop_limits. Requires
-   * the class to be initialized before the loop_limits can be started.
+   * @brief This method is a helper to start the thread safety_loop. Requires
+   * the class to be initialized before the safety_loop can be started.
    */
-  void start_loop();
+  void start_safety_loop();
+
+  /**
+   * @brief This method is a helper class to goto some position for the leg.
+   * This requires the board to be initialized in any mode which has active
+   * motors. Additionally this function will pause the limit checks and will
+   * reset the board before executing the position control. This is to allow
+   * homing from outside the limits.
+   */
+  void goto_position(const double &hip_home_position = 0,
+                     const double &knee_home_position = 0);
+
+  /**
+   * @brief This method is a helper class to hold the position the leg was in
+   * when the function was called. This function will only change the state if
+   * the motor board is active. otherwise nothing will happen. When holding the
+   * monopod wll be a read only state until the holding is killed.
+   */
+  void hold_position();
+
+  /**
+   * @brief Is the monopod holding the current leg position?
+   */
+  bool is_hold_position();
+
+  /**
+   * @brief Stops robot from holding.
+   */
+  void stop_hold_position();
 
   /**
    * @brief Calibrate the Encoders.
    *
    * @param hip_home_offset_rad hip offset from found encoder index 0 (rad)
-   * @param knee_home_offset_rad knee offset from found encoder index 0 (rad)
+   * @param knee_home_offset_rad knee offset from found encoder index 0
+   * (rad)
    */
   void calibrate(const double &hip_home_offset_rad = 0,
                  const double &knee_home_offset_rad = 0);
@@ -92,7 +121,8 @@ public:
   bool is_joint_controllable(const int joint_index);
 
   /**
-   * @brief Is the robot in a valid state?
+   * @brief Is the robot in a valid state? HOLDING state and safemode is
+   * considered invalid.
    *
    * @return bool, true if valid otherwise false.
    */
@@ -320,22 +350,37 @@ public:
 
 private:
   /**
-   * @brief this function is just a wrapper around the actual loop_limits
+   * @brief Possible monopod states.
+   */
+  enum class MonopodState {
+    //! not initialized.
+    NOT_INITIALIZED = 0,
+    //! Running, safety loop is started in background
+    RUNNING,
+    //! Holding static location
+    HOLDING,
+    //! Read only mode. Can only read position and set values of observation
+    //! limits.
+    READ_ONLY,
+  } current_state_;
+
+  /**
+   * @brief this function is just a wrapper around the actual safety_loop
    * function, such that it can be spawned as a posix thread.
    */
-  static THREAD_FUNCTION_RETURN_TYPE loop_limits(void *instance_pointer) {
-    ((Monopod *)(instance_pointer))->loop_limits();
+  static THREAD_FUNCTION_RETURN_TYPE safety_loop(void *instance_pointer) {
+    ((Monopod *)(instance_pointer))->safety_loop();
     return THREAD_FUNCTION_RETURN_VALUE;
   }
 
   /**
-   * @brief this is a simple control loop_limits which runs at a kilohertz.
+   * @brief this is a simple control safety_loop which runs at a kilohertz.
    *
    * it reads the measurement from the analog sensor, in this case the
    * slider. then it scales it and sends it as the current target to
    * the motor.
    */
-  void loop_limits();
+  void safety_loop();
 
   /**
    * @brief Simple helper method to serialized getting of data.
@@ -353,7 +398,7 @@ private:
     Vector<double> data;
     data.reserve(jointSerialization.size());
     for (auto &joint_index : jointSerialization) {
-      if (is_initialized && Contains(encoder_joint_indexing, joint_index)) {
+      if (Contains(encoder_joint_indexing, joint_index)) {
         data.push_back(getJointData(joint_index));
       } else {
         return std::nullopt;
@@ -368,7 +413,7 @@ private:
   Ptr<EncoderJointModule> create_encoder_module(JointNamesIndex joint_index) {
     /* Create encoders here */
     auto encoder =
-        std::make_shared<monopod_drivers::Encoder>(can_bus_board_, joint_index);
+        std::make_shared<monopod_drivers::Encoder>(board_, joint_index);
     /* Encoder joint modules */
     return std::make_shared<EncoderJointModule>(joint_index, encoder, 1.0, 0.0,
                                                 false);
@@ -379,8 +424,7 @@ private:
    */
   Ptr<MotorJointModule> create_motor_module(JointNamesIndex joint_index) {
     /* create motors here*/
-    auto motor =
-        std::make_shared<monopod_drivers::Motor>(can_bus_board_, joint_index);
+    auto motor = std::make_shared<monopod_drivers::Motor>(board_, joint_index);
     /* motor joint modules */
     return std::make_shared<MotorJointModule>(joint_index, motor, 0.025, 9.0,
                                               0.0, false);
@@ -421,12 +465,17 @@ private:
   /**
    * @brief the realt time thread object.
    */
-  real_time_tools::RealTimeThread rt_thread_limits_;
+  real_time_tools::RealTimeThread rt_thread_safety_;
 
   /**
-   * @brief controls execution of loop_limits which checks limits of joints.
+   * @brief controls execution of safety_loop which checks limits of joints.
    */
-  bool stop_loop_limits;
+  bool safety_loop_running;
+
+  /**
+   * @brief controls execution of safety_loop which checks limits of joints.
+   */
+  bool pause_safety_loop;
 
   /**
    * @brief Determines if the joint is in dummy mode. (no connection to real
@@ -444,7 +493,7 @@ private:
    * holds meassurement and write buffers. This could also be a dummy
    * controlboard.
    */
-  Ptr<monopod_drivers::ControlBoardsInterface> can_bus_board_;
+  Ptr<monopod_drivers::ControlBoardsInterface> board_;
 
   /**
    * @brief Holds encoder joint modules for each active joint.

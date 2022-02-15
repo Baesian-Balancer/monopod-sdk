@@ -23,8 +23,8 @@ MotorJointModule::MotorJointModule(
 void MotorJointModule::set_torque(const double &desired_torque) {
 
   double desired_current = joint_torque_to_motor_current(desired_torque);
-
-  // limit current to avoid overheating etc ----------------------------------
+  // limit current to avoid overheating etc
+  // ----------------------------------
   desired_current = std::min(desired_current, max_current_);
   desired_current = std::max(desired_current, -max_current_);
 
@@ -190,6 +190,8 @@ HomingReturnCode MotorJointModule::update_homing() {
     if (actual_index_time > homing_state_.last_encoder_index_time_index) {
       // -- FINISHED
       const double index_angle = get_measured_index_angle();
+      rt_printf("joint [%d] found encoder index at position [%f]. \n",
+                homing_state_.joint_id, index_angle);
 
       // Store the end position of the homing so it can be used to
       // determine the travelled distance.

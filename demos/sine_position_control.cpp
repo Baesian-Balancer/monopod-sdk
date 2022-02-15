@@ -1,9 +1,3 @@
-/**
- * @file sine_position_control.cpp
- * @copyright Copyright (c) 2018-2020, New York University and Max Planck
- * Gesellschaft, License BSD-3-Clause
- */
-
 #include "sine_position_control.hpp"
 #include "real_time_tools/spinner.hpp"
 #include "real_time_tools/timer.hpp"
@@ -54,6 +48,7 @@ void SinePositionControl::loop() {
 
     std::vector<double> data =
         sdk_->get_positions({hip_joint, knee_joint}).value();
+
     // compute the control
     actual_position_hip = data[0];
     actual_position_knee = data[1];
