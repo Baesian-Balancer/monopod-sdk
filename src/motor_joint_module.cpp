@@ -47,7 +47,7 @@ double MotorJointModule::get_max_torque() const {
 }
 
 void MotorJointModule::set_max_torque(const double &max_torque) {
-  max_current_ = motor_current_to_joint_torque(max_torque);
+  max_current_ = joint_torque_to_motor_current(max_torque);
 }
 
 double MotorJointModule::get_sent_torque() const {
