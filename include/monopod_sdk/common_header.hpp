@@ -13,7 +13,7 @@ namespace monopod_drivers {
 /**
  * Max current before the robot gets kill in amps (A).
  */
-#define MAX_CURRENT 5.0
+#define MAX_CURRENT 12.0
 
 // #define VERBOSE true
 
