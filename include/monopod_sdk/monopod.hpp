@@ -66,7 +66,7 @@ public:
    * reset the board before executing the position control. This is to allow
    * homing from outside the limits.
    */
-  void goto_position(const double &hip_home_position = 0,
+  bool goto_position(const double &hip_home_position = 0,
                      const double &knee_home_position = 0);
 
   /**

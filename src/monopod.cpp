@@ -146,7 +146,7 @@ void Monopod::reset(const bool &move_to_zero) {
   current_state_ = MonopodState::RUNNING;
 }
 
-void Monopod::goto_position(const double &hip_home_position,
+bool Monopod::goto_position(const double &hip_home_position,
                             const double &knee_home_position) {
   assertm(initialized(), "Requires monopod_sdk is initialized.");
   if (current_state_ != MonopodState::RUNNING) {
@@ -154,18 +154,27 @@ void Monopod::goto_position(const double &hip_home_position,
                  "not in [MonopodState::RUNNING]. This means the "
                  "robot is HOLDING or in READ_ONLY mode with no active motors."
               << std::endl;
-    return;
+    return false;
   }
 
   // Disable limits to avoid triggering the safemode.
   pause_safety_loop = true;
   // Make sure we are in a reset state before going to zero.
   board_->reset();
-  leg_->goto_position(hip_home_position, knee_home_position);
+  bool ok = leg_->goto_position(hip_home_position, knee_home_position);
   // Reset here pauses the motors again.
   board_->reset();
   // start limit loop again if it was active before
   pause_safety_loop = false;
+
+  if (!ok) {
+    std::cerr
+        << "Monopod::goto_position(): Failed to goto_position when "
+        << "exectuing the control. This most likely occoured if the observed "
+        << "error between steps was unexpected in size." << std::endl;
+    return false;
+  }
+  return true;
 }
 void Monopod::hold_position() {
 
