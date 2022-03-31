@@ -138,8 +138,9 @@ public:
    *
    * @param move_to_zero True if you want the monopod to move into zero
    * position, otherwise false.
+   * @return bool whether goto home was successful
    */
-  void reset(const bool &move_to_zero = true);
+  bool reset(const bool &move_to_zero = true);
 
   // ======================================
   // setters

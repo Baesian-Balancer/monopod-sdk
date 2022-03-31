@@ -132,18 +132,20 @@ void Monopod::print(const Vector<int> &joint_indexes) const {
   }
 }
 
-void Monopod::reset(const bool &move_to_zero) {
+bool Monopod::reset(const bool &move_to_zero) {
   // Make sure we are in a reset state before going to zero.
   assertm(initialized(), "Requires monopod_sdk is initialized.");
   if (current_state_ == MonopodState::HOLDING) {
     stop_hold_position();
   }
   board_->reset();
+  bool ok = true;
   if (move_to_zero) {
     // by default moves to home
-    goto_position();
+    ok = ok && goto_position();
   }
   current_state_ = MonopodState::RUNNING;
+  return ok;
 }
 
 bool Monopod::goto_position(const double &hip_home_position,
