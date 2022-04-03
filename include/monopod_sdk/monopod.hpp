@@ -416,7 +416,7 @@ private:
         std::make_shared<monopod_drivers::Encoder>(board_, joint_index);
     /* Encoder joint modules */
     return std::make_shared<EncoderJointModule>(joint_index, encoder, 1.0, 0.0,
-                                                false);
+                                                true);
   }
 
   /**
@@ -427,7 +427,7 @@ private:
     auto motor = std::make_shared<monopod_drivers::Motor>(board_, joint_index);
     /* motor joint modules */
     return std::make_shared<MotorJointModule>(joint_index, motor, 0.025, 9.0,
-                                              0.0, false);
+                                              0.0, true);
   }
 
   /**
