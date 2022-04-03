@@ -260,10 +260,10 @@ private:
         joints_[hip_joint]->get_measured_angle(),
         joints_[knee_joint]->get_measured_angle()};
 
-    rt_printf("Leg::go_to(): Init positions [hip: %.3f, knee: %.3f]",
+    rt_printf("Leg::go_to(): Init positions [hip: %.3f, knee: %.3f]\n",
               initial_joint_positions[0], initial_joint_positions[1]);
 
-    rt_printf("Leg::go_to(): Desired positions [hip: %.3f, knee: %.3f]",
+    rt_printf("Leg::go_to(): Desired positions [hip: %.3f, knee: %.3f]\n",
               angle_to_reach_rad[0], angle_to_reach_rad[1]);
 
     double final_time = (angle_to_reach_rad - initial_joint_positions)
@@ -293,7 +293,7 @@ private:
       desired_pose = min_jerk_trajs[0].compute(current_time);
       desired_torque =
           joints_[hip_joint]->execute_position_controller(desired_pose);
-      if (desired_torque == -1) {
+      if (desired_torque == -1.) {
         break;
       }
       joints_[hip_joint]->set_torque(desired_torque);
@@ -301,7 +301,7 @@ private:
       desired_pose = min_jerk_trajs[1].compute(current_time);
       desired_torque =
           joints_[knee_joint]->execute_position_controller(desired_pose);
-      if (desired_torque == -1) {
+      if (desired_torque == -1.) {
         break;
       }
       joints_[knee_joint]->set_torque(desired_torque);
