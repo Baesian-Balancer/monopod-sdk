@@ -82,14 +82,6 @@ double MotorJointModule::execute_position_controller(
     double target_position_rad) const {
   double diff = target_position_rad - get_measured_angle();
 
-  // if (std::fabs(diff) > 6.) {
-  //   // TODO: magic number for safety limit.
-  //   std::cerr << "motor_joint_module::execute_position_controller(): "
-  //             << "Difference between target position and current position "
-  //             << "exceeded the limits set of 6.0 Radians." << std::endl;
-  //   return -1;
-  // }
-
   // simple PD control
   double desired_torque = position_control_gain_p_ * diff -
                           position_control_gain_d_ * get_measured_velocity();

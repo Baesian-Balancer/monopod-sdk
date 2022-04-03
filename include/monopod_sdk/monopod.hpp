@@ -66,7 +66,7 @@ public:
    * reset the board before executing the position control. This is to allow
    * homing from outside the limits.
    */
-  bool goto_position(const double &hip_home_position = 0,
+  void goto_position(const double &hip_home_position = 0,
                      const double &knee_home_position = 0);
 
   /**
@@ -138,9 +138,8 @@ public:
    *
    * @param move_to_zero True if you want the monopod to move into zero
    * position, otherwise false.
-   * @return bool whether goto home was successful
    */
-  bool reset(const bool &move_to_zero = true);
+  void reset(const bool &move_to_zero = true);
 
   // ======================================
   // setters
