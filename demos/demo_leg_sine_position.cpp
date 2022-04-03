@@ -38,7 +38,7 @@ int main(int, char **) {
   // Dont need start loop here now.
   sdk->start_safety_loop();
 
-  sdk->calibrate();
+  // sdk->calibrate();
 
   rt_printf("sdk is set up \n");
 
