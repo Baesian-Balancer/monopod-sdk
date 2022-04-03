@@ -169,13 +169,14 @@ bool Monopod::goto_position(const double &hip_home_position,
   // start limit loop again if it was active before
   pause_safety_loop = false;
 
-  if (!ok) {
-    std::cerr
-        << "Monopod::goto_position(): Failed to goto_position when "
-        << "exectuing the control. This most likely occoured if the observed "
-        << "error between steps was unexpected in size." << std::endl;
-    return false;
-  }
+  // if (!ok) {
+  //   std::cerr
+  //       << "Monopod::goto_position(): Failed to goto_position when "
+  //       << "exectuing the control. This most likely occoured if the observed
+  //       "
+  //       << "error between steps was unexpected in size." << std::endl;
+  //   return false;
+  // }
   return true;
 }
 void Monopod::hold_position() {

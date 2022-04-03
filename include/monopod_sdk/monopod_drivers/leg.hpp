@@ -293,17 +293,17 @@ private:
       desired_pose = min_jerk_trajs[0].compute(current_time);
       desired_torque =
           joints_[hip_joint]->execute_position_controller(desired_pose);
-      if (desired_torque == -1.) {
-        break;
-      }
+      // if (desired_torque == -1.) {
+      //   break;
+      // }
       joints_[hip_joint]->set_torque(desired_torque);
 
       desired_pose = min_jerk_trajs[1].compute(current_time);
       desired_torque =
           joints_[knee_joint]->execute_position_controller(desired_pose);
-      if (desired_torque == -1.) {
-        break;
-      }
+      // if (desired_torque == -1.) {
+      //   break;
+      // }
       joints_[knee_joint]->set_torque(desired_torque);
       joints_[hip_joint]->send_torque();
       joints_[knee_joint]->send_torque();
