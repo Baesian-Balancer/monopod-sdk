@@ -107,9 +107,16 @@ void CanBusControlBoards::send_if_input_changed() {
 
 void CanBusControlBoards::wait_until_ready() {
   rt_printf("waiting for boards and motors to be ready \n");
-  bool is_ready = false;
-  while (!is_ready) {
-    is_ready = CanBusControlBoards::is_ready();
+  int timeout = 0;
+  while (!CanBusControlBoards::is_ready()) {
+    real_time_tools::Timer::sleep_sec(0.1);
+    CanBusControlBoards::reset();
+    timeout++;
+    if (timeout > 100) {
+      std::cerr
+          << "Timed out while waiting for boards to initialize. exiting. \n";
+      exit(-1);
+    }
   }
   rt_printf("board and motors are ready \n");
 }
@@ -121,7 +128,12 @@ bool CanBusControlBoards::is_ready() {
   if (status_[motor_board]->length() == 0 && active_boards_[motor_board]) {
     return false;
   } else if (active_boards_[motor_board]) {
-    ready = ready && status_[motor_board]->newest_element().is_ready();
+    auto board = status_[motor_board]->newest_element();
+    ready = ready && board.is_ready();
+    if (board.get_error_code()) {
+      std::cerr << "Motor Board not ready because of '"
+                << board.get_error_description() << "'" << std::endl;
+    }
   }
 
   if (status_[encoder_board1]->length() == 0 &&
@@ -395,6 +407,14 @@ void CanBusControlBoards::loop() {
       status.error_code = data >> 5;
 
       status_[motor_board]->append(status);
+
+      if (status.get_error_code() == status.ErrorCodes::ENCODER) {
+        std::cerr << "Encoder Error Encountered. This is a terminal issue and "
+                     "requires reset. Exiting program."
+                  << std::endl;
+        exit(-1);
+      }
+
       break;
     }
 
