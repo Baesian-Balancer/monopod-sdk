@@ -36,48 +36,23 @@ public:
 
     joints_[hip_joint] = hip_joint_module;
     joints_[knee_joint] = knee_joint_module;
-  }
-
-  /**
-   * @brief Destroy the LegInterface object
-   */
-  ~Leg() {}
-
-  /**
-   * @brief Initialize canbus connecion, esablish connection to the motors,
-   * and set motor constants.
-   */
-  bool initialize() {
 
     // The the control gains in order to perform the calibration
     double kp, kd;
-    kp = 3.0;
+    kp = 2.0;
     kd = 0.05;
 
     joints_[hip_joint]->set_position_control_gains(kp, kd);
     joints_[knee_joint]->set_position_control_gains(kp, kd);
 
-    // wait until all board are ready and connected
     initialized = true;
-    return initialized;
+    is_holding = false;
   }
-
-  // =========================================================================
-  //  GETTERS
-  // =========================================================================
 
   /**
-   * @brief Get all meassurements of the leg. This includes Position,
-   * Velocity, Torque, and In the future Acceleration.
-   *
-   * @return unordered map of LVector measurements. Indexed with the
-   * meassurement type enum.
+   * @brief Destroy the LegInterface object
    */
-  double get_measured_torque(const JointNamesIndex &joint_index) const {
-    throw_if_not_init();
-
-    return joints_.at(joint_index)->get_measured_torque();
-  }
+  ~Leg() { is_holding = false; }
 
 private:
   /**
@@ -93,13 +68,58 @@ public:
    */
   bool calibrate(const double &hip_home_offset_rad,
                  const double &knee_home_offset_rad) {
-    throw_if_not_init();
     double search_distance_limit_rad = 2 * M_PI;
     LVector home_offset_rad = {hip_home_offset_rad, knee_home_offset_rad};
-    execute_homing(search_distance_limit_rad, home_offset_rad);
+
+    bool status = true;
+
+    status =
+        status && execute_homing(search_distance_limit_rad, home_offset_rad) ==
+                      HomingReturnCode::SUCCEEDED;
     LVector zero_pose = LVector::Zero();
-    go_to(zero_pose);
+    status = status && go_to(zero_pose) == GoToReturnCode::SUCCEEDED;
     return true;
+  }
+
+  /**
+   * @brief Allow the robot to go to a desired pose. Once the control done
+   * 0 torques is sent. By default this function will home.
+   *
+   * @param hip_home_position (rad) Final desired hip position
+   * @param knee_home_position (rad) Final desired knee position
+   *
+   * @return true if successfully went to location otherwise false.
+   */
+  bool goto_position(const double &hip_home_position = 0,
+                     const double &knee_home_position = 0) {
+    LVector pose = {hip_home_position, knee_home_position};
+    return go_to(pose) == GoToReturnCode::SUCCEEDED;
+  }
+
+  /**
+   * @brief Start loop to hold robot at current leg position. Current position
+   * is defined as the position meassured when the function was called.
+   */
+  void start_holding_loop() {
+    // Make sure only one holding loop is running.
+    if (is_holding) {
+      return;
+    }
+    is_holding = true;
+    rt_thread_hold_.create_realtime_thread(&Leg::hold_current_pos_loop, this);
+  }
+
+  /**
+   * @brief True if currrently holding at some position, otherwise false.
+   */
+  bool is_hold_current_pos() { return is_holding; }
+
+  /**
+   * @brief Stops any hold loop currently running.
+   */
+  void stop_hold_current_pos() {
+    is_holding = false;
+    rt_thread_hold_.join();
   }
 
 private:
@@ -112,14 +132,52 @@ private:
   /**
    * @brief is Initialized.
    */
-  bool initialized = false;
+  bool initialized;
+
+  /**
+   * @brief the realt time thread object.
+   */
+  real_time_tools::RealTimeThread rt_thread_hold_;
+  /**
+   * @brief is Leg holding position?.
+   */
+  bool is_holding;
 
 private:
-  void throw_if_not_init() const {
-    if (!initialized)
-      throw std::runtime_error(
-          "Need to initialize the monopod_drivers::Leg before use.");
+  /**
+   * @brief this function is just a wrapper around the actual hold current
+   * position function, such that it can be spawned as a posix thread.
+   */
+  static THREAD_FUNCTION_RETURN_TYPE
+  hold_current_pos_loop(void *instance_pointer) {
+    ((Leg *)(instance_pointer))->hold_current_pos_loop();
+    return THREAD_FUNCTION_RETURN_VALUE;
   }
+  /**
+   * @brief This loop runs at 1khz and attempts to hold the leg at the position
+   * set when called. This will run as a thread in the background until killed.
+   */
+  void hold_current_pos_loop() {
+    double hold_pos_hip = joints_[hip_joint]->get_measured_angle();
+    double hold_pos_knee = joints_[knee_joint]->get_measured_angle();
+
+    real_time_tools::Spinner spinner;
+    spinner.set_period(0.01); // TODO magic number
+
+    while (is_holding) {
+      double desired_torque =
+          joints_[hip_joint]->execute_position_controller(hold_pos_hip);
+      joints_[hip_joint]->set_torque(desired_torque);
+      joints_[hip_joint]->send_torque();
+      desired_torque =
+          joints_[knee_joint]->execute_position_controller(hold_pos_knee);
+      joints_[knee_joint]->set_torque(desired_torque);
+      joints_[knee_joint]->send_torque();
+
+      spinner.spin();
+    }
+  }
+
   /**
    * @brief Perform homing for all joints.
    *
@@ -155,7 +213,7 @@ private:
 
     // run homing for all joints until all of them are done
     real_time_tools::Spinner spinner;
-    spinner.set_period(0.001); // TODO magic number
+    spinner.set_period(0.01); // TODO magic number
     HomingReturnCode homing_status;
     do {
       bool all_succeeded = true;
@@ -169,7 +227,6 @@ private:
         if (joint_result == HomingReturnCode::NOT_INITIALIZED ||
             joint_result == HomingReturnCode::FAILED) {
           homing_status = joint_result;
-          // abort homing
           break;
         }
 

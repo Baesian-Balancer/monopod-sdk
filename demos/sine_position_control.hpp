@@ -1,8 +1,3 @@
-/**
- * @file sine_position_control.hpp
- * @copyright Copyright (c) 2018-2020, New York University and Max Planck
- * Gesellschaft, License BSD-3-Clause
- */
 
 #include "monopod_sdk/common_header.hpp"
 #include "monopod_sdk/monopod.hpp"

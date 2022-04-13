@@ -23,25 +23,19 @@ MotorJointModule::MotorJointModule(
 void MotorJointModule::set_torque(const double &desired_torque) {
 
   double desired_current = joint_torque_to_motor_current(desired_torque);
-
-  // limit current to avoid overheating etc ----------------------------------
+  // limit current to avoid overheating etc
+  // ----------------------------------
   desired_current = std::min(desired_current, max_current_);
   desired_current = std::max(desired_current, -max_current_);
 
   // Make sure your max isnt above Global max --------------------------------
   if (std::fabs(desired_current) > MAX_CURRENT) {
-    std::cout << "something went wrong, it should never happen"
+    std::cerr << "something went wrong, it should never happen"
                  " that desired_current > "
               << MAX_CURRENT << ". desired_current: " << desired_current
               << std::endl;
     exit(-1);
   }
-
-  // // limit velocity to avoid breaking the robot --------------------------
-  // if (!std::isnan(max_velocity_) && get_measurement(velocity)->length() > 0
-  // &&
-  //     std::fabs(get_measurement(velocity)->newest_element()) > max_velocity_)
-  //   safe_current_target = 0;
 
   motor_->set_current_target(polarity_ * desired_current);
 }
@@ -53,7 +47,7 @@ double MotorJointModule::get_max_torque() const {
 }
 
 void MotorJointModule::set_max_torque(const double &max_torque) {
-  max_current_ = motor_current_to_joint_torque(max_torque);
+  max_current_ = joint_torque_to_motor_current(max_torque);
 }
 
 double MotorJointModule::get_sent_torque() const {
@@ -79,28 +73,6 @@ double MotorJointModule::motor_current_to_joint_torque(double current) const {
   return current * gear_ratio_ * motor_constant_;
 }
 
-double MotorJointModule::get_joint_measurement(
-    const Measurements &measurement_id) const {
-  auto measurement_history = motor_->get_measurement(measurement_id);
-
-  if (measurement_history->length() == 0) {
-    // rt_printf("get_joint_measurement returns NaN\n");
-    return std::numeric_limits<double>::quiet_NaN();
-  }
-  return polarity_ * measurement_history->newest_element();
-}
-
-long int MotorJointModule::get_joint_measurement_index(
-    const Measurements &measurement_id) const {
-  auto measurement_history = motor_->get_measurement(measurement_id);
-
-  if (measurement_history->length() == 0) {
-    // rt_printf("get_joint_measurement_index returns NaN\n");
-    return -1;
-  }
-  return measurement_history->newest_timeindex();
-}
-
 void MotorJointModule::set_position_control_gains(double kp, double kd) {
   position_control_gain_p_ = kp;
   position_control_gain_d_ = kd;
@@ -113,14 +85,6 @@ double MotorJointModule::execute_position_controller(
   // simple PD control
   double desired_torque = position_control_gain_p_ * diff -
                           position_control_gain_d_ * get_measured_velocity();
-
-  // clamp torque
-  const double max_torque = motor_current_to_joint_torque(MAX_CURRENT) * 0.9;
-  if (desired_torque > max_torque) {
-    desired_torque = max_torque;
-  } else if (desired_torque < -max_torque) {
-    desired_torque = -max_torque;
-  }
 
   return desired_torque;
 }
@@ -151,6 +115,9 @@ void MotorJointModule::init_homing(double search_distance_limit_rad,
   homing_state_.last_encoder_index_time_index =
       get_joint_measurement_index(Measurements::encoder_index);
   homing_state_.target_position_rad = get_measured_angle();
+
+  rt_printf("target pos init... %.3f \n", homing_state_.target_position_rad);
+
   homing_state_.step_count = 0;
   homing_state_.start_position = get_measured_angle();
 
@@ -223,6 +190,8 @@ HomingReturnCode MotorJointModule::update_homing() {
     if (actual_index_time > homing_state_.last_encoder_index_time_index) {
       // -- FINISHED
       const double index_angle = get_measured_index_angle();
+      rt_printf("joint [%d] found encoder index at position [%f]. \n",
+                homing_state_.joint_id, index_angle);
 
       // Store the end position of the homing so it can be used to
       // determine the travelled distance.

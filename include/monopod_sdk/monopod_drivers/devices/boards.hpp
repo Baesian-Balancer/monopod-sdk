@@ -220,6 +220,7 @@ public:
    * @brief A useful shortcut
    */
   typedef time_series::TimeSeries<BoardStatus> StatusTimeseries;
+
   /**
    * @brief A useful shortcut
    */
@@ -421,6 +422,25 @@ public:
    * @brief returns only once board and motors are ready.
    */
   virtual void wait_until_ready() = 0;
+
+  /**
+   * This will cause the control to be forced into a "safemode" where the
+   * control is set to zero then held constant until reset.
+   */
+  virtual void enter_safemode() = 0;
+
+  /**
+   * This will return if the control is in "safemode".
+   */
+  virtual bool is_safemode() = 0;
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the motors will be paused and The
+   * control boards will be reset such that any timed out connection will be
+   * reestablished.
+   */
+  virtual void reset() = 0;
 };
 
 /**
@@ -570,33 +590,42 @@ public:
    */
   virtual void wait_until_ready();
 
-  bool is_ready();
-
-  /// \todo: this function should go away,
-  /// and we should add somewhere a warning in case there is a timeout
-  void pause_motors();
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the motors will be paused and The
+   * control boards will be reset such that any timed out connection will be
+   * reestablished.
+   */
+  virtual void reset();
 
   /**
    * This will cause the control to be forced into a "safemode" where the
    * control is set to zero then held constant until reset.
    */
-  void enter_safemode() {
-    set_control(0, current_target_0);
-    set_control(0, current_target_1);
-    send_newest_controls();
+  virtual void enter_safemode() {
+    // Ensure we are not in safe mode for the pause motors to be able to send
+    // control.
+    is_safemode_ = false;
+    pause_motors();
     is_safemode_ = true;
   }
 
   /**
-   * This will cause the control to reset the "safemode" if the control is
-   * currently in safemode.
-   */
-  void reset_safemode() { is_safemode_ = false; }
-
-  /**
    * This will return if the control is in "safemode".
    */
-  bool is_safemode() { return is_safemode_; }
+  virtual bool is_safemode() { return is_safemode_; }
+
+  /**
+   * @brief True if all active boards have established at least one status
+   * message from the board that does not include any error.
+   */
+  bool is_ready();
+
+  /**
+   * @brief Sets motors to Idle and sets the canbus control recieve timeout on
+   * board to none until next action is sent.
+   */
+  void pause_motors();
 
   /**
    * @brief Disable the can reciever timeout.
@@ -723,7 +752,7 @@ private:
   /**
    * State Info
    */
-  std::vector<bool> active_boards_;
+  Vector<int> active_boards_;
 
   /**
    * Outputs
@@ -779,8 +808,10 @@ private:
   bool is_loop_active_;
 
   /**
-   * @brief Are motor in idle mode = 0 torques?
-   * @TODO update this documentation with the actual behavior
+   * @brief This variables if true means two things: Are motor in idle mode = 0
+   * torques?, and is the timeout duration for a control signal zero on the TI
+   * board? When a new control is sent the motors will enter into their normal
+   * state where they are active with the proper timeout duration.
    */
   bool motors_are_paused_;
 
@@ -802,6 +833,247 @@ private:
    * or not dependening on the current OS.
    */
   real_time_tools::RealTimeThread rt_thread_;
+};
+
+//==============================================================================
+/**
+ * @brief This class DummyControlBoards implements a ControlBoardsInterface
+ * specific to CAN networks.
+ */
+class DummyControlBoards : public ControlBoardsInterface {
+public:
+  /**
+   * @brief Construct a new DummyControlBoards object
+   *
+   */
+  DummyControlBoards() {
+    int history_length = 1000;
+
+    measurement_ = create_vector_of_pointers<ScalarTimeseries>(
+        measurement_count, history_length);
+
+    status_ = create_vector_of_pointers<StatusTimeseries>(board_count,
+                                                          history_length);
+
+    control_ = create_vector_of_pointers<ScalarTimeseries>(control_count,
+                                                           history_length);
+
+    sent_control_ = create_vector_of_pointers<ScalarTimeseries>(control_count,
+                                                                history_length);
+
+    BoardStatus status;
+    status.system_enabled = 1;
+    status.motor1_enabled = 1;
+    status.motor1_ready = 1;
+    status.motor2_enabled = 1;
+    status.motor2_ready = 1;
+    status.error_code = 0;
+
+    status_[encoder_board1]->append(status);
+    status_[encoder_board2]->append(status);
+    status_[motor_board]->append(status);
+
+    // Meassurements
+    measurement_[current_0]->append(0);
+    measurement_[current_1]->append(0);
+    measurement_[position_0]->append(0);
+    measurement_[position_1]->append(0);
+    measurement_[position_2]->append(0);
+    measurement_[position_3]->append(0);
+    measurement_[position_4]->append(0);
+    measurement_[velocity_0]->append(0);
+    measurement_[velocity_1]->append(0);
+    measurement_[velocity_2]->append(0);
+    measurement_[velocity_3]->append(0);
+    measurement_[velocity_4]->append(0);
+    measurement_[acceleration_0]->append(0);
+    measurement_[acceleration_1]->append(0);
+    measurement_[acceleration_2]->append(0);
+    measurement_[acceleration_3]->append(0);
+    measurement_[acceleration_4]->append(0);
+    measurement_[analog_0]->append(0);
+    measurement_[analog_1]->append(0);
+    measurement_[encoder_index_0]->append(0);
+    measurement_[encoder_index_1]->append(0);
+
+    sent_control_[current_target_0]->append(0);
+    sent_control_[current_target_1]->append(0);
+
+    control_[current_target_0]->append(0);
+    control_[current_target_1]->append(0);
+  }
+
+  /**
+   * @brief Destroy the DummyControlBoards object
+   */
+  ~DummyControlBoards(){};
+
+  /**
+   * Getters
+   */
+
+  /**
+   * @brief Get the measurement data.
+   *
+   * @param index is the kind of measurement we are insterested in.
+   * @return Ptr<const ScalarTimeseries> is the list of the last measurements
+   * acquiered from the CAN card.
+   */
+  virtual Ptr<const ScalarTimeseries> get_measurement(const int &index) const {
+    return measurement_[index];
+  }
+
+  /**
+   * @brief Get the status of the CAN card.
+   *
+   * @param index the kind of status we are interested in.
+   * @return Ptr<const StatusTimeseries> is the list of last acquiered status.
+   */
+  virtual Ptr<const StatusTimeseries> get_status(const int &index) const {
+    return status_[index];
+  }
+
+  /**
+   * @brief Get the controls to be sent.
+   *
+   * @param index the kind of control we are interested in.
+   * @return Ptr<const ScalarTimeseries> is the list of the control to be
+   * sent.
+   */
+  virtual Ptr<const ScalarTimeseries> get_control(const int &index) const {
+    return control_[index];
+  }
+
+  /**
+   * @brief Get the commands to be sent.
+   *
+   * @return Ptr<const CommandTimeseries> is the list of the command to be
+   * sent.
+   */
+  virtual Ptr<const CommandTimeseries> get_command() const {
+    rt_printf("get_sent_command not implemented in dummy board class.");
+    exit(-1);
+  }
+
+  /**
+   * @brief Get the already sent controls.
+   *
+   * @param index the kind of control we are interested in.
+   * @return Ptr<const ScalarTimeseries> is the list of the sent cotnrols.
+   */
+  virtual Ptr<const ScalarTimeseries> get_sent_control(const int &index) const {
+    return control_[index];
+  }
+
+  /**
+   * @brief Get the already sent commands.
+   *
+   * @return Ptr<const CommandTimeseries> is the list of the sent cotnrols.
+   */
+  virtual Ptr<const CommandTimeseries> get_sent_command() const {
+    rt_printf("get_sent_command not implemented in dummy board class.");
+    exit(-1);
+  }
+
+  /**
+   * Setters
+   */
+
+  /**
+   * @brief Set a board to an active state if it is not already active. This
+   * means the board will now have its status checked for is_ready and if the
+   * board is the motor_board we must send enable the motors etc.
+   *
+   * @param index
+   */
+  virtual void set_active_board(const int &index) {
+    rt_printf("set board index '%d' id to active\n", index);
+  }
+
+  /**
+   * @brief Set the controls, see ControlBoardsInterface::set_control
+   *
+   * @param control
+   * @param index
+   */
+  virtual void set_control(const double &control, const int &index) {
+    control_[index]->append(control);
+  }
+
+  /**
+   * @brief Set the commands, see ControlBoardsInterface::set_command
+   *
+   * @param command
+   */
+  virtual void set_command(const ControlBoardsCommand &command) {
+    rt_printf("set command id: %d\n", command.id_);
+  }
+
+  /**
+   * @brief Send the actual command and controls.
+   */
+  virtual void send_if_input_changed() {
+    for (size_t i = 0; i < control_.size(); i++) {
+      if (control_[i]->length() == 0) {
+        rt_printf("you tried to send control but no control has been set\n");
+        exit(-1);
+      }
+
+      Index timeindex = control_[i]->newest_timeindex();
+      sent_control_[i]->append((*control_[i])[timeindex]);
+    }
+  }
+
+  /**
+   * @brief returns only once board and motors are ready.
+   */
+  virtual void wait_until_ready(){};
+
+  /**
+   * This will cause the control to reset the "safemode" if the control is
+   * currently in safemode. Additionally the system will be set to idle with no
+   * timeout on communication.
+   */
+  virtual void reset() { is_safemode_ = false; };
+
+  /**
+   * This will cause the control to be forced into a "safemode" where the
+   * control is set to zero then held constant until reset.
+   */
+  virtual void enter_safemode() { is_safemode_ = true; };
+
+  /**
+   * This will return if the control is in "safemode".
+   */
+  virtual bool is_safemode() { return is_safemode_; };
+
+  /**
+   * @brief measurement_ contains all the measurements acquiered from the CAN
+   * board.
+   */
+  Vector<Ptr<ScalarTimeseries>> measurement_;
+
+  /**
+   * @brief This is the status history of the CAN board.
+   */
+  Vector<Ptr<StatusTimeseries>> status_;
+
+  /**
+   * @brief This is the buffer of the controls to be sent to card.
+   */
+  Vector<Ptr<ScalarTimeseries>> control_;
+
+  /**
+   * @brief This is the history of the already sent controls.
+   */
+  Vector<Ptr<ScalarTimeseries>> sent_control_;
+
+  /**
+   * @brief Is the system in safemode? This implies the motors were killed and
+   * now being held constant at 0 control magnitude. This is maintained until
+   * reset.
+   */
+  bool is_safemode_ = false;
 };
 
 } // namespace monopod_drivers

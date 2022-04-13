@@ -1,9 +1,3 @@
-/**
- * @file demo_sine_position_1_motor.cpp
- * @copyright Copyright (c) 2018-2020, New York University and Max Planck
- * Gesellschaft, License BSD-3-Clause
- */
-
 #include "monopod_sdk/monopod_drivers/leg.hpp"
 #include "sine_position_control.hpp"
 #include <atomic>
@@ -38,13 +32,26 @@ int main(int, char **) {
   StopDemos = false;
 
   monopod_drivers::sdk_Ptr sdk = std::make_shared<monopod_drivers::Monopod>();
-  sdk->initialize(monopod_drivers::Mode::motor_board);
-  // sdk->calibrate(1, 1);
+  sdk->initialize(monopod_drivers::Mode::MOTOR_BOARD);
+
+  sdk->set_max_torque_target(1.5, monopod_drivers::hip_joint);
+  sdk->set_max_torque_target(1.5, monopod_drivers::knee_joint);
+  // sdk->set_max_torque_target(15, monopod_drivers::hip_joint);
+  // sdk->set_max_torque_target(15, monopod_drivers::knee_joint);
+
+  // Dont need start loop here now.
+  sdk->start_safety_loop();
+
+  // sdk->calibrate();
 
   rt_printf("sdk is set up \n");
 
   // construct a simple PD controller.
   monopod_drivers::SinePositionControl controller(sdk);
+  controller.set_gains(0.3, 0.05);
+  // controller.set_gains(0.03, 0.0);
+
+  rt_printf("gain 0.03, 0.0\n");
 
   rt_printf("controllers are set up \n");
 

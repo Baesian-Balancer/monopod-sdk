@@ -29,7 +29,8 @@ int main(int, char **) {
   monopod_drivers::Monopod monopod;
   rt_printf("controllers are set up \n");
 
-  monopod.initialize(monopod_drivers::Mode::motor_board);
+  // monopod.initialize(monopod_drivers::Mode::FIXED_CONNECTOR);
+  monopod.initialize(monopod_drivers::Mode::MOTOR_BOARD);
   rt_printf("initialized monopod sdk \n");
 
   real_time_tools::Timer time_logger;
@@ -40,8 +41,17 @@ int main(int, char **) {
     // Printings
     rt_printf("\33[H\33[2J"); // clear screen
     monopod.print();          // print info
+
+    auto input_data = monopod.get_positions().value();
+    std::cout << "Positions from SDK: ";
+    for (auto data : input_data) {
+      std::cout << data << ", ";
+    }
+    std::cout << std::endl;
+
     time_logger.print_statistics();
     fflush(stdout);
+    real_time_tools::Timer::sleep_sec(0.5);
 
   } // endwhile
 

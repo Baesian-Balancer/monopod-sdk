@@ -83,9 +83,30 @@ bool EncoderJointModule::check_limits() const {
   for (const auto &limit_info : limits_) {
     auto meassurement_id = limit_info.first;
     auto joint_limit = limit_info.second;
-    double meassurement = get_joint_measurement(meassurement_id);
-    valid = valid &&
-            in_range<double>(meassurement, joint_limit.min, joint_limit.max);
+
+    // Todo: maybe clean up how this is formatted. dont like this case
+    // statement.
+    double meassurement;
+    switch (meassurement_id) {
+    case position:
+      meassurement = get_measured_angle();
+      break;
+    case velocity:
+      meassurement = get_measured_velocity();
+      break;
+    case acceleration:
+      meassurement = get_measured_acceleration();
+      break;
+    default:
+      meassurement = 0;
+      break;
+    }
+
+    if (!(std::isnan(meassurement) &&
+          meassurement_id == Measurements::acceleration)) {
+      valid = valid &&
+              in_range<double>(meassurement, joint_limit.min, joint_limit.max);
+    }
   }
   limit_door_.unlock();
   return valid;

@@ -18,7 +18,7 @@ Encoder::get_measurement(const Measurements &index) const {
     case velocity:
       return board_->get_measurement(ControlBoardsInterface::velocity_0);
     case acceleration:
-      throw std::invalid_argument("acceleration not supported yet.");
+      return board_->get_measurement(ControlBoardsInterface::acceleration_0);
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_0);
     default:
@@ -32,7 +32,7 @@ Encoder::get_measurement(const Measurements &index) const {
     case velocity:
       return board_->get_measurement(ControlBoardsInterface::velocity_1);
     case acceleration:
-      throw std::invalid_argument("acceleration not supported yet.");
+      return board_->get_measurement(ControlBoardsInterface::acceleration_1);
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_1);
     default:
@@ -46,7 +46,7 @@ Encoder::get_measurement(const Measurements &index) const {
     case velocity:
       return board_->get_measurement(ControlBoardsInterface::velocity_2);
     case acceleration:
-      throw std::invalid_argument("acceleration not supported yet.");
+      return board_->get_measurement(ControlBoardsInterface::acceleration_2);
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_2);
     default:
@@ -60,7 +60,7 @@ Encoder::get_measurement(const Measurements &index) const {
     case velocity:
       return board_->get_measurement(ControlBoardsInterface::velocity_3);
     case acceleration:
-      throw std::invalid_argument("acceleration not supported yet.");
+      return board_->get_measurement(ControlBoardsInterface::acceleration_3);
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_3);
     default:
@@ -74,7 +74,7 @@ Encoder::get_measurement(const Measurements &index) const {
     case velocity:
       return board_->get_measurement(ControlBoardsInterface::velocity_4);
     case acceleration:
-      throw std::invalid_argument("acceleration not supported yet.");
+      return board_->get_measurement(ControlBoardsInterface::acceleration_4);
     case encoder_index:
       return board_->get_measurement(ControlBoardsInterface::encoder_index_4);
     default:
@@ -116,7 +116,7 @@ void Encoder::set_board_active() const {
     return;
   }
   throw std::invalid_argument(
-      "encoder_id needs to match one of the joints in "
+      "When activating board, encoder_id needs to match one of the joints in "
       "the JointNamesIndex enum. The provided value was, " +
       std::to_string(encoder_id_));
 }
@@ -125,7 +125,7 @@ void Encoder::print() const {
   BoardStatus encoder_board_status;
   double encoder_position = std::nan("");
   double encoder_velocity = std::nan("");
-  double encoder_encoder_index = std::nan("");
+  double encoder_acceleration = std::nan("");
 
   if (get_status()->length() != 0) {
     encoder_board_status = get_status()->newest_element();
@@ -139,18 +139,21 @@ void Encoder::print() const {
     encoder_velocity = get_measurement(velocity)->newest_element();
   }
 
-  if (get_measurement(encoder_index)->length() != 0) {
-    encoder_encoder_index = get_measurement(encoder_index)->newest_element();
+  if (get_measurement(acceleration)->length() != 0) {
+    encoder_acceleration = get_measurement(acceleration)->newest_element();
   }
 
   rt_printf("Encoder board status: ");
+  rt_printf("joint index %d; ", encoder_id_);
   rt_printf("error_code: %d ", encoder_board_status.get_error_code());
+  rt_printf("\n");
 
   rt_printf("Encoder status: ");
+  rt_printf("joint index %d; ", encoder_id_);
   rt_printf("Encoder measurements: ");
-  rt_printf("position: %8f ", encoder_position);
-  rt_printf("velocity: %8f ", encoder_velocity);
-  rt_printf("encoder index: %8f ", encoder_encoder_index);
+  rt_printf("raw position: %8f ", encoder_position);
+  rt_printf("raw velocity: %8f ", encoder_velocity);
+  rt_printf("raw acceleration: %8f ", encoder_acceleration);
   rt_printf("\n");
 }
 
