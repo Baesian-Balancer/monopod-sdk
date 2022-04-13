@@ -20,7 +20,7 @@ endif()
 
 add_custom_target(image_copy ALL
     DEPENDS apidoc
-    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/monopod_sdk_docs/getting_started/monopod_drivers/images/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
+    COMMAND ${CMAKE_COMMAND} -E copy "${SPHINX_SOURCE}/media/device_class_diagram.svg" "${DOXYGEN_OUTPUT_DIRECTORY}/xml/device_class_diagram.svg"
     COMMENT "copy device class device svg into doxygen xml."
   )
 
