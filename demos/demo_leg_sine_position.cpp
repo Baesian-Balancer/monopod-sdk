@@ -49,7 +49,7 @@ int main(int, char **) {
   // construct a simple PD controller.
   monopod_drivers::SinePositionControl controller(sdk);
   controller.set_gains(0.3, 0.05);
-  // controller.set_gains(0.3, 0.0);
+  // controller.set_gains(0.03, 0.0);
 
   rt_printf("gain 0.03, 0.0\n");
 
