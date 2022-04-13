@@ -65,7 +65,27 @@ void SinePositionControl::loop() {
         amplitude * sin(2 * M_PI * frequence * local_time);
     desired_position_hip = desired_position;
     desired_position_knee = -desired_position; // opposite to make the bend
-                                               // create vertical movement.
+    // create vertical movement.
+
+    // Hip check debug
+    if (std::fabs(desired_position_hip - actual_position_hip) > 3.) {
+      rt_printf("Hip position fail with... desired: %f, actual: %f\n",
+                desired_position_hip, actual_position_hip);
+    }
+    if (std::fabs(desired_velocity_hip - actual_velocity_hip) > 200.) {
+      rt_printf("Hip velocity fail with... desired: %f, actual: %f\n",
+                desired_velocity_hip, actual_velocity_hip);
+    }
+
+    // Knee check debug
+    if (std::fabs(desired_position_knee - actual_position_knee) > 3.) {
+      rt_printf("Knee position fail with... desired: %f, actual: %f\n",
+                desired_position_knee, actual_position_knee);
+    }
+    if (std::fabs(desired_velocity_hip - actual_velocity_hip) > 200.) {
+      rt_printf("Knee velocity fail with... desired: %f, actual: %f\n",
+                desired_velocity_hip, actual_velocity_hip);
+    }
 
     desired_torque_hip = kp_ * (desired_position_hip - actual_position_hip) +
                          kd_ * (desired_velocity_hip - actual_velocity_hip);
